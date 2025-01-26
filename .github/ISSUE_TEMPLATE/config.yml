@@ -1,16 +1,83 @@
-name: Selecciona el tipo de issue
-description: Elige el tipo de contribución que deseas hacer
+name: "Plantillas de Issues"
+description: "Selecciona el tipo de contribución que deseas hacer"
 blank_issues_enabled: false
 contact_links:
-  - name: 📚 Documentación del Proyecto
-    url: https://github.com/ernestobarrera/filters/wiki
-    about: Consulta nuestra documentación antes de crear una issue
+  - name: "📖 Guía de Contribución"
+    url: "../../blob/main/CONTRIBUTING.md"
+    about: "Lee nuestra guía de contribución antes de crear una issue"
 
-# Configuración de las plantillas
-templates:
-  - name: 🆕 Nuevo Filtro
-    about: Proponer un nuevo filtro de búsqueda
-    filename: nuevo_filtro.md
-  - name: 🔄 Modificar Filtro Existente
-    about: Proponer cambios a un filtro existente
-    filename: modificar_filtro.md
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de contribuir a nuestro repositorio de filtros.
+        Por favor, rellena la información necesaria a continuación.
+
+  - type: dropdown
+    id: tipo-issue
+    attributes:
+      label: "Tipo de Contribución"
+      description: "¿Qué tipo de cambio propones?"
+      options:
+        - "🆕 Nuevo Filtro"
+        - "🔄 Modificación de Filtro Existente"
+    validations:
+      required: true
+
+  # Campos para Nuevo Filtro
+  - type: dropdown
+    id: categoria
+    attributes:
+      label: "Categoría del Filtro"
+      description: "Selecciona la categoría que mejor se ajuste"
+      options:
+        - "Metodológico"
+        - "Clínico"
+        - "Ámbito/Población"
+        - "Otra"
+    validations:
+      required: true
+
+  - type: textarea
+    id: justificacion
+    attributes:
+      label: "Justificación"
+      description: "Explica brevemente por qué es necesario este filtro o cambio"
+      placeholder: "Este filtro/cambio es necesario porque..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: estrategia
+    attributes:
+      label: "Estrategia de Búsqueda"
+      description: "Incluye la estrategia completa (actual y propuesta en caso de modificación)"
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: validacion
+    attributes:
+      label: "Validación"
+      description: "Incluye datos de validación (sensibilidad, especificidad, etc.)"
+      value: |
+        ### Métricas de Rendimiento
+        - Sensibilidad: 
+        - Especificidad:
+        - Precisión:
+        - Número de referencias recuperadas:
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Checklist"
+      description: "Antes de enviar tu issue, por favor verifica lo siguiente"
+      options:
+        - label: "He verificado que no existe un filtro similar"
+        - label: "He probado la estrategia en PubMed"
+        - label: "Los términos MeSH están validados"
+        - label: "He documentado las pruebas realizadas"
+        - label: "He seguido el formato establecido en CONTRIBUTING.md"
+    validations:
+      required: true
