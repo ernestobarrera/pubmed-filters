@@ -1,1 +1,15 @@
+# Filtro: Efectos Adversos Dispositivos Médicos
+# Autor revisión: @ernestobarrera
+# Fecha: 26-01-2025
+# Descripción: Filtro de búsqueda para identificar efectos adversos relacionados con dispositivos médicos
+# Referencia completa: Golder, Su, Guy Peryer, and Yoon K. Loke. "Overview: comprehensive and carefully constructed strategies are required when conducting searches for adverse effects data." Journal of clinical epidemiology 113 (2019): 36-43.
+# URL: https://www.jclinepi.com/article/S0895-4356(18)31128-4/fulltext
+
 (complicat*[tiab] OR ae[sh] OR safe*[tiab] OR "postoperative complications"[Mesh] OR failure*[tiab] OR adverse[tiab] OR co[sh] OR failed[tiab] OR "equipment failure"[Mesh] OR removal[tiab] OR "equipment safety"[Mesh:NoExp] OR "side effect*"[tiab] OR harmful[tiab] OR tolerated[tiab] OR loosen*[tiab] OR "Intraoperative complications"[Mesh:NoExp] OR breakag*[tiab] OR discomfort[tiab] OR displacement[tiab] OR (detrimental[TIAB] AND effect*[tiab]) OR "untoward effects"[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Golder S, Peryer G, Loke YK. Overview: comprehensive and carefully constructed strategies are required when conducting searches for adverse effects data. Journal of clinical epidemiology. 2019;113:36-43."
+  }
+}
