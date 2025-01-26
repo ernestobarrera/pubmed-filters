@@ -1,4 +1,4 @@
-Copy# Filtro: Deprescripción
+# Filtro: Deprescripción
 # Autor revisión: @ernestobarrera
 # Fecha: 03-09-2022
 # Descripción: Filtro de alta especificidad para la identificación de artículos sobre deprescripción de medicamentos
