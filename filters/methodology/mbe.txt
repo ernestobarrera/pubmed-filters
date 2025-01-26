@@ -1,10 +1,9 @@
 # Filtro: Medicina Basada en la evidencia
-# Autor: @ernestob
+# Autor: @ernestobarrera
 # Fecha: 03-09-2022
 # Descripción: Búsqueda de artículos y recursos sobre Medicina Basada en la Evidencia (MBE) incluyendo journal clubs y práctica basada en la evidencia
 # Referencia completa: E-learning of evidence-based health care (EBHC) to increase EBHC competencies in healthcare professionals: a systematic review modificado: se añade OR (journal[TIAB] AND club*[TIAB]) 
 # "url": "https://files.eric.ed.gov/fulltext/ED573452.pdf "
-
 
 ((((("critical appraisal" OR "journal club" OR (journal[TIAB] AND club*[TIAB])))) OR ((((("evidence-based practice" OR "evidence-based policy" OR "evidence based practice" OR "evidence-based medicine" OR "evidence based medicine" OR "evidence-based health care" OR "evidence-based healthcare" OR "evidence based health care" OR "evidence based health care" OR "evidence-based dentistry" OR "evidence based dentistry" OR "Evidence-Based Facility Design" OR "evidence-based nursing" OR "evidence based nursing" OR "Evidence-Based Emergency Medicine")))) OR (((((("Evidence-Based Practice"[Mesh]) OR "Evidence-Based Practice/education"[Mesh]) OR "Evidence-Based Medicine"[Mesh]) OR "Evidence-Based Dentistry"[Mesh]) OR "Evidence-Based Nursing"[Mesh] OR "Evidence-Based Facility Design"[Mesh] OR "Evidence-Based Emergency Medicine"[Mesh])))))
 
