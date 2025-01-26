@@ -5,7 +5,6 @@ contact_links:
   - name: "📖 Guía de Contribución"
     url: "../../blob/main/CONTRIBUTING.md"
     about: "Lee nuestra guía de contribución antes de crear una issue"
-
 body:
   - type: markdown
     attributes:
@@ -24,7 +23,6 @@ body:
     validations:
       required: true
 
-  # Campos para Nuevo Filtro
   - type: dropdown
     id: categoria
     attributes:
@@ -39,11 +37,11 @@ body:
       required: true
 
   - type: textarea
-    id: justificacion
+    id: descripcion
     attributes:
-      label: "Justificación"
-      description: "Explica brevemente por qué es necesario este filtro o cambio"
-      placeholder: "Este filtro/cambio es necesario porque..."
+      label: "Descripción"
+      description: "Describe el propósito del filtro o los cambios propuestos"
+      placeholder: "Explica los detalles de tu contribución..."
     validations:
       required: true
 
@@ -51,7 +49,7 @@ body:
     id: estrategia
     attributes:
       label: "Estrategia de Búsqueda"
-      description: "Incluye la estrategia completa (actual y propuesta en caso de modificación)"
+      description: "Incluye la estrategia completa"
       render: text
     validations:
       required: true
@@ -60,24 +58,24 @@ body:
     id: validacion
     attributes:
       label: "Validación"
-      description: "Incluye datos de validación (sensibilidad, especificidad, etc.)"
+      description: "Incluye los datos de validación"
       value: |
-        ### Métricas de Rendimiento
+        Métricas de Rendimiento:
         - Sensibilidad: 
         - Especificidad:
         - Precisión:
         - Número de referencias recuperadas:
 
   - type: checkboxes
-    id: checklist
+    id: terms
     attributes:
-      label: "Checklist"
-      description: "Antes de enviar tu issue, por favor verifica lo siguiente"
+      label: "Verificación"
       options:
         - label: "He verificado que no existe un filtro similar"
+          required: true
         - label: "He probado la estrategia en PubMed"
+          required: true
         - label: "Los términos MeSH están validados"
+          required: true
         - label: "He documentado las pruebas realizadas"
-        - label: "He seguido el formato establecido en CONTRIBUTING.md"
-    validations:
-      required: true
+          required: true
