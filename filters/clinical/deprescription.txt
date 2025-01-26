@@ -1,1 +1,21 @@
+Copy# Filtro: Deprescripción
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro de alta especificidad para la identificación de artículos sobre deprescripción de medicamentos
+# Referencia completa: Adaptado de Morel, T., Nguyen-Soenen, J., Thompson, W., & Fournier, J. P. (2022). Development and validation of search filters to identify articles on deprescribing in Medline and Embase. BMC Medical Research Methodology, 22(1), 1-9.
+# URL: https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-022-01561-5
+
 ("deprescrib*"[TIAB]|"deprescriptions"[mh]|(("medication*"[TIAB]|"prescribing"[TIAB]) AND "inappropriate"[TIAB])|"polypharmacy"[TIAB]|"discontinu*"[TIAB]|("withdraw*"[TIAB] AND "medication*"[TIAB])|(("medication*"[TIAB]|"drugs"[TIAB]|"prescribing"[TIAB]|"inappropriate"[TIAB]) AND "reduc*"[TIAB])|"inappropriate prescribing"[mh]|("review*"[TIAB] AND "medication"[TIAB])|("dose reduction"[TIAB]|"taper*"[TIAB]))
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 92.0,
+      "specificity": 90.0,
+      "precision": 8.0
+    },
+    "reference": "Morel T, et al. Development and validation of search filters to identify articles on deprescribing. 2022"
+  }
+}
