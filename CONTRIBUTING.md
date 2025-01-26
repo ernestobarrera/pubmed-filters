@@ -1,137 +1,132 @@
 # Guía de Contribución
 
-## 🌟 Antes de Empezar
+## 🌟 Inicio Rápido
 
-1. **Revisa los filtros existentes** para evitar duplicados
-2. **Consulta las issues abiertas** para ver si alguien ya está trabajando en algo similar
-3. **Familiarízate con la estructura** del repositorio
+[![Nuevo Filtro](https://img.shields.io/badge/Crear-Nuevo_Filtro-success?style=for-the-badge)](../../issues/new?template=nuevo_filtro.md)
+[![Modificar Filtro](https://img.shields.io/badge/Proponer-Modificación-blue?style=for-the-badge)](../../issues/new?template=modificar_filtro.md)
 
 ## 📋 Proceso de Contribución
 
-### Para Nuevos Filtros
+### 1. Preparación
 
-1. **Crea una Issue**
+- [ ] Revisa [filtros existentes](../../tree/main/filters) para evitar duplicados
+- [ ] Consulta [issues abiertas](../../issues) para ver trabajos en curso
+- [ ] Familiarízate con la estructura del repositorio
 
-   - Usa la plantilla "Nuevo Filtro"
-   - Describe claramente el propósito
-   - Incluye validación inicial
+### 2. Desarrollo
 
-2. **Fork y Desarrollo**
+#### Para Nuevos Filtros
 
-   - Fork del repositorio
-   - Crea rama: `filter/nombre-descriptivo`
-   - Añade el filtro siguiendo las guías
+1. [Crea una Issue usando la plantilla de Nuevo Filtro](../../issues/new?template=nuevo_filtro.md)
+2. Fork y desarrollo:
+   ```bash
+   git checkout -b filter/nombre-descriptivo
+   ```
+3. [Crea un Pull Request](../../pulls)
 
-3. **Pull Request**
-   - Referencia la issue (#número)
-   - Completa la plantilla
-   - Espera revisión
+#### Para Modificaciones
 
-### Para Modificaciones
+1. [Crea una Issue usando la plantilla de Modificación](../../issues/new?template=modificar_filtro.md)
+2. Fork y desarrollo:
+   ```bash
+   git checkout -b update/nombre-filtro
+   ```
+3. [Crea un Pull Request](../../pulls)
 
-1. **Crea una Issue**
-
-   - Usa la plantilla "Modificación"
-   - Explica los cambios
-   - Muestra comparativas
-
-2. **Desarrollo**
-
-   - Fork del repositorio
-   - Crea rama: `update/nombre-filtro`
-   - Realiza cambios
-
-3. **Pull Request**
-   - Incluye antes/después
-   - Documenta validación
-   - Espera revisión
-
-## 📝 Guías de Estilo
+## 📝 Especificaciones Técnicas
 
 ### Estructura de Archivos
 
 ```
 filters/
-└── categoría/
+└── categoría/         # metodologicos, clinicos, poblacion
     └── nombre_filtro[_sensible|_especifico].txt
 ```
 
 ### Formato de Filtros
 
-```
+```yaml
 # Filtro: [NOMBRE DEL FILTRO]
 # Autor revisión: @ernestobarrera
 # Fecha: DD-MM-YYYY
-# Descripción: [DESCRIPCIÓN BREVE DEL FILTRO Y SU PROPÓSITO]
-# Referencia completa: [REFERENCIA BIBLIOGRÁFICA COMPLETA INCLUYENDO MODIFICACIONES SI LAS HAY]
-# URL: [URL DE LA REFERENCIA SI EXISTE]
-
+# Descripción: [DESCRIPCIÓN BREVE]
+# Referencia: [REFERENCIA BIBLIOGRÁFICA]
+# URL: [URL DE LA REFERENCIA]
 
 [CONTENIDO DEL FILTRO]
 
 @@@FILTER_METADATA@@@
 {
   "validation": {
-    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
+    "reference": "[AUTOR ET AL, AÑO]"
   }
 }
 ```
 
 ### Nomenclatura
 
-- Usar minúsculas
-- Separar palabras con guiones bajos
-- Sufijos `_sensible` o `_especifico` cuando aplique
+- Minúsculas con guiones bajos
+- Sufijos según precisión:
+  - `_sensible`: Alta sensibilidad
+  - `_especifico`: Alta especificidad
 
-## ✅ Validación
+## ✅ Criterios de Validación
 
-### Requisitos Mínimos Sugeridos
+### 1. Términos MeSH
 
-1. **Términos MeSH**
+- [ ] Verificados en [base MeSH](https://www.nlm.nih.gov/mesh)
+- [ ] Actualizados al año en curso
 
-   - Verificados en la base MeSH
-   - Actualizados al año en curso
+### 2. Métricas
 
-2. **Pruebas**
+- [ ] Sensibilidad (%)
+- [ ] Especificidad (%)
+- [ ] Precisión sobre muestra aleatoria
+- [ ] Comparativa con filtros similares
 
-   - Número de resultados
-   - Precisión (muestra aleatoria)
-   - Comparativa con filtros similares
+### 3. Documentación
 
-3. **Documentación**
-   - Comentarios en el código
-   - Referencias si aplica
-   - Ejemplos de uso
+- [ ] Comentarios explicativos
+- [ ] Referencias bibliográficas
+- [ ] Ejemplos de uso
 
 ## 🔄 Proceso de Revisión
 
-1. **Revisión Inicial**
+1. Revisión Inicial
 
-   - Estructura correcta
-   - Guías de estilo
-   - Documentación básica
+   - [ ] Estructura del archivo
+   - [ ] Formato del filtro
+   - [ ] Documentación básica
 
-2. **Validación Técnica**
+2. Validación Técnica
 
-   - Términos MeSH
-   - Operadores booleanos
-   - Resultados de pruebas
+   - [ ] Términos MeSH correctos
+   - [ ] Sintaxis booleana válida
+   - [ ] Resultados documentados
 
-3. **Aprobación Final**
-   - Merge a main
-   - Cierre de issue
-   - Actualización de docs
+3. Aprobación Final
+   - [ ] Merge a main
+   - [ ] Cierre de issue
+   - [ ] Actualización de documentación
 
-## 📚 Recursos Útiles
+## 📚 Recursos
 
-- [Guía MeSH](https://www.nlm.nih.gov/mesh/meshhome.html)
-- [Sintaxis PubMed](https://pubmed.ncbi.nlm.nih.gov/help/#syntax)
-- [Clinical Queries](https://www.ncbi.nlm.nih.gov/pubmed/clinical)
+| Recurso          | Descripción              | Enlace                                                  |
+| ---------------- | ------------------------ | ------------------------------------------------------- |
+| MeSH             | Base de términos médicos | [Acceder](https://www.nlm.nih.gov/mesh/meshhome.html)   |
+| PubMed Syntax    | Guía de sintaxis         | [Acceder](https://pubmed.ncbi.nlm.nih.gov/help/#syntax) |
+| Clinical Queries | Filtros metodológicos    | [Acceder](https://www.ncbi.nlm.nih.gov/pubmed/clinical) |
 
-## ❓ ¿Preguntas?
+## ❓ Soporte
 
-Abre una issue con la etiqueta "pregunta" o contacta con los mantenedores.
+- [Crear issue de consulta](../../issues/new?labels=pregunta)
+- [Ver preguntas frecuentes](../../labels/pregunta)
 
 ---
 
-¡Gracias por contribuir! 🎉
+### Atajos Rápidos
+
+- 🆕 [Nuevo Filtro](../../issues/new?template=nuevo_filtro.md)
+- 🔄 [Modificar Filtro](../../issues/new?template=modificar_filtro.md)
+- ❓ [Consulta](../../issues/new?labels=pregunta)
+- 📊 [Ver Progreso](../../projects)
