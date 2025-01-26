@@ -1,0 +1,1 @@
+(group*[tw] AND therapy*)

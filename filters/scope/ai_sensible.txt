@@ -1,0 +1,1 @@
+("ChatGPT"[TIAB] OR "Large Language Model*"[TIAB] OR "Generative Artificial Intelligence"[TIAB] OR "Claude"[TIAB] OR "Gemini"[TIAB] OR "Perplexity"[TIAB] OR "Anthropic"[TIAB] OR "Bard"[TIAB] OR "Transformer"[TIAB] OR "Attention Mechanism"[TIAB] OR "Self-Attention"[TIAB] OR "Embeddings"[TIAB] )

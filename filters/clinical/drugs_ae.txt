@@ -1,0 +1,1 @@
+("DRUG-RELATED SIDE EFFECTS AND ADVERSE REACTIONS"[mh] OR ae[sh] OR co[sh] OR de[sh] OR ci[sh] OR risk[ti] OR safe[tiab] OR safety[tiab] OR "side effect*"[tiab] OR "undesirable effect*"[tiab] OR "treatment emergent"[tiab] OR tolerability[tiab] OR toxicity[tiab] OR adrs OR (adverse[tiab] AND (effect*[tiab] OR reaction*[tiab] OR event*[tiab] OR outcome*[tiab])))

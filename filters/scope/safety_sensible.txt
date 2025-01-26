@@ -1,0 +1,1 @@
+((safe*[tiab] OR Safety[Mesh] OR Erro*[tiab] OR Adverse[tiab]) AND ("Risk Management"[Mesh] OR "Quality of Health Care"[Mesh] OR "Medical Errors"[Mesh] OR "Safety Management"[Mesh:NoExp] OR "Medical Audit"[Mesh:NoExp]))

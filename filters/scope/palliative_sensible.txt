@@ -1,0 +1,1 @@
+(“Terminal Care”[mh] OR caregiver*[tw] OR bereave* OR inpatient[tiab] OR “attitude to death”[tw] OR “end of life” OR hospice* OR “terminally ill”[tw] OR palliative*[tw] OR “Advance Care” OR palliat OR advanced OR (morphine AND cancer) OR “cancer pain”)

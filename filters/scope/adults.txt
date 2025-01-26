@@ -1,0 +1,1 @@
+NOT (("Adolescent"[mh]|"Child"[mh]|"Infant"[mh]|adolescen*[tiab]|child*[tiab]|schoolchild*[tiab]|infant*[tiab]|girl*[tiab]|boy[tiab]|boys[tiab] OR boyhood[tiab]|teen[tiab]|teens[tiab]|teenager*[tiab]|youth*[tiab]|pediatr*[tiab]|paediatr*[tiab]|puber*[tiab]) NOT ("Adult"[mh]|adult*[tiab]|man[tiab]|men[tiab]|woman[tiab]|women[tiab]))

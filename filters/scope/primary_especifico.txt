@@ -1,0 +1,1 @@
+("Primary Health Care"[mh]|"primary care"[ALL]|"Physicians, Family"[mh]|general pract*[ALL]|"family"[ad]|family pract*[ALL]|family physician*[tw])

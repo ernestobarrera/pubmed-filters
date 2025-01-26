@@ -1,0 +1,16 @@
+# Filtro: [NOMBRE DEL FILTRO]
+# Autor revisión: @ernestobarrera
+# Fecha: DD-MM-YYYY
+# Descripción: [DESCRIPCIÓN BREVE DEL FILTRO Y SU PROPÓSITO]
+# Referencia completa: [REFERENCIA BIBLIOGRÁFICA COMPLETA INCLUYENDO MODIFICACIONES SI LAS HAY]
+# URL: [URL DE LA REFERENCIA SI EXISTE]
+
+
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
+  }
+}

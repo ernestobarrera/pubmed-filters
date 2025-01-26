@@ -1,0 +1,1 @@
+("Terminal Care"[mh] OR bereave* OR hospice*[tw] OR "advanced cancer"[tiab] OR "end of life" OR "terminally ill"[tw] OR palliative*[tiab] OR "Palliative Care"[mh])

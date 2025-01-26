@@ -1,0 +1,1 @@
+(Infan*|newborn*|new-born*|perinat*|neonat*|baby*|babies|toddler*|minors|minors*|boy|boys|boyfriend|boyhood|girl*|kid|kids|child|child*|children*|schoolchild*|school child[tiab]|school child*[tiab]|adolescen*|juvenil*|youth*|teen*|under*age*|pubescen*|pediatrics[mh]|pediatric*|paediatric*|peadiatric*|school[tiab]|school*[tiab]|prematur*|preterm*)

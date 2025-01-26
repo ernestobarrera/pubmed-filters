@@ -1,0 +1,1 @@
+("family"[ALL]|physician*[ALL]|practice*[tw]|"primary care"[ALL]|"Primary Health Care"[mh]|primary[tw]|general pract*[tiab]|gp[tiab]|gps[tiab])
