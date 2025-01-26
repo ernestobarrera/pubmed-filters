@@ -1,6 +1,6 @@
 # Filtro: Efectos Adversos Dispositivos Médicos
 # Autor revisión: @ernestobarrera
-# Fecha: 26-01-2025
+# Fecha: 03-09-2022
 # Descripción: Filtro de búsqueda para identificar efectos adversos relacionados con dispositivos médicos
 # Referencia completa: Golder, Su, Guy Peryer, and Yoon K. Loke. "Overview: comprehensive and carefully constructed strategies are required when conducting searches for adverse effects data." Journal of clinical epidemiology 113 (2019): 36-43.
 # URL: https://www.jclinepi.com/article/S0895-4356(18)31128-4/fulltext
