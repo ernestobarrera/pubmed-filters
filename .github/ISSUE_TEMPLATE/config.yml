@@ -2,80 +2,75 @@ name: "Plantillas de Issues"
 description: "Selecciona el tipo de contribución que deseas hacer"
 blank_issues_enabled: false
 contact_links:
-  - name: "📖 Guía de Contribución"
-    url: "../../blob/main/CONTRIBUTING.md"
-    about: "Lee nuestra guía de contribución antes de crear una issue"
+
+name: "📖 Guía de Contribución"
+url: "../../blob/main/CONTRIBUTING.md"
+about: "Lee nuestra guía de contribución antes de crear una issue"
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Gracias por tomarte el tiempo de contribuir a nuestro repositorio de filtros.
-        Por favor, rellena la información necesaria a continuación.
-
-  - type: dropdown
-    id: tipo-issue
-    attributes:
-      label: "Tipo de Contribución"
-      description: "¿Qué tipo de cambio propones?"
-      options:
-        - "🆕 Nuevo Filtro"
-        - "🔄 Modificación de Filtro Existente"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: categoria
-    attributes:
-      label: "Categoría del Filtro"
-      description: "Selecciona la categoría que mejor se ajuste"
-      options:
-        - "Metodológico"
-        - "Clínico"
-        - "Ámbito/Población"
-        - "Otra"
-    validations:
-      required: true
-
-  - type: textarea
-    id: descripcion
-    attributes:
-      label: "Descripción"
-      description: "Describe el propósito del filtro o los cambios propuestos"
-      placeholder: "Explica los detalles de tu contribución..."
-    validations:
-      required: true
-
-  - type: textarea
-    id: estrategia
-    attributes:
-      label: "Estrategia de Búsqueda"
-      description: "Incluye la estrategia completa"
-      render: text
-    validations:
-      required: true
-
-  - type: textarea
-    id: validacion
-    attributes:
-      label: "Validación"
-      description: "Incluye los datos de validación"
-      value: |
-        Métricas de Rendimiento:
-        - Sensibilidad: 
-        - Especificidad:
-        - Precisión:
-        - Número de referencias recuperadas:
-
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: "Verificación"
-      options:
-        - label: "He verificado que no existe un filtro similar"
-          required: true
-        - label: "He probado la estrategia en PubMed"
-          required: true
-        - label: "Los términos MeSH están validados"
-          required: true
-        - label: "He documentado las pruebas realizadas"
-          required: true
+type: markdown
+attributes:
+value: |
+Gracias por tomarte el tiempo de contribuir a nuestro repositorio de filtros.
+Por favor, rellena la información necesaria a continuación.
+type: dropdown
+id: tipo-issue
+attributes:
+label: "Tipo de Contribución"
+description: "¿Qué tipo de cambio propones?"
+options:
+- "🆕 Nuevo Filtro"
+- "🔄 Modificación de Filtro Existente"
+validations:
+required: true
+type: dropdown
+id: categoria
+attributes:
+label: "Categoría del Filtro"
+description: "Selecciona la categoría que mejor se ajuste"
+options:
+- "Metodológico"
+- "Clínico"
+- "Ámbito/Población"
+- "Otra"
+validations:
+required: true
+type: textarea
+id: descripcion
+attributes:
+label: "Descripción"
+description: "Describe el propósito del filtro o los cambios propuestos"
+placeholder: "Explica los detalles de tu contribución..."
+validations:
+required: true
+type: textarea
+id: estrategia
+attributes:
+label: "Estrategia de Búsqueda"
+description: "Incluye la estrategia completa"
+render: text
+validations:
+required: true
+type: textarea
+id: validacion
+attributes:
+label: "Validación"
+description: "Incluye los datos de validación"
+value: |
+Métricas de Rendimiento:
+- Sensibilidad:
+- Especificidad:
+- Precisión:
+- Número de referencias recuperadas:
+type: checkboxes
+id: terms
+attributes:
+label: "Verificación"
+options:
+- label: "He verificado que no existe un filtro similar"
+required: true
+- label: "He probado la estrategia en PubMed"
+required: true
+- label: "Los términos MeSH están validados"
+required: true
+- label: "He documentado las pruebas realizadas"
+required: true
