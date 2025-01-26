@@ -3,6 +3,7 @@ name: 🆕 Propuesta de Nuevo Filtro
 about: Proponer un nuevo filtro de búsqueda
 title: "[NUEVO] "
 labels: ["nuevo filtro", "necesita revisión"]
+assignees: []
 ---
 
 ## 📝 Descripción del Filtro
@@ -14,9 +15,11 @@ labels: ["nuevo filtro", "necesita revisión"]
 - [ ] Metodológico
 - [ ] Clínico
 - [ ] Ámbito/Población
-- [ ] Otra:
+- [ ] Otra: <!-- Especificar si se marca "Otra" -->
 
 ### Justificación
+
+<!-- Explica por qué es necesario este filtro -->
 
 ```
 
@@ -24,23 +27,26 @@ labels: ["nuevo filtro", "necesita revisión"]
 
 ## 🔍 Estrategia de Búsqueda
 
+<!-- Incluye la estrategia completa -->
+
 ```
 
 ```
 
 ## ✔️ Validación
 
-### Datos principales (como sensibilidad y especificidad)
+### Métricas de Rendimiento
 
-<!-- Describe las pruebas realizadas -->
+<!-- Incluye datos de validación como: -->
 
-```
-
-```
+- Sensibilidad:
+- Especificidad:
+- Precisión:
+- Número de referencias recuperadas:
 
 ### Referencias
 
-<!-- Si aplica, incluye referencias bibliográficas -->
+<!-- Referencias bibliográficas si el filtro se basa en publicaciones previas -->
 
 ## 📋 Checklist
 
@@ -48,5 +54,4 @@ labels: ["nuevo filtro", "necesita revisión"]
 - [ ] He probado la estrategia en PubMed
 - [ ] Los términos MeSH están validados
 - [ ] He documentado las pruebas realizadas
-
----
+- [ ] He seguido el formato establecido en CONTRIBUTING.md

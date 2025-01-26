@@ -1,0 +1,16 @@
+name: Selecciona el tipo de issue
+description: Elige el tipo de contribución que deseas hacer
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentación del Proyecto
+    url: https://github.com/ernestobarrera/filters/wiki
+    about: Consulta nuestra documentación antes de crear una issue
+
+# Configuración de las plantillas
+templates:
+  - name: 🆕 Nuevo Filtro
+    about: Proponer un nuevo filtro de búsqueda
+    filename: nuevo_filtro.md
+  - name: 🔄 Modificar Filtro Existente
+    about: Proponer cambios a un filtro existente
+    filename: modificar_filtro.md
