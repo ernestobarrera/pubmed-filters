@@ -55,7 +55,7 @@ Ver [CONTRIBUTING.md](CONTRIBUTING.md) para detalles sobre:
 
 ## 🔧 Uso
 
-Los filtros se integran automáticamente en el [Buscador PubMed Avanzado](https://ernestobarrera.github.io/t/pubmed.html), pero también pueden usarse directamente en PubMed:
+Los filtros se integran automáticamente en el [Buscador PubMed Avanzado](https://ernestobarrera.github.io/buscadores-pubmed.html), pero también pueden usarse directamente en PubMed:
 
 1. Selecciona el filtro deseado
 2. Copia el contenido
