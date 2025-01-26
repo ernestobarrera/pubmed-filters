@@ -10,6 +10,7 @@
 
 @@@FILTER_METADATA@@@
 {
+  
   "validation": {
     "reference": "Rohwer A, et al. E-learning of EBHC to increase competencies in healthcare professionals. 2017"
     

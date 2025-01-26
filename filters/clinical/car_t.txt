@@ -1,1 +1,16 @@
+# Filtro: Terapias CAR-T, TCR-T y TIL
+# Autor revisión: @ernestobarrera
+# Fecha: 01-11-2024
+# Descripción: Búsqueda de artículos relacionados con terapias avanzadas basadas en células T modificadas (CAR-T), receptores de células T (TCR-T) y linfocitos infiltrantes de tumor (TIL)
+# Referencia completa: Elaboración propia (noviembre 2024)
+# URL: N/A
+
 ((lisocabtagene maraleucel[TIAB]|Breyanzi[TIAB]|KYMRIAH[TIAB]|CTL019[TIAB]|tisagenlecleucel[TIAB]|"tisagenlecleucel"[NM]|KTE-C19[TIAB]|Yescarta[TIAB]|"axicabtagene ciloleucel"[TIAB]|"axicabtagene ciloleucel"[NM]|"brexucabtagene autoleucel"[NM]|"brexucabtagene autoleucel"[TIAB]|"KTE-X19"[TIAB]|Tecartus[TIAB]|"idecabtagene vicleucel"[NM]|"idecabtagene vicleucel"[TIAB]|"ide-cel"[TIAB]|"bb2121"[TIAB]|Abecma[TIAB]|"ciltacabtagene autoleucel"[TIAB]|CARVYKTI[TIAB]|lifileucel[TIAB]|"afamitresgene autoleucel"[TIAB]|UCART19[TIAB]|"LCAR-B38M"[TIAB])|("Immunotherapy, Adoptive"[mh] AND (T-cell*[tw]|"chimeric antigen receptor*"[tw]|CAR-T[tw]|TIL[tw])))
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Elaboración propia. 2024"
+  }
+}

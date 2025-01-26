@@ -10,6 +10,22 @@
 
 @@@FILTER_METADATA@@@
 {
+  "metrics": {
+      "sensitivity": 96.4,
+      "specificity": 79.5
+    },
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 98,
+        "specificity": 74
+      },
+      "specific": {
+        "sensitivity": 64,
+        "specificity": 98
+      }
+    },
+
+
   "validation": {
     "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
   }
