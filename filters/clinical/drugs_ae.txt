@@ -14,7 +14,6 @@
       "sensitive": {
         "sensitivity": 90
       },
-    }
     "reference": "Golder S, Su H, Peryer G, Loke YK. Journal of Clinical Epidemiology 2019;113:36-43."
   }
 }
