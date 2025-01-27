@@ -1,1 +1,15 @@
+# Filtro: Efectos adversos Medicamentos v.1  
+# Autor revisión: @ernestobarrera  
+# Fecha: 03-09-2022  
+# Descripción: Filtro modificado para búsqueda de efectos adversos de medicamentos  
+# Referencia completa: Golder S, Su H, Peryer G, Loke YK. "Overview: comprehensive and carefully constructed strategies are required when conducting searches for adverse effects data." Journal of Clinical Epidemiology. 2019;113:36-43. Modificado por @yo  
+# URL: https://www.jclinepi.com/article/S0895-4356(18)31128-4/fulltext
+
 ("DRUG-RELATED SIDE EFFECTS AND ADVERSE REACTIONS"[mh] OR ae[sh] OR co[sh] OR de[sh] OR ci[sh] OR risk[ti] OR safe[tiab] OR safety[tiab] OR "side effect*"[tiab] OR "undesirable effect*"[tiab] OR "treatment emergent"[tiab] OR tolerability[tiab] OR toxicity[tiab] OR adrs OR (adverse[tiab] AND (effect*[tiab] OR reaction*[tiab] OR event*[tiab] OR outcome*[tiab])))
+
+@@@FILTER_METADATA@@@  
+{
+  "validation": {
+    "reference": "Golder S, Su H, Peryer G, Loke YK. Journal of Clinical Epidemiology 2019;113:36-43. Modificado por @yo"
+  }
+}

@@ -1,32 +1,129 @@
-# Filtro: [NOMBRE DEL FILTRO]
+# Templates para Filtros PubMed
+# Autor: @ernestobarrera
+# Fecha: 27-01-2025
+# Descripción: Plantillas estandarizadas para la creación y mantenimiento de filtros PubMed
+# Referencia: Documentación interna de filtros PubMed
+
+## 1. Filtro Simple con Métricas
+# Filtro: [NOMBRE]
 # Autor revisión: @ernestobarrera
 # Fecha: DD-MM-YYYY
-# Descripción: [DESCRIPCIÓN BREVE DEL FILTRO Y SU PROPÓSITO]
-# Referencia completa: [REFERENCIA BIBLIOGRÁFICA COMPLETA INCLUYENDO MODIFICACIONES SI LAS HAY]
-# URL: [URL DE LA REFERENCIA SI EXISTE]
-
+# Descripción: [DESCRIPCIÓN]
+# Referencia completa: [REFERENCIA]
+# URL: [URL]
 
 [CONTENIDO DEL FILTRO]
 
 @@@FILTER_METADATA@@@
 {
-  "metrics": {
-      "sensitivity": 96.4,
-      "specificity": 79.5
-    },
-    "metrics": {
-      "sensitive": {
-        "sensitivity": 98,
-        "specificity": 74
-      },
-      "specific": {
-        "sensitivity": 64,
-        "specificity": 98
-      }
-    },
-
-
   "validation": {
-    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
+    "metrics": {
+      "sensitivity": 00.0,
+      "specificity": 00.0,
+      "precision": 00.0
+    },
+    "reference": "Autor et al. JOURNAL YEAR"
   }
 }
+
+## 2. Filtro con Versiones Sensible/Específica
+# Filtro: [NOMBRE]
+# Autor revisión: @ernestobarrera
+# Fecha: DD-MM-YYYY
+# Descripción: [DESCRIPCIÓN]
+# Referencia completa: [REFERENCIA]
+# URL: [URL]
+
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 00.0,
+        "specificity": 00.0,
+        "precision": 00.0
+      },
+      "specific": {
+        "sensitivity": 00.0,
+        "specificity": 00.0,
+        "precision": 00.0
+      }
+    },
+    "reference": "Autor et al. JOURNAL YEAR"
+  }
+}
+
+## 3. Filtro Sin Métricas
+# Filtro: [NOMBRE]
+# Autor revisión: @ernestobarrera
+# Fecha: DD-MM-YYYY
+# Descripción: [DESCRIPCIÓN]
+# Referencia completa: [REFERENCIA]
+# URL: [URL]
+
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Autor et al. JOURNAL YEAR"
+  }
+}
+
+## 4. Filtro Simple Sin Precisión
+# Filtro: [NOMBRE]
+# Autor revisión: @ernestobarrera
+# Fecha: DD-MM-YYYY
+# Descripción: [DESCRIPCIÓN]
+# Referencia completa: [REFERENCIA]
+# URL: [URL]
+
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 00.0,
+      "specificity": 00.0
+    },
+    "reference": "Autor et al. JOURNAL YEAR"
+  }
+}
+
+## 5. Filtro Doble Sin Precisión
+# Filtro: [NOMBRE]
+# Autor revisión: @ernestobarrera
+# Fecha: DD-MM-YYYY
+# Descripción: [DESCRIPCIÓN]
+# Referencia completa: [REFERENCIA]
+# URL: [URL]
+
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 00.0,
+        "specificity": 00.0
+      },
+      "specific": {
+        "sensitivity": 00.0,
+        "specificity": 00.0
+      }
+    },
+    "reference": "Autor et al. JOURNAL YEAR"
+  }
+}
+
+### Notas Importantes:
+1. Las métricas deben incluir un decimal (00.0)
+2. La fecha debe seguir formato DD-MM-YYYY
+3. Las referencias deben ser abreviadas en el metadata
+4. Mantener una línea en blanco antes y después de @@@FILTER_METADATA@@@
+5. El campo precisión es opcional
+6. Formato de referencia abreviada: "Apellido et al. JOURNAL YEAR"
