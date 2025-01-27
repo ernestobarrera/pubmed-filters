@@ -1,1 +1,17 @@
+
+# Filtro: Efectos Adversos Procedimientos Quirúrgicos
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro para la búsqueda de efectos adversos en procedimientos quirúrgicos, modificado del trabajo de Golder et al.
+# Referencia completa: Golder, Su, Guy Peryer, and Yoon K. Loke. Overview: comprehensive and carefully constructed strategies are required when conducting searches for adverse effects data. Journal of clinical epidemiology 113 (2019): 36-43.
+# URL: https://www.jclinepi.com/article/S0895-4356(18)31128-4/fulltext
+
 (complication*[tiab] OR ae[sh] OR safe*[tiab] OR co[sh] OR "postoperative complications"[Mh:NoExp])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Modificado de: Golder S, et al. J Clin Epidemiol 2019;113:36-43"
+  }
+}
+
