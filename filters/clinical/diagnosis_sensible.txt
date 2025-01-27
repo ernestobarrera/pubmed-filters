@@ -12,14 +12,12 @@
   "validation": {
     "metrics": {
       "sensitive": {
-        "sensitivity": 92,
-        "specificity": 73,
-        "precision": 9
+        "sensitivity": 98,
+        "specificity": 74
       },
       "specific": {
         "sensitivity": 64,
-        "specificity": 98,
-        "precision": 40
+        "specificity": 98
       }
     },
     "reference": "Haynes RB, et al. JAMIA 1994;1:447-458"
