@@ -1,4 +1,4 @@
-# Filtro: Diagnosis/Narrow
+# Filtro: Diagnosis/Broad
 # Autor revisión: @ernestobarrera
 # Fecha: 03-09-2022
 # Descripción: Clinical Query de PubMed para búsquedas diagnósticas de alta especificidad
