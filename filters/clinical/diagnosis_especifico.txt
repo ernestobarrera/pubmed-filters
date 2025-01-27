@@ -1,1 +1,20 @@
+
+# Filtro: Diagnosis/Narrow
+# Autor revisión: @ernestobarrera
+# Fecha: 27-01-2025
+# Descripción: Clinical Query de PubMed para búsquedas diagnósticas de alta especificidad
+ #Referencia completa: Haynes RB, Wilczynski N, McKibbon KA, Walker CJ, Sinclair JC. Developing optimal search strategies for detecting clinically sound studies in MEDLINE. J Am Med Inform Assoc 1994;1:447-458.
+# URL: https://pubmed.ncbi.nlm.nih.gov/7850570/
+
 (Diagnosis/Narrow[filter])
+
+@@@FILTER_METADATA@@@
+{
+"validation": {
+"metrics": {
+"sensitivity": 64,
+"specificity": 98
+},
+"reference": "Haynes RB, et al. JAMIA 1994;1:447-458"
+}
+}
