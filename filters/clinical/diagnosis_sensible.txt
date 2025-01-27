@@ -1,4 +1,4 @@
-# Filtro: Diagnosis/Broad
+# Filtro: Diagnosis/Sensitive
 # Autor revisión: @ernestobarrera
 # Fecha: 03-09-2022
 # Descripción: Clinical Query de PubMed para búsquedas diagnósticas de alta especificidad
@@ -9,17 +9,19 @@
 
 @@@FILTER_METADATA@@@
 {
-"validation": {
-"metrics": {
-"sensitive": {
-"sensitivity": 98,
-"specificity": 74
-},
-"specific": {
-"sensitivity": 64,
-"specificity": 98
-}
-},
-"reference": "Haynes RB, et al. JAMIA 1994;1:447-458"
-}
+  "validation": {
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 92,
+        "specificity": 73,
+        "precision": 9
+      },
+      "specific": {
+        "sensitivity": 64,
+        "specificity": 98,
+        "precision": 40
+      }
+    },
+    "reference": "Haynes RB, et al. JAMIA 1994;1:447-458"
+  }
 }
