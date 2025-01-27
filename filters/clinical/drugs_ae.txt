@@ -12,11 +12,9 @@
   "validation": {
     "metrics": {
      "sensitivity": 90,
-     "specificity": 90
-
+     "specificity": 90,
+     "precision": 8.0
     },
     "reference": "Golder S, Su H, Peryer G, Loke YK. Journal of Clinical Epidemiology 2019;113:36-43."
   }
 }
-
-
