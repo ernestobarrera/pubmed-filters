@@ -14,12 +14,14 @@
       "specific": {
         "sensitivity": 75.3,
         "specificity": 94.8,
-        "precision": 94.0
+        "precision": 94.0,
+         "NNR":2.8
       },
       "sensitive": {
         "sensitivity": 100.0,
         "specificity": 79.4,
-        "precision": 80.3
+        "precision": 80.3,
+        "NNR": 5.5
       }
     },
     "reference": "Tummers M, et al. Optimal search strategies for identifying moderators and predictors of treatment effects in PubMed. Health Inf Libr J. 2019;36(4):318-40."
