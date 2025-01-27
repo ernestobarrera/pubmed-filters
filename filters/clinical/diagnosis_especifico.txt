@@ -12,8 +12,8 @@
 "validation": {
 "metrics": {
 "sensitive": {
-"sensitivity": 92,
-"specificity": 73
+"sensitivity": 98,
+"specificity": 74
 },
 "specific": {
 "sensitivity": 64,
