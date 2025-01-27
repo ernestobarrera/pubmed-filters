@@ -1,0 +1,22 @@
+# Filtro: Clinical Examination RP Filter
+# Autor revisión: @ernestobarrera  
+# Fecha: 27-01-2025
+# Descripción: Filtro desarrollado mediante particionamiento recursivo para la búsqueda de estudios sobre examinación clínica
+# Referencia completa: Shaikh N, Badgett RG, Pi M, Wilczynski NL, McKibbon KA, Ketchum AM, Haynes RB. Development and Validation of Filters for the Retrieval of Studies of Clinical Examination From Medline. J Med Internet Res 2011;13(4):e82
+# URL: https://www.jmir.org/2011/4/e82/
+
+(Diagnosis[tw] AND (specific*[tw] OR clinical*[tw] OR exam*[tw])) OR "sensitivity and specificity"[MESH]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 89.0,
+      "specificity": null,
+      "precision": 26.0,
+      "NNR":380
+    },
+    "reference":  "Shaikh N, et al. J Med Internet Res 2011;13(4):e82"
+  }
+}
+
