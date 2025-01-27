@@ -1,3 +1,5 @@
+Actualizaré la documentación con todos los nuevos elementos que hemos discutido:
+
 # Documentación de Filtros PubMed
 
 ## Estructura del Archivo
@@ -7,12 +9,12 @@ Cada archivo de filtro debe seguir una estructura específica con dos partes pri
 ### 1. Cabecera de Documentación
 
 ```plaintext
-# Filtro: Nombre del filtro
-# Autor: @ernestob
+# Filtro: [NOMBRE DEL FILTRO]
+# Autor revisión: @ernestobarrera
 # Fecha: DD-MM-YYYY
-# Descripción: Descripción clara y concisa
-# Referencia completa: Referencia bibliográfica completa
-# URL: URL de la referencia (si existe)
+# Descripción: [DESCRIPCIÓN BREVE DEL FILTRO Y SU PROPÓSITO]
+# Referencia completa: [REFERENCIA BIBLIOGRÁFICA COMPLETA INCLUYENDO MODIFICACIONES SI LAS HAY]
+# URL: [URL DE LA REFERENCIA SI EXISTE]
 ```
 
 #### Normas para la Cabecera:
@@ -24,89 +26,143 @@ Cada archivo de filtro debe seguir una estructura específica con dos partes pri
 
 ### 2. Filtro y Metadata
 
+Existen tres plantillas principales según el tipo de filtro:
+
+#### 2.1 Filtro Simple con Métricas:
+
 ```plaintext
 [CONTENIDO DEL FILTRO]
 
 @@@FILTER_METADATA@@@
 {
   "validation": {
-    "reference": "Autor et al, título abreviado. Año"
+    "metrics": {
+      "sensitivity": 00.0,
+      "specificity": 00.0,
+      "precision": 00.0
+    },
+    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
   }
 }
 ```
 
-#### Normas para el Metadata:
-
-- Mantener una línea en blanco antes de `@@@FILTER_METADATA@@@`
-- La referencia en el tooltip debe ser breve y legible
-- Formato: "Autor et al, título abreviado. Año"
-
-## Guía de Estilo
-
-### Para la Descripción:
-
-- Ser conciso pero informativo
-- Mencionar el tipo de contenido que recupera
-- Incluir términos clave o acrónimos relevantes
-
-### Para las Referencias:
-
-- **Completa** (en cabecera): Incluir todos los detalles bibliográficos
-- **Abreviada** (en metadata): Mantener solo lo esencial para identificación
-
-## Ejemplos
-
-### Ejemplo Bien Estructurado:
+#### 2.2 Filtro con Versiones Sensible/Específica:
 
 ```plaintext
-# Filtro: Medicina Basada en la evidencia
-# Autor: @ernestob
-# Fecha: 03-09-2022
-# Descripción: Búsqueda de artículos y recursos sobre MBE incluyendo journal clubs
-# Referencia completa: Rohwer A, et al. E-learning of EBHC... (2017)
-# URL: https://doi.org/...
-
 [CONTENIDO DEL FILTRO]
 
 @@@FILTER_METADATA@@@
 {
   "validation": {
-    "reference": "Rohwer A, et al. E-learning of EBHC. 2017"
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 00.0,
+        "specificity": 00.0,
+        "precision": 00.0
+      },
+      "specific": {
+        "sensitivity": 00.0,
+        "specificity": 00.0,
+        "precision": 00.0
+      }
+    },
+    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
   }
 }
 ```
 
-## Mantenimiento
+#### 2.3 Filtro Sin Métricas:
+
+```plaintext
+[CONTENIDO DEL FILTRO]
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "[AUTOR ET AL, TÍTULO ABREVIADO. AÑO]"
+  }
+}
+```
+
+## Gestión de Tooltips
+
+### Función de Formateo:
+
+```javascript
+function formatTooltipContent(metadata) {
+  const parts = [];
+
+  if (metadata.validation?.metrics) {
+    // Para filtros con versión única
+    if ("sensitivity" in metadata.validation.metrics) {
+      parts.push(`S: ${metadata.validation.metrics.sensitivity}%`);
+      parts.push(`E: ${metadata.validation.metrics.specificity}%`);
+      if ("precision" in metadata.validation.metrics) {
+        parts.push(`P: ${metadata.validation.metrics.precision}%`);
+      }
+    }
+    // Para filtros con versiones sensible/específica
+    else if ("sensitive" in metadata.validation.metrics) {
+      parts.push("Versión Sensible:");
+      parts.push(`S: ${metadata.validation.metrics.sensitive.sensitivity}%`);
+      parts.push(`E: ${metadata.validation.metrics.sensitive.specificity}%`);
+      if ("precision" in metadata.validation.metrics.sensitive) {
+        parts.push(`P: ${metadata.validation.metrics.sensitive.precision}%`);
+      }
+      parts.push("\nVersión Específica:");
+      parts.push(`S: ${metadata.validation.metrics.specific.sensitivity}%`);
+      parts.push(`E: ${metadata.validation.metrics.specific.specificity}%`);
+      if ("precision" in metadata.validation.metrics.specific) {
+        parts.push(`P: ${metadata.validation.metrics.specific.precision}%`);
+      }
+    }
+  }
+
+  if (metadata.validation?.reference) {
+    parts.push(`\nFuente: ${metadata.validation.reference}`);
+  }
+
+  return parts.join(" | ");
+}
+```
+
+### Consideraciones para Tooltips:
+
+- Usar el operador `?.` para acceso seguro a propiedades
+- Verificar existencia de propiedades con `'propiedad' in objeto`
+- Manejar correctamente casos sin métricas
+- Mantener formato consistente en la salida
+
+## Mantenimiento y Actualización
 
 ### Al Crear Nuevos Filtros:
 
-1. Usar la plantilla base
-2. Verificar la sintaxis del filtro
-3. Comprobar que el JSON del metadata es válido
+1. Identificar el tipo de filtro (simple, doble o sin métricas)
+2. Usar la plantilla correspondiente
+3. Verificar formato JSON del metadata
+4. Comprobar funcionamiento del tooltip
 
 ### Al Actualizar Filtros:
 
-1. Actualizar la fecha
-2. Documentar modificaciones en la referencia completa
-3. Mantener la brevedad en la referencia del tooltip
-
-## Consejos Adicionales
-
-- Mantener consistencia en el formato
-- Verificar que el tooltip funciona correctamente
-- Documentar cualquier modificación al filtro original
-- Mantener las referencias actualizadas
+1. Mantener consistencia en el formato de fecha
+2. Documentar modificaciones en la referencia
+3. Actualizar métricas si es necesario
+4. Verificar funcionamiento del tooltip
 
 ## Resolución de Problemas
 
-### Si el Tooltip No Funciona:
-
-1. Verificar formato JSON del metadata
-2. Comprobar que existe una línea en blanco antes de `@@@FILTER_METADATA@@@`
-3. Verificar que la referencia está correctamente formateada
-
 ### Errores Comunes:
 
-- Falta de línea en blanco antes del metadata
-- JSON mal formateado
-- Referencias demasiado largas en el tooltip
+1. JSON mal formateado en metadata
+2. Acceso incorrecto a propiedades anidadas
+3. Falta de manejo de casos opcionales
+4. Referencias demasiado extensas en tooltips
+
+### Verificación:
+
+1. Validar JSON del metadata
+2. Comprobar existencia de línea en blanco antes de metadata
+3. Verificar formato de métricas según tipo de filtro
+4. Probar visualización del tooltip
+
+¿Quieres que prepare el prompt para futura referencia?
