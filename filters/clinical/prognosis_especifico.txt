@@ -1,1 +1,26 @@
+# Filtro: Prognosis/Narrow
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Clinical Query de PubMed para búsquedas pronósticas de alta especificidad
+# Referencia completa: Haynes RB, Wilczynski N, McKibbon KA, Walker CJ, Sinclair JC. Developing optimal search strategies for detecting clinically sound studies in MEDLINE. J Am Med Inform Assoc 1994;1:447-458.
+# URL: https://pubmed.ncbi.nlm.nih.gov/7850570/
+# URL2 (métricas): https://pubmed.ncbi.nlm.nih.gov/help/#clinical-study-category-filters
+
 (Prognosis/Narrow[filter])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 90,
+        "specificity": 80
+      },
+      "specific": {
+        "sensitivity": 52,
+        "specificity": 94
+      }
+    },
+    "reference": "Haynes RB, et al. JAMIA 1994;1:447-458"
+  }
+}
