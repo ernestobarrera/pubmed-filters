@@ -1,1 +1,27 @@
+# Filtro: Predictores de Tratamiento
+# Autor revisión: @ernestobarrera
+# Fecha: 03/09/2022
+# Descripción: Filtro para identificar estudios sobre predictores de tratamiento con versiones sensible y específica
+# Referencia completa: Tummers M, van Hoorn R, Levering C, Booth A, van der Wilt GJ, Kievit W. Optimal search strategies for identifying moderators and predictors of treatment effects in PubMed. Health Information & Libraries Journal. 2019 Dec;36(4):318-40.
+# URL: https://onlinelibrary.wiley.com/doi/10.1111/hir.12230
+
 ((‘Epidemiologic Methods’[mh]|assign*|control*[tiab]|trial*[tiab]) AND therapy[sh])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "specific": {
+        "sensitivity": 75.3,
+        "specificity": 94.8,
+        "precision": 94.0
+      },
+      "sensitive": {
+        "sensitivity": 100.0,
+        "specificity": 79.4,
+        "precision": 80.3
+      }
+    },
+    "reference": "Tummers M, et al. Optimal search strategies for identifying moderators and predictors of treatment effects in PubMed. Health Inf Libr J. 2019;36(4):318-40."
+  }
+}
