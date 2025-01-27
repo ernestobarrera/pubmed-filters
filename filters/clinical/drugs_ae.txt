@@ -1,4 +1,4 @@
-# Filtro: Efectos adversos Medicamentos v.1  
+# Filtro: Efectos adversos Medicamentos v1  
 # Autor revisión: @ernestobarrera  
 # Fecha: 03-09-2022  
 # Descripción: Filtro modificado para búsqueda de efectos adversos de medicamentos  
