@@ -1,1 +1,23 @@
+
+# Filtro: Estudios Cualitativos v.1.
+# Autor revisión: @ernestobarrera
+# Fecha: 30-01-2025
+# Descripción: Filtro basado en la Universidad de Texas (UTHealth) para la búsqueda de estudios cualitativos en PubMed.
+# Referencia completa: UTHealth [University of Texas Health Science Center at Houston]. Search Filters for Various Databases. Last Updated: 1.10.2014. Houston, US-TX: UTHealth.
+# URL: https://libguides.sph.uth.tmc.edu/search_filters/pubmed_filters
+# Fuente de validación: Wagner, M., Rosumeck, S., Küffmeier, C., Döring, K., & Euler, U. (2020). A validation study revealed differences in design and performance of MEDLINE search filters for qualitative research. Journal of Clinical Epidemiology, 120, 17-24.
+
 (“interviews as topic”[Mesh:noexp] OR “focus groups”[Mesh:noexp] OR narration[Mesh:noexp] OR qualitative research[Mesh:noexp] OR (((“semi-structured”[TIAB] OR semistructured[TIAB] OR unstructured[TIAB] OR structured[TIAB] OR informal[TIAB] OR “in-depth”[TIAB] OR indepth[TIAB] OR “face-to-face”[TIAB] OR guide[TIAB] OR guides[TIAB]) AND (interview*[TIAB] OR discussion*[TIAB] OR questionnaire*[TIAB])) OR (“focus group”[TIAB] OR “focus groups”[TIAB] OR qualitative[TIAB] OR ethnograph*[TIAB] OR fieldwork[TIAB] OR “field work”[TIAB] OR “key informant”[TIAB])))
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 81.96,
+     "specificity": null,
+      "precision": 0.80
+    },
+     "reference": "Wagner M, et al. J Clin Epidemiol 2020;120:17-24"
+  }
+}
