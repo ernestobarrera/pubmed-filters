@@ -9,7 +9,9 @@
 @@@FILTER_METADATA@@@
 {
   "validation": {
-   
     "reference": "Elaboración propia por Ernesto Barrera"
+
   }
 }
+
+
