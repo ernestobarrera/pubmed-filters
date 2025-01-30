@@ -1,1 +1,18 @@
+# Filtro: Evaluaciones Económicas (s,e) v.1.
+# Autor revisión: @ernestobarrera
+# Fecha: 003-09-2022
+# Descripción: Filtro para la búsqueda de estudios sobre evaluaciones económicas en PubMed con versiones sensible y específica.
+# Referencia completa: CADTH's Database Search Filters. Sin fecha de actualización. Consultado el 9 de noviembre. Revisado por ISSG Search Filter Resource 
+# URL: https://cadth.ca/strings-attached-cadths-database-search-filters
+# URL2 (revisión): https://sites.google.com/a/york.ac.uk/issg-search-filters-resource/home/economic-evaluations
+
 ("Economics"[mh:noexp]|"Costs and Cost Analysis"[mh]|"Economics, Nursing"[mh]|"Economics, Medical"[mh]|"Economics, Pharmaceutical"[mh]|"Economics, Hospital"[mh]|"Economics, Dental"[mh]|"Fees and Charges"[mh]|"Budgets"[mh]|budget*[tiab]|economic*[tiab]|cost[tiab]|costs[tiab]|costly[tiab]|costing[tiab]|price[tiab]|prices[tiab]|pricing[tiab]|pharmacoeconomic*[tiab]|pharmaco-economic*[tiab]|expenditure[tiab]|expenditures[tiab]|expense[tiab]|expenses[tiab]|financial[tiab]|finance[tiab]|finances[tiab]|financed[tiab]|value for money[tiab]|monetary value*[tiab]|"models, economic"[mh]|economic model*[tiab]|"markov chains"[mh]|markov[tiab]|"monte carlo method"[mh]|monte carlo[tiab]|"Decision Theory"[mh]|decision tree*[tiab]|decision analy*[tiab]|decision model*[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+        "reference": "CADTH Database, ISSG York"
+  }
+}
+
+
