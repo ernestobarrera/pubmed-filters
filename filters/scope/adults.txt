@@ -1,1 +1,15 @@
+# Filtro: Estudios en Personas Adultas v.1.
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro basado en la University Library Vrije Universiteit Amsterdam para la búsqueda de estudios en personas adultas en PubMed.
+# Referencia completa: University Library Vrije Universiteit Amsterdam.
+# URL: https://blocks.bmi-online.nl/catalog/4
+
 NOT (("Adolescent"[mh]|"Child"[mh]|"Infant"[mh]|adolescen*[tiab]|child*[tiab]|schoolchild*[tiab]|infant*[tiab]|girl*[tiab]|boy[tiab]|boys[tiab] OR boyhood[tiab]|teen[tiab]|teens[tiab]|teenager*[tiab]|youth*[tiab]|pediatr*[tiab]|paediatr*[tiab]|puber*[tiab]) NOT ("Adult"[mh]|adult*[tiab]|man[tiab]|men[tiab]|woman[tiab]|women[tiab]))
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "University Library Vrije Universiteit Amsterdam"
+  }
+}

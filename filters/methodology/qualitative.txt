@@ -1,7 +1,7 @@
 
 # Filtro: Estudios Cualitativos v.1.
 # Autor revisión: @ernestobarrera
-# Fecha: 30-01-2025
+# Fecha: 03-09-2022
 # Descripción: Filtro basado en la Universidad de Texas (UTHealth) para la búsqueda de estudios cualitativos en PubMed.
 # Referencia completa: UTHealth [University of Texas Health Science Center at Houston]. Search Filters for Various Databases. Last Updated: 1.10.2014. Houston, US-TX: UTHealth.
 # URL: https://libguides.sph.uth.tmc.edu/search_filters/pubmed_filters
