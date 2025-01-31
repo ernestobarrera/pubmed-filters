@@ -8,11 +8,10 @@
 
 ("network meta-analysis"[mh]) OR ("meta-analysis as topic"[mh] AND network[tiab]) OR ("indirect comparison"[tiab] OR "indirect treatment"[tiab] OR "mixed treatment"[tiab] OR Bayesian[tiab]) OR (network*[tiab] AND ("meta-analy*"[tiab] OR metaanaly*[tiab])) OR ((multi[tiab] OR multiple[tiab]) AND treatment[tiab] AND comparison*[tiab]) OR (mixed[tiab] AND treatment[tiab] AND ("meta-analy*"[tiab] OR metaanaly*[tiab])) OR ("umbrella review*"[tiab] OR nma[tiab]) OR ((Multi[tiab] OR multiple[tiab]) AND paramet*[tiab] AND evidence[tiab] AND synthesis[tiab]) OR (Multiparamet*[tiab] AND evidence[tiab] AND synthesis[tiab]) OR ("multi-paramet*"[tiab] AND evidence[tiab] AND synthesis[tiab]) OR (MPES[tiab])
 
-
 @@@FILTER_METADATA@@@
 {
   "validation": {
       "reference": "Canada's Drug Agency Search Filters Database"
-  },
+  }
 
 }
