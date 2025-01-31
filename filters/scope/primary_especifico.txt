@@ -1,1 +1,27 @@
+# Filtro: Atención Primaria
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro validado para identificar artículos de medicina familiar/atención primaria con dos versiones: una de alta especificidad y otra de alta sensibilidad
+# Referencia completa: Pols, D. H., Bramer, W. M., Bindels, P. J., van de Laar, F. A., & Bohnen, A. M. (2015). Development and validation of search filters to identify articles on family medicine in online medical databases. The Annals of Family Medicine, 13(4), 364-366.
+# URL: https://www.annfammed.org/content/13/4/364
+
 ("Primary Health Care"[mh]|"primary care"[ALL]|"Physicians, Family"[mh]|general pract*[ALL]|"family"[ad]|family pract*[ALL]|family physician*[tw])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "specific": {
+        "sensitivity": 90.3,
+        "specificity": 97.4,
+        "precision": null
+      },
+      "sensitive": {
+        "sensitivity": 96.8,
+        "specificity": 74.9,
+        "precision": 5.0
+      }
+    },
+    "reference": "Pols DH, et al. The Annals of Family Medicine 2015"
+  }
+}

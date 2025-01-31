@@ -1,1 +1,22 @@
-(((Patient Participation[Mesh]|consumer participation[Mesh]|Professional-Patient Relations[Mesh]|Patient-Centered Care[Mesh]|Patient Preference[Mesh]|Patient Satisfaction[Majr]|Patient Education as Topic[Mesh]|Attitude to Health[Mesh]|Attitude to Death[Mesh]|Patient Acceptance of Health Care[Mesh]|Health Knowledge, Attitudes, Practice[Mesh]|Focus Groups[Mesh]|Quality of Life[Majr]|Self Care[mh:noexp]|Self Concept[Mesh]|Self-examination[Mesh]|Cooperative Behavior[Mesh]|Adaptation, Psychological[Mesh]|Decision Support Techniques[Mesh]|Self-Help Groups[Mesh]|Community Networks[Mesh]|Emotions[Mesh]|Consumer Satisfaction[Mesh]|Needs Assessment[Mesh]|Personal Autonomy[Mesh]|Patient Advocacy[Mesh]|Life Change Events[Mesh])|(patient perspective*[tiab]|patient\'s perspective*[tiab]|patient desire*[tiab]|patient\'s desire*[tiab]|"patient\'s desires"[tiab]|patient view*[tiab]|patient\'s view\*[tiab]|patient expression*[tiab]|patient\'s expression*[tiab]|patient attitude*[tiab]|patient\'s attitude*[tiab]|patient involvement*[tiab]|patient\'s involvement*[tiab]|patient decision*[tiab]|patient\'s decision*[tiab]|patient activation[tiab]|patient\'s activation[tiab]|patients activation[tiab]|patient empowerment[tiab]|patient participation[tiab]|patient\'s participation[tiab]|patients participation[tiab]|patient collaboration[tiab]|patient\'s collaboration[tiab]|patients collaboration[tiab]|expert patient*[tiab]|consumer participation[tiab]|consumer perspective[tiab]|consumers perspective[tiab]|consumer\'s perspective[tiab]|consumer involvement[tiab]|patient-focused[tiab]|patient-centred[tiab]|patient-centered[tiab]|patient needs[tiab]|self-management[ti]|self-perception[tiab])|(Patients[Majr] AND (Communication[MeSH Terms]|Decision Making[Mesh]))))
+# Filtro: Pacientes (Knowledge, Views & Values)
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro validado para identificar literatura existente sobre conocimientos, puntos de vista y valores de los pacientes
+# Referencia completa: Wessels, Monique (10/2016). "How to identify existing literature on patients' knowledge, views, and values: the development of a validated search filter." Journal of the Medical Library Association, 104(4), p. 320.
+# URL: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5079497/
+
+
+(((Patient Participation[Mesh] OR consumer participation[Mesh] OR Professional-Patient Relations[Mesh] OR Patient-Centered Care[Mesh] OR Patient Preference[Mesh] OR Patient Satisfaction[Majr] OR Patient Education as Topic[Mesh] OR Attitude to Health[Mesh] OR Attitude to Death[Mesh] OR Patient Acceptance of Health Care[Mesh] OR Health Knowledge, Attitudes, Practice[Mesh] OR Focus Groups[Mesh] OR Quality of Life[Majr] OR Self Care[mh:noexp] OR Self Concept[Mesh] OR Self-examination[Mesh] OR Cooperative Behavior[Mesh] OR Adaptation, Psychological[Mesh] OR Decision Support Techniques[Mesh] OR Self-Help Groups[Mesh] OR Community Networks[Mesh] OR Emotions[Mesh] OR Consumer Satisfaction[Mesh] OR Needs Assessment[Mesh] OR Personal Autonomy[Mesh] OR Patient Advocacy[Mesh] OR Life Change Events[Mesh])) OR (patient perspective* [tiab] OR patient's perspective* [tiab] OR patient desire* [tiab] OR patient's desire* [tiab] OR "patient's desires" [tiab] OR patient view* [tiab] OR patient's view* [tiab] OR patient expression* [tiab] OR patient's expression* [tiab] OR patient attitude* [tiab] OR patient's attitude* [tiab] OR patient involvement* [tiab] OR patient's involvement* [tiab] OR patient decision* [tiab] OR patient's decision* [tiab] OR patient activation[tiab] OR patient's activation[tiab] OR patients activation[tiab] OR patient empowerment[tiab] OR patient participation[tiab] OR patient's participation[tiab] OR patients participation[tiab] OR patient collaboration[tiab] OR patient's collaboration[tiab] OR patients collaboration[tiab] OR expert patient* [tiab] OR consumer participation[tiab] OR consumer perspective[tiab] OR consumers perspective[tiab] OR consumer's perspective[tiab] OR consumer involvement[tiab] OR patient-focused[tiab] OR patient-centred[tiab] OR patient-centered[tiab] OR patient needs[tiab] OR self-management[ti] OR self-perception[tiab]) OR (Patients[Majr] AND (Communication[MeSH Terms] OR Decision Making[Mesh])))
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 90.1,
+      "specificity": 98.8,
+      "precision": 79.3
+    },
+    "reference": "Wessels M, et al. How to identify existing literature on patients' knowledge, views, and values: the development of a validated search filter. J Med Libr Assoc. 2016;104(4):320-324."
+  }
+}
