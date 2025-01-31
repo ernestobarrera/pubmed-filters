@@ -1,0 +1,16 @@
+# Filtro: NNT-NNH (Números Necesarios a Tratar/Dañar)
+# Autor revisión: @ernestobarrera
+# Fecha: 31-01-2025
+# Descripción: Filtro para identificar estudios que reporten NNT, NNH y medidas relacionadas de impacto absoluto
+# Validación: Sin métricas - Elaboración propia
+
+
+("Numbers Needed To Treat"[Mesh] OR "number* needed to treat*"[tiab] OR "number* needed to harm*"[tiab] OR "number* needed to prevent*"[tiab] OR "number* needed to screen*"[tiab] OR "number* needed to vaccinate*"[tiab] OR NNT[tiab] OR NNTB[tiab] OR NNTH[tiab] OR NNH[tiab] OR NNTV[tiab] OR NNTP[tiab] OR ((ARR[tw] OR "absolute risk reduction*"[tw] OR "risk reduction, absolute"[tw] OR "absolute risk difference*"[tw] OR "absolute benefit*"[tw]) NOT "antibody response ratio"[tw] NOT "respiratory arsenate reductase"[tw]) OR (("patient harm*"[tiab] OR "clinical harm*"[tiab] OR "therapeutic harm*"[tiab]) AND (number*[tiab] OR calculat*[tiab]))) NOT ("nicotinamide nucleotide transhydrogenase"[tw] OR "aldosterone renin ratio"[tw] OR "Aldosterone-Renin Ratio"[tiab] OR "chromosomal microarray"[tw] OR Mutation[tw] OR "adjusted relative risk"[tiab] OR "Adjusted rate ratio"[tiab] OR "age related resistance"[tiab] OR "chromosomal analysis"[tw] OR "Infrared spectroscopy"[tw] OR "arr-like"[tiab] OR "arr-cb"[tiab] OR "array"[tiab] OR "arrays"[tiab] OR "annual rate ratio"[tiab] OR "area under curve"[tiab] OR receptor[tiab] OR "Non-nutritive sucking"[tiab] OR "non nutritive sucking"[tiab] OR "neural network system*"[tiab] OR "nervous system"[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Filtro desarrollado para capturar estudios que reporten medidas de impacto absoluto"
+  }
+}
+
