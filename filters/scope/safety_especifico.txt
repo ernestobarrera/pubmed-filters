@@ -1,1 +1,29 @@
+# Filtro: Seguridad Paciente
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro validado para identificar artículos sobre seguridad del paciente con tres versiones: alta especificidad (P2), equilibrada (SP1) y alta sensibilidad (S2)
+# Referencia completa: Tanon AA, Champagne F, Contandriopoulos AP, Pomey MP, Vadeboncoeur A, Nguyen H. Patient safety and systematic reviews: finding papers indexed in MEDLINE, EMBASE and CINAHL. BMJ Quality & Safety. 2010 Oct 1;19(5):452-61.
+# URL: https://doi.org/10.1136/qshc.2008.031401
+
 (("Medical Errors"[Majr] OR "Safety Management"[Majr:NoExp]) AND (patient*[tiab]))
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "specific": {
+        "sensitivity": 68.67,
+        "specificity": 96.8,
+        "precision": null
+      },
+      
+      "sensitive": {
+        "sensitivity": 98.8,
+        "specificity": 88.17,
+        "precision": null
+      }
+    },
+    "reference": "Tanon AA,et al. Quality & Safety. 2010"
+  }
+}
