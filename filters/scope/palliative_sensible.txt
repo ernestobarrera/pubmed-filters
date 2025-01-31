@@ -1,1 +1,28 @@
+# Filtro: Cuidados Paliativos (s,e) v.1.
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro basado en la estrategia de búsqueda validada por Rietjens et al. para recuperar estudios sobre cuidados paliativos en PubMed, con versiones sensible y específica.
+# Referencia completa: Rietjens JA, Bramer WM, Geijteman EC, van der Heide A, Oldenmenger WH. Development and validation of search filters to find articles on palliative care in bibliographic databases. Palliat Med. 2019;33(4):470-474.
+# URL: https://pmc.ncbi.nlm.nih.gov/articles/PMC6439930/
+
 (“Terminal Care”[mh] OR caregiver*[tw] OR bereave* OR inpatient[tiab] OR “attitude to death”[tw] OR “end of life” OR hospice* OR “terminally ill”[tw] OR palliative*[tw] OR “Advance Care” OR palliat OR advanced OR (morphine AND cancer) OR “cancer pain”)
+
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitive": {
+        "sensitivity": 99.6,
+        "specificity": 92.5,
+        "precision": 5.0
+      },
+      "specific": {
+        "sensitivity": 93.7,
+        "specificity": 97.4,
+        "precision": 45.0
+      }
+    },
+    "reference": "Rietjens JA, et al. Palliat Med. 2019;33(4):470-474"
+  }
+}

@@ -1,1 +1,23 @@
+# Filtro: Pediatría
+# Autor revisión: @ernestobarrera
+# Fecha: 03-09-2022
+# Descripción: Filtro de alta especificidad para identificar estudios pediátricos en PubMed
+# Referencia completa: Leclercq, E., Leeflang, M. M., van Dalen, E. C., & Kremer, L. C. (2013). Validation of search filters for identifying pediatric studies in PubMed. The journal of pediatrics, 162(3), 629-634.
+# URL: https://doi.org/10.1016/j.jpeds.2012.09.012
+
 (Infan*|newborn*|new-born*|perinat*|neonat*|baby*|babies|toddler*|minors|minors*|boy|boys|boyfriend|boyhood|girl*|kid|kids|child|child*|children*|schoolchild*|school child[tiab]|school child*[tiab]|adolescen*|juvenil*|youth*|teen*|under*age*|pubescen*|pediatrics[mh]|pediatric*|paediatric*|peadiatric*|school[tiab]|school*[tiab]|prematur*|preterm*)
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "metrics": {
+      "sensitivity": 99.5,
+      "specificity": 28.1,
+      "precision": 69.0
+    },
+    "reference": "Leclercq et al. (2013)",
+    "additional_metrics": {
+      "nnr": 1.45
+    }
+  }
+}
