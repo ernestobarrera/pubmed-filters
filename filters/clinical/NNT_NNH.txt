@@ -9,7 +9,7 @@
 @@@FILTER_METADATA@@@
 {
   "validation": {
-    "reference": "Filtro para identificar estudios que reporten NNT, NNH y medidas relacionadas de impacto absoluto. Elaboración propia por Ernesto Barrera"
+    "reference": "Elaboración propia por Ernesto Barrera"
 
   }
 }
