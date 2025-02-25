@@ -4,7 +4,7 @@
 # Descripción: Filtro para la búsqueda de estudios sobre IA generativa en PubMed con versiones sensible y específica.
 # Referencia completa: Elaboración Propia 
 
-("ChatGPT"[TIAB] OR "Large Language Model*"[TIAB] OR "Generative Artificial Intelligence"[TIAB] OR "Claude"[TIAB] OR "Gemini"[TIAB] OR "Perplexity"[TIAB] OR "Anthropic"[TIAB] OR "Bard"[TIAB] OR "Transformer"[TIAB] OR "Attention Mechanism"[TIAB] OR  "Pretrained Transformer"[TIAB] OR "Self-Attention"[TIAB] OR "Embeddings"[TIAB] OR "Deepseek"[TIAB] OR "Generative Artificial Intelligence"[Mesh] OR "Natural Language Processing"[Mesh]) 
+( "ChatGPT"[TIAB] OR "Claude"[TIAB] OR "Gemini"[TIAB] OR "Perplexity"[TIAB] OR "Anthropic"[TIAB] OR "Bard"[TIAB] OR "Deepseek"[TIAB] OR "Google NotebookLM"[TIAB] OR ("Llama"[TIAB] AND "AI"[TIAB]) OR ("Llama 2"[TIAB] AND "AI"[TIAB]) OR ("Mistral"[TIAB] AND "AI"[TIAB]) OR ("Mixtral"[TIAB] AND "AI"[TIAB])  OR "Grok"[TIAB]  OR "SenseNova"[TIAB] OR "GitHub Copilot"[TIAB] OR "Microsoft Copilot"[TIAB] OR "Large Language Model*"[TIAB] OR "Generative Artificial Intelligence"[TIAB] OR "Transformer"[TIAB] OR "Attention Mechanism"[TIAB] OR "Pretrained Transformer"[TIAB] OR "pre-trained transformer*"[TIAB] OR "Self-Attention"[TIAB] OR "Embeddings"[TIAB] OR "Generative Artificial Intelligence"[Mesh] OR "Natural Language Processing"[Mesh] )
 
 @@@FILTER_METADATA@@@
 {
