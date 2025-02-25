@@ -4,7 +4,7 @@
 [![Licencia](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 [![Issues](https://img.shields.io/github/issues/ernestobarrera/pubmed-filters)](https://github.com/ernestobarrera/pubmed-filters/issues)
 
-Colección curada de filtros metodológicos para optimizar búsquedas bibliográficas en PubMed. Este repositorio contiene estrategias de búsqueda validadas que se integran con el [Buscador PubMed Avanzado](https://ernestobarrera.github.io/t/pubmed.html).
+Colección curada de filtros metodológicos para optimizar búsquedas bibliográficas en PubMed. Este repositorio contiene estrategias de búsqueda validadas que se integran con el [Buscador PubMed Avanzado](https://ernestobarrera.github.io/buscar-pubmed.html).
 
 ## 📚 Contenido
 

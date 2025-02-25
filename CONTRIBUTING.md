@@ -127,6 +127,6 @@ filters/
 ### Atajos Rápidos
 
 - 🆕 [Nuevo Filtro](../../issues/new?template=nuevo_filtro.md)
-- 🔄 [Modificar Filtro](../../issues/new?template=modificar_filtro.md)
-- ❓ [Consulta](../../issues/new?labels=pregunta)
+- 🔄 [Modificar Filtro](../../issues/new?template=modificacion_filtros.md  )
+- ❓ [Consulta](../../issues/new?template=Blank+issue?labels=pregunta)
 - 📊 [Ver Progreso](../../projects)
