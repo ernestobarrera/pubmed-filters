@@ -1,0 +1,19 @@
+# Filtro: Mortalidad v.1.
+# Autor revisión: @ernestobarrera
+# Fecha: 07-03-2025
+# Descripción: Filtro para recuperar artículos relacionados con mortalidad, supervivencia y causas de muerte utilizando términos MeSH y palabras clave en título y abstract
+# Referencia completa: Elaboración propia basada en descriptores MeSH principales relacionados con mortalidad
+
+(
+    "Mortality"[Mesh] OR "Death"[Mesh] OR "Survival"[Mesh] OR 
+    "Survival Rate"[Mesh] OR "Case Fatality Rate"[Mesh] OR 
+    "Out-of-Hospital Cardiac Arrest"[Mesh] OR "Death Certificates"[Mesh] OR
+    mortality[tiab] OR death[tiab] OR fatality[tiab] OR suicid*[tiab] OR homicid*[tiab] OR murder*[tiab]
+)
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Elaboración propia por Ernesto Barrera"
+  }
+}
