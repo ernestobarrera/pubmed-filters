@@ -6,9 +6,9 @@
 
 (
     "Mortality"[Mesh] OR "Death"[Mesh] OR "Survival"[Mesh] OR 
-    "Survival Rate"[Mesh] OR "Case Fatality Rate"[Mesh] OR 
+    "Survival Rate"[Mesh] OR "Fatal Outcome"[Mesh] OR 
     "Out-of-Hospital Cardiac Arrest"[Mesh] OR "Death Certificates"[Mesh] OR
-    mortality[tiab] OR death[tiab] OR fatality[tiab] OR suicid*[tiab] OR homicid*[tiab] OR murder*[tiab]
+    mortality[tiab] OR death[tiab] OR fatal*[tiab] OR suicid*[tiab] OR homicid*[tiab] OR murder*[tiab]
 )
 
 @@@FILTER_METADATA@@@
