@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_surgery
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Surgery según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Ann Surg[JO]|JAMA Surg[JO]|J Vasc Surg[JO]|Br J Surg[JO]|Surg Endosc[JO]|Ann Surg Oncol[JO]|Obes Surg[JO]|J Am Coll Surg[JO]|Surgery[JO]|J Trauma Acute Care Surg[JO]|Eur J Surg Oncol[JO]|World J Surg[JO]|Int J Surg[JO]|Surg Obes Relat Dis[JO]|Eur J Vasc Endovasc Surg[JO]|HPB (Oxford)[JO]|Am J Surg[JO]|J Surg Oncol[JO]|J Gastrointest Surg[JO]|World J Emerg Surg[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Surgery",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Annals of Surgery",
+    "JAMA Surgery",
+    "Journal of Vascular Surgery",
+    "The British journal of surgery",
+    "Surgical Endoscopy",
+    "Annals of Surgical Oncology",
+    "Obesity Surgery",
+    "Journal of the American College of Surgeons",
+    "Surgery",
+    "The journal of trauma and acute care surgery",
+    "European journal of surgical oncology : the journal of the European Society of Surgical Oncology and the British Association of Surgical Oncology",
+    "World Journal of Surgery",
+    "International journal of surgery (London, England)",
+    "Surgery for obesity and related diseases : official journal of the American Society for Bariatric Surgery",
+    "European journal of vascular and endovascular surgery : the official journal of the European Society for Vascular Surgery",
+    "HPB : the official journal of the International Hepato Pancreato Biliary Association",
+    "American journal of surgery",
+    "Journal of Surgical Oncology",
+    "Journal of gastrointestinal surgery : official journal of the Society for Surgery of the Alimentary Tract",
+    "World journal of emergency surgery : WJES"
+  ]
+}

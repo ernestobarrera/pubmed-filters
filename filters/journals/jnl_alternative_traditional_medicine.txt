@@ -1,0 +1,35 @@
+# Filtro: journals/jnl_alternative_traditional_medicine
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 18 revistas en Alternative & Traditional Medicine según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(BMC Complement Altern Med[JO]|Evid Based Complement Alternat Med[JO]|J Tradit Complement Med[JO]|Complement Ther Med[JO]|Complement Ther Clin Pract[JO]|BMC Complement Med Ther[JO]|J Altern Complement Med[JO]|J Ethnobiol Ethnomed[JO]|Medicines (Basel)[JO]|J Evid Based Complementary Altern Med[JO]|Am J Occup Ther[JO]|Am J Chin Med (Gard City N Y)[JO]|J Integr Med[JO]|Chin J Nat Med[JO]|Chin Med[JO]|J Ayurveda Integr Med[JO]|Integr Med Res[JO]|Acupunct Med[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Alternative & Traditional Medicine",
+  "journalCount": 18,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "BMC Complementary and Alternative Medicine",
+    "Evidence-based complementary and alternative medicine : eCAM",
+    "Journal of Traditional and Complementary Medicine",
+    "Complementary Therapies in Medicine",
+    "Complementary Therapies in Clinical Practice",
+    "BMC Complementary Medicine and Therapies",
+    "Journal of alternative and complementary medicine (New York, N.Y.)",
+    "Journal of Ethnobiology and Ethnomedicine",
+    "Medicines (Basel, Switzerland)",
+    "Journal of Evidence-Based Complementary & Alternative Medicine",
+    "The American journal of occupational therapy : official publication of the American Occupational Therapy Association",
+    "The American Journal of Chinese Medicine",
+    "Journal of Integrative Medicine",
+    "Chinese Journal of Natural Medicines",
+    "Chinese Medicine",
+    "Journal of Ayurveda and Integrative Medicine",
+    "Integrative Medicine Research",
+    "Acupuncture in medicine : journal of the British Medical Acupuncture Society"
+  ]
+}

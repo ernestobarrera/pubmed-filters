@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_otolaryngology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Otolaryngology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Head Neck[JO]|Laryngoscope[JO]|Otolaryngol Head Neck Surg[JO]|Hear Res[JO]|JAMA Otolaryngol Head Neck Surg[JO]|Int Forum Allergy Rhinol[JO]|Ear Hear[JO]|Eur Arch Otorhinolaryngol[JO]|Otol Neurotol[JO]|Int J Pediatr Otorhinolaryngol[JO]|Clin Otolaryngol[JO]|J Laryngol Otol[JO]|Rhinology[JO]|J Otolaryngol Head Neck Surg[JO]|Am J Rhinol Allergy[JO]|Otolaryngol Clin North Am[JO]|Auris Nasus Larynx[JO]|Braz J Otorhinolaryngol[JO]|Laryngoscope Investig Otolaryngol[JO]|Acta Otolaryngol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Otolaryngology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Head & Neck",
+    "The Laryngoscope",
+    "Otolaryngology--head and neck surgery : official journal of American Academy of Otolaryngology-Head and Neck Surgery",
+    "Hearing Research",
+    "JAMA otolaryngology-- head & neck surgery",
+    "International Forum of Allergy & Rhinology",
+    "Ear and Hearing",
+    "European archives of oto-rhino-laryngology : official journal of the European Federation of Oto-Rhino-Laryngological Societies (EUFOS) : affiliated with the German Society for Oto-Rhino-Laryngology - Head and Neck Surgery",
+    "Otology & neurotology : official publication of the American Otological Society, American Neurotology Society [and] European Academy of Otology and Neurotology",
+    "International Journal of Pediatric Otorhinolaryngology",
+    "Clinical otolaryngology : official journal of ENT-UK ; official journal of Netherlands Society for Oto-Rhino-Laryngology & Cervico-Facial Surgery",
+    "The Journal of laryngology and otology",
+    "Rhinology",
+    "Journal of otolaryngology - head & neck surgery = Le Journal d'oto-rhino-laryngologie et de chirurgie cervico-faciale",
+    "American Journal of Rhinology & Allergy",
+    "Otolaryngologic Clinics of North America",
+    "Auris, nasus, larynx",
+    "Brazilian Journal of Otorhinolaryngology",
+    "Laryngoscope Investigative Otolaryngology",
+    "Acta Oto-Laryngologica"
+  ]
+}

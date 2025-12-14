@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_biomedical_technology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Biomedical Technology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Biomaterials[JO]|Acta Biomater[JO]|IEEE Trans Biomed Eng[JO]|Biofabrication[JO]|J Mech Behav Biomed Mater[JO]|ACS Biomater Sci Eng[JO]|J Neural Eng[JO]|Ann Biomed Eng[JO]|IEEE Trans Biomed Circuits Syst[JO]|J Biomed Mater Res A[JO]|J Biomed Mater Res B Appl Biomater[JO]|J Tissue Eng Regen Med[JO]|Bioact Mater[JO]|Tissue Eng Part A[JO]|Physiol Meas[JO]|Biomech Model Mechanobiol[JO]|Med Biol Eng Comput[JO]|Tissue Eng Part B Rev[JO]|Med Eng Phys[JO]|Biomed Mater[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Biomedical Technology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Biomaterials",
+    "Acta Biomaterialia",
+    "IEEE transactions on bio-medical engineering",
+    "Biofabrication",
+    "Journal of the Mechanical Behavior of Biomedical Materials",
+    "ACS Biomaterials Science & Engineering",
+    "Journal of Neural Engineering",
+    "Annals of Biomedical Engineering",
+    "IEEE Transactions on Biomedical Circuits and Systems",
+    "Journal of biomedical materials research. Part A",
+    "Journal of biomedical materials research. Part B, Applied biomaterials",
+    "Journal of Tissue Engineering and Regenerative Medicine",
+    "Bioactive Materials",
+    "Tissue engineering. Part A",
+    "Physiological Measurement",
+    "Biomechanics and Modeling in Mechanobiology",
+    "Medical & Biological Engineering & Computing",
+    "Tissue engineering. Part B, Reviews",
+    "Medical Engineering & Physics",
+    "Biomedical materials (Bristol, England)"
+  ]
+}

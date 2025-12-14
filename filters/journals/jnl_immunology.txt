@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_immunology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Immunology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Immunity[JO]|Nat Rev Immunol[JO]|Front Immunol[JO]|Nat Immunol[JO]|J Allergy Clin Immunol[JO]|J Exp Med[JO]|J Immunol[JO]|Immunol Rev[JO]|Allergy[JO]|Trends Immunol[JO]|Autoimmun Rev[JO]|Sci Immunol[JO]|J Allergy Clin Immunol Pract[JO]|Mucosal Immunol[JO]|Eur J Immunol[JO]|Mediators Inflamm[JO]|Cell Mol Immunol[JO]|J Autoimmun[JO]|Annu Rev Immunol[JO]|Curr Opin Immunol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Immunology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Immunity",
+    "Nature reviews. Immunology",
+    "Frontiers in Immunology",
+    "Nature Immunology",
+    "The Journal of allergy and clinical immunology",
+    "The Journal of experimental medicine",
+    "Journal of immunology (Baltimore, Md. : 1950)",
+    "Immunological Reviews",
+    "Allergy",
+    "Trends in Immunology",
+    "Autoimmunity Reviews",
+    "Science Immunology",
+    "The journal of allergy and clinical immunology. In practice",
+    "Mucosal Immunology",
+    "European Journal of Immunology",
+    "Mediators of Inflammation",
+    "Cellular & Molecular Immunology",
+    "Journal of Autoimmunity",
+    "Annual Review of Immunology",
+    "Current Opinion in Immunology"
+  ]
+}

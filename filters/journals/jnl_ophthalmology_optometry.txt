@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_ophthalmology_optometry
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Ophthalmology & Optometry según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Ophthalmology[JO]|Invest Ophthalmol Vis Sci[JO]|Am J Ophthalmol[JO]|Prog Retin Eye Res[JO]|JAMA Ophthalmol[JO]|Br J Ophthalmol[JO]|Retina[JO]|Eye (Lond)[JO]|Surv Ophthalmol[JO]|Clin Ophthalmol[JO]|Acta Ophthalmol (Copenh)[JO]|Ocul Surf[JO]|Graefes Arch Clin Exp Ophthalmol[JO]|J Cataract Refract Surg[JO]|Exp Eye Res[JO]|Cornea[JO]|J Vis[JO]|Vision Res[JO]|J Glaucoma[JO]|BMC Ophthalmol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Ophthalmology & Optometry",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Ophthalmology",
+    "Investigative Ophthalmology & Visual Science",
+    "American Journal of Ophthalmology",
+    "Progress in Retinal and Eye Research",
+    "JAMA Ophthalmology",
+    "The British journal of ophthalmology",
+    "Retina (Philadelphia, Pa.)",
+    "Eye (London, England)",
+    "Survey of Ophthalmology",
+    "Clinical ophthalmology (Auckland, N.Z.)",
+    "Acta Ophthalmologica",
+    "The Ocular Surface",
+    "Graefe's archive for clinical and experimental ophthalmology = Albrecht von Graefes Archiv fur klinische und experimentelle Ophthalmologie",
+    "Journal of cataract and refractive surgery",
+    "Experimental Eye Research",
+    "Cornea",
+    "Journal of Vision",
+    "Vision Research",
+    "Journal of Glaucoma",
+    "BMC Ophthalmology"
+  ]
+}

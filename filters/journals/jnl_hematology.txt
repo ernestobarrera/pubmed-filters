@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_hematology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Hematology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Blood[JO]|Leukemia[JO]|J Hematol Oncol[JO]|J Thromb Haemost[JO]|Haematologica[JO]|Am J Hematol[JO]|Br J Haematol[JO]|Lancet Haematol[JO]|Thromb Haemost[JO]|Blood Adv[JO]|Biol Blood Marrow Transplant[JO]|Transfusion[JO]|Bone Marrow Transplant[JO]|Thromb Res[JO]|Blood Cancer J[JO]|Blood Rev[JO]|J Thromb Thrombolysis[JO]|Semin Thromb Hemost[JO]|Ann Hematol[JO]|Exp Hematol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Hematology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Blood",
+    "Leukemia",
+    "Journal of Hematology & Oncology",
+    "Journal of thrombosis and haemostasis : JTH",
+    "Haematologica",
+    "American Journal of Hematology",
+    "British Journal of Haematology",
+    "The Lancet. Haematology",
+    "Thrombosis and Haemostasis",
+    "Blood Advances",
+    "Biology of blood and marrow transplantation : journal of the American Society for Blood and Marrow Transplantation",
+    "Transfusion",
+    "Bone Marrow Transplantation",
+    "Thrombosis Research",
+    "Blood Cancer Journal",
+    "Blood Reviews",
+    "Journal of Thrombosis and Thrombolysis",
+    "Seminars in Thrombosis and Hemostasis",
+    "Annals of Hematology",
+    "Experimental Hematology"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_plastic_reconstructive_surgery
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Plastic & Reconstructive Surgery según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Plast Reconstr Surg[JO]|Aesthet Surg J[JO]|J Plast Reconstr Aesthet Surg[JO]|Dermatol Surg[JO]|Plast Reconstr Surg Glob Open[JO]|Ann Plast Surg[JO]|J Cosmet Dermatol[JO]|J Craniofac Surg[JO]|Aesthetic Plast Surg[JO]|JAMA Facial Plast Surg[JO]|J Reconstr Microsurg[JO]|Microsurgery[JO]|Cleft Palate Craniofac J[JO]|Ophthalmic Plast Reconstr Surg[JO]|Clin Plast Surg[JO]|Facial Plast Surg Clin North Am[JO]|J Cosmet Laser Ther[JO]|Arch Plast Surg[JO]|Facial Plast Surg[JO]|Semin Plast Surg[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Plastic & Reconstructive Surgery",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Plastic and Reconstructive Surgery",
+    "Aesthetic Surgery Journal",
+    "Journal of plastic, reconstructive & aesthetic surgery : JPRAS",
+    "Dermatologic surgery : official publication for American Society for Dermatologic Surgery [et al.]",
+    "Plastic and Reconstructive surgery. Global Open",
+    "Annals of Plastic Surgery",
+    "Journal of Cosmetic Dermatology",
+    "The Journal of craniofacial surgery",
+    "Aesthetic Plastic Surgery",
+    "JAMA Facial Plastic Surgery",
+    "Journal of Reconstructive Microsurgery",
+    "Microsurgery",
+    "The Cleft palate-craniofacial journal : official publication of the American Cleft Palate-Craniofacial Association",
+    "Ophthalmic plastic and reconstructive surgery",
+    "Clinics in Plastic Surgery",
+    "Facial Plastic Surgery Clinics of North America",
+    "Journal of cosmetic and laser therapy : official publication of the European Society for Laser Dermatology",
+    "Archives of Plastic Surgery",
+    "Facial plastic surgery : FPS",
+    "Seminars in Plastic Surgery"
+  ]
+}

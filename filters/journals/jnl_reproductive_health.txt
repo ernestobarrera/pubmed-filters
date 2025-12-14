@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_reproductive_health
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Reproductive Health según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Fertil Steril[JO]|Hum Reprod[JO]|Hum Reprod Update[JO]|J Sex Med[JO]|Reprod Health[JO]|Reprod Biomed Online[JO]|J Assist Reprod Genet[JO]|Reproduction[JO]|Biol Reprod[JO]|Andrology[JO]|Contraception[JO]|Reprod Biol Endocrinol[JO]|Am J Reprod Immunol[JO]|Asian J Androl[JO]|J Reprod Immunol[JO]|Andrologia[JO]|Sex Med Rev[JO]|Mol Hum Reprod[JO]|Reprod Fertil Dev[JO]|Semin Reprod Med[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Reproductive Health",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Fertility and Sterility",
+    "Human reproduction (Oxford, England)",
+    "Human Reproduction Update",
+    "The journal of sexual medicine",
+    "Reproductive Health",
+    "Reproductive BioMedicine Online",
+    "Journal of Assisted Reproduction and Genetics",
+    "Reproduction (Cambridge, England)",
+    "Biology of Reproduction",
+    "Andrology",
+    "Contraception",
+    "Reproductive biology and endocrinology : RB&E",
+    "American journal of reproductive immunology (New York, N.Y. : 1989)",
+    "Asian Journal of Andrology",
+    "Journal of Reproductive Immunology",
+    "Andrologia",
+    "Sexual Medicine Reviews",
+    "Molecular Human Reproduction",
+    "Reproduction, fertility, and development",
+    "Seminars in Reproductive Medicine"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_psychology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Psychology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Front Psychol[JO]|Trends Cogn Sci[JO]|Clin Psychol Rev[JO]|Psychol Bull[JO]|Pers Individ Dif[JO]|J Pers Soc Psychol[JO]|Psychol Sci[JO]|Perspect Psychol Sci[JO]|J Appl Psychol[JO]|Front Hum Neurosci[JO]|Annu Rev Psychol[JO]|Child Dev[JO]|Am Psychol[JO]|J Child Psychol Psychiatry[JO]|Curr Opin Psychol[JO]|J Organ Behav[JO]|Psychon Bull Rev[JO]|J Vocat Behav[JO]|Addict Behav[JO]|J Educ Psychol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Psychology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Frontiers in Psychology",
+    "Trends in Cognitive Sciences",
+    "Clinical Psychology Review",
+    "Psychological Bulletin",
+    "Personality and Individual Differences",
+    "Journal of Personality and Social Psychology",
+    "Psychological Science",
+    "Perspectives on psychological science : a journal of the Association for Psychological Science",
+    "The Journal of applied psychology",
+    "Frontiers in Human Neuroscience",
+    "Annual Review of Psychology",
+    "Child Development",
+    "The American psychologist",
+    "Journal of child psychology and psychiatry, and allied disciplines",
+    "Current opinion in psychology",
+    "Journal of Organizational Behavior",
+    "Psychonomic Bulletin & Review",
+    "Journal of Vocational Behavior",
+    "Addictive Behaviors",
+    "Journal of Educational Psychology"
+  ]
+}

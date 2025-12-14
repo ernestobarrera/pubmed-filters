@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_psychiatry
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Psychiatry según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Mol Psychiatry[JO]|JAMA Psychiatry[JO]|Lancet Psychiatry[JO]|Biol Psychiatry[JO]|J Affect Disord[JO]|Am J Psychiatry[JO]|Clin Psychol Rev[JO]|Psychol Med[JO]|Neuropsychopharmacology[JO]|Psychiatry Res[JO]|Transl Psychiatry[JO]|World Psychiatry[JO]|Schizophr Bull[JO]|J Child Psychol Psychiatry[JO]|Br J Psychiatry[JO]|BMC Psychiatry[JO]|Front Psychiatry[JO]|J Am Acad Child Adolesc Psychiatry[JO]|J Psychiatr Res[JO]|Schizophr Res[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Psychiatry",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Molecular Psychiatry",
+    "JAMA Psychiatry",
+    "The lancet. Psychiatry",
+    "Biological Psychiatry",
+    "Journal of Affective Disorders",
+    "The American journal of psychiatry",
+    "Clinical Psychology Review",
+    "Psychological Medicine",
+    "Neuropsychopharmacology : official publication of the American College of Neuropsychopharmacology",
+    "Psychiatry Research",
+    "Translational Psychiatry",
+    "World psychiatry : official journal of the World Psychiatric Association (WPA)",
+    "Schizophrenia Bulletin",
+    "Journal of child psychology and psychiatry, and allied disciplines",
+    "The British journal of psychiatry : the journal of mental science",
+    "BMC Psychiatry",
+    "Frontiers in Psychiatry",
+    "Journal of the American Academy of Child and Adolescent Psychiatry",
+    "Journal of Psychiatric Research",
+    "Schizophrenia Research"
+  ]
+}

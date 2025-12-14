@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_rheumatology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Rheumatology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|Autoimmun Rev[JO]|Rheumatology[JO]|Arthritis Care Res (Hoboken)[JO]|Osteoarthritis Cartilage[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|J Rheumatol[JO]|Clin Exp Rheumatol[JO]|Clin Rheumatol[JO]|Curr Opin Rheumatol[JO]|Int J Rheum Dis[JO]|RMD Open[JO]|Curr Rheumatol Rep[JO]|Joint Bone Spine[JO]|Best Pract Res Clin Rheumatol[JO]|Rheumatol Int[JO]|Pediatr Rheumatol Online J[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Rheumatology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Annals of the Rheumatic Diseases",
+    "Arthritis & rheumatology (Hoboken, N.J.)",
+    "Nature Reviews. Rheumatology",
+    "Autoimmunity Reviews",
+    "Rheumatology",
+    "Arthritis Care & Research",
+    "Osteoarthritis and Cartilage",
+    "Arthritis Research & Therapy",
+    "Seminars in Arthritis and Rheumatism",
+    "The Journal of Rheumatology",
+    "Clinical and Experimental Rheumatology",
+    "Clinical Rheumatology",
+    "Current Opinion in Rheumatology",
+    "International Journal of Rheumatic Diseases",
+    "RMD Open",
+    "Current Rheumatology Reports",
+    "Joint Bone Spine",
+    "Best practice & research. Clinical rheumatology",
+    "Rheumatology International",
+    "Pediatric rheumatology online journal"
+  ]
+}

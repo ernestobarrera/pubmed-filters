@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_oral_maxillofacial_surgery
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Oral & Maxillofacial Surgery según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Clin Implant Dent Relat Res[JO]|Int J Oral Maxillofac Surg[JO]|J Oral Maxillofac Surg[JO]|Oral Surg Oral Med Oral Pathol Oral Radiol[JO]|J Craniomaxillofac Surg[JO]|Int J Oral Maxillofac Implants[JO]|Med Oral Patol Oral Cir Bucal[JO]|Br J Oral Maxillofac Surg[JO]|J Craniofac Surg[JO]|Dentomaxillofac Radiol[JO]|Prog Orthod[JO]|J Oral Maxillofac Pathol[JO]|Eur J Oral Implantol[JO]|Implant Dent[JO]|Cleft Palate Craniofac J[JO]|J Oral Biol Craniofac Res[JO]|Oral Maxillofac Surg Clin North Am[JO]|Int J Implant Dent[JO]|J Oral Implantol[JO]|Cranio[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Oral & Maxillofacial Surgery",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Clinical Implant Dentistry and Related Research",
+    "International Journal of Oral and Maxillofacial Surgery",
+    "Journal of oral and maxillofacial surgery : official journal of the American Association of Oral and Maxillofacial Surgeons",
+    "Oral Surgery, Oral Medicine, Oral Pathology and Oral Radiology",
+    "Journal of cranio-maxillo-facial surgery : official publication of the European Association for Cranio-Maxillo-Facial Surgery",
+    "The International journal of oral & maxillofacial implants",
+    "Medicina Oral, Patologia Oral y Cirugia Bucal",
+    "The British journal of oral & maxillofacial surgery",
+    "The Journal of craniofacial surgery",
+    "Dento maxillo facial radiology",
+    "Progress in Orthodontics",
+    "Journal of oral and maxillofacial pathology : JOMFP",
+    "European Journal of Oral Implantology",
+    "Implant Dentistry",
+    "The Cleft palate-craniofacial journal : official publication of the American Cleft Palate-Craniofacial Association",
+    "Journal of Oral Biology and Craniofacial Research",
+    "Oral and maxillofacial surgery clinics of North America",
+    "International Journal of Implant Dentistry",
+    "The Journal of oral implantology",
+    "Cranio : the journal of craniomandibular practice"
+  ]
+}

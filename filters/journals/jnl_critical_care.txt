@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_critical_care
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Critical Care según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Intensive Care Med[JO]|Crit Care[JO]|Crit Care Med[JO]|Ann Intensive Care[JO]|J Crit Care[JO]|Pediatr Crit Care Med[JO]|J Intensive Care[JO]|Curr Opin Crit Care[JO]|J Intensive Care Med[JO]|Intensive Crit Care Nurs[JO]|Crit Care Clin[JO]|Am J Crit Care[JO]|Aust Crit Care[JO]|Nurs Crit Care[JO]|Med Intensiva[JO]|Indian J Crit Care Med[JO]|Intensive Care Med Exp[JO]|Rev Bras Ter Intensiva[JO]|BJA Educ[JO]|Crit Care Nurse[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Critical Care",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Intensive Care Medicine",
+    "Critical Care",
+    "Critical Care Medicine",
+    "Annals of Intensive Care",
+    "Journal of Critical Care",
+    "Pediatric critical care medicine : a journal of the Society of Critical Care Medicine and the World Federation of Pediatric Intensive and Critical Care Societies",
+    "Journal of Intensive Care",
+    "Current Opinion in Critical Care",
+    "Journal of Intensive Care Medicine",
+    "Intensive & critical care nursing",
+    "Critical Care Clinics",
+    "American journal of critical care : an official publication, American Association of Critical-Care Nurses",
+    "Australian critical care : official journal of the Confederation of Australian Critical Care Nurses",
+    "Nursing in Critical Care",
+    "Medicina intensiva",
+    "Indian journal of critical care medicine : peer-reviewed, official publication of Indian Society of Critical Care Medicine",
+    "Intensive Care Medicine Experimental",
+    "Revista Brasileira de Terapia Intensiva",
+    "BJA education",
+    "Critical Care Nurse"
+  ]
+}

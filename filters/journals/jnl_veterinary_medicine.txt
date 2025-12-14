@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_veterinary_medicine
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Veterinary Medicine según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Transbound Emerg Dis[JO]|Vet Microbiol[JO]|Front Vet Sci[JO]|Theriogenology[JO]|J Vet Intern Med[JO]|BMC Vet Res[JO]|Ticks Tick Borne Dis[JO]|Animals (Basel)[JO]|Vet Parasitol[JO]|Prev Vet Med[JO]|Res Vet Sci[JO]|Anim Nutr[JO]|Vet J[JO]|Asian-Australas J Anim Sci[JO]|Appl Anim Behav Sci[JO]|Vet Res[JO]|Annu Rev Anim Biosci[JO]|Vet World[JO]|Vet Rec[JO]|Vet Pathol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Veterinary Medicine",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Transboundary and Emerging Diseases",
+    "Veterinary Microbiology",
+    "Frontiers in Veterinary Science",
+    "Theriogenology",
+    "Journal of Veterinary Internal Medicine",
+    "BMC Veterinary Research",
+    "Ticks and Tick-borne Diseases",
+    "Animals : an open access journal from MDPI",
+    "Veterinary Parasitology",
+    "Preventive Veterinary Medicine",
+    "Research in Veterinary Science",
+    "Animal nutrition (Zhongguo xu mu shou yi xue hui)",
+    "Veterinary journal (London, England : 1997)",
+    "Asian-Australasian Journal of Animal Sciences",
+    "Applied Animal Behaviour Science",
+    "Veterinary Research",
+    "Annual Review of Animal Biosciences",
+    "Veterinary World",
+    "The Veterinary Record",
+    "Veterinary Pathology"
+  ]
+}

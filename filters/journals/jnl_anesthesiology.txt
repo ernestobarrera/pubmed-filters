@@ -1,0 +1,35 @@
+# Filtro: journals/jnl_anesthesiology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 18 revistas en Anesthesiology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Anesthesiology[JO]|Anesth Analg[JO]|Br J Anaesth[JO]|Anaesthesia[JO]|Reg Anesth Pain Med[JO]|J Clin Anesth[JO]|Can J Anaesth[JO]|J Cardiothorac Vasc Anesth[JO]|Eur J Anaesthesiol[JO]|Curr Opin Anaesthesiol[JO]|Paediatr Anaesth[JO]|Acta Anaesthesiol Scand[JO]|BMC Anesthesiol[JO]|Indian J Anaesth[JO]|J Clin Monit Comput[JO]|J Anesth[JO]|Anaesth Crit Care Pain Med[JO]|Best Pract Res Clin Anaesthesiol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Anesthesiology",
+  "journalCount": 18,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Anesthesiology",
+    "Anesthesia and analgesia",
+    "British Journal of Anaesthesia",
+    "Anaesthesia",
+    "Regional Anesthesia and Pain Medicine",
+    "Journal of Clinical Anesthesia",
+    "Canadian journal of anaesthesia = Journal canadien d'anesthesie",
+    "Journal of Cardiothoracic and Vascular Anesthesia",
+    "European journal of anaesthesiology",
+    "Current opinion in anaesthesiology",
+    "Paediatric anaesthesia",
+    "Acta Anaesthesiologica Scandinavica",
+    "BMC Anesthesiology",
+    "Indian Journal of Anaesthesia",
+    "Journal of Clinical Monitoring and Computing",
+    "Journal of Anesthesia",
+    "Anaesthesia, critical care & pain medicine",
+    "Best practice & research. Clinical anaesthesiology"
+  ]
+}

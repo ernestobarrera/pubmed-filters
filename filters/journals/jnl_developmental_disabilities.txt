@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_developmental_disabilities
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Developmental Disabilities según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Autism Dev Disord[JO]|Autism[JO]|Autism Res[JO]|Res Dev Disabil[JO]|Mol Autism[JO]|J Learn Disabil[JO]|Res Autism Spectr Disord[JO]|J Appl Res Intellect Disabil[JO]|J Intellect Disabil Res[JO]|J Neurodev Disord[JO]|J Posit Behav Interv[JO]|Focus Autism Other Dev Disabl[JO]|Learn Disabil Q[JO]|Res Pract Persons Severe Disabl[JO]|Augment Altern Commun[JO]|Rev J Autism Dev Disord[JO]|Am J Intellect Dev Disabil[JO]|Intellect Dev Disabil[JO]|J Dev Phys Disabil[JO]|Educ Train Autism Dev Disabil[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Developmental Disabilities",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of Autism and Developmental Disorders",
+    "Autism : the international journal of research and practice",
+    "Autism research : official journal of the International Society for Autism Research",
+    "Research in Developmental Disabilities",
+    "Molecular Autism",
+    "Journal of Learning Disabilities",
+    "Research in Autism Spectrum Disorders",
+    "Journal of applied research in intellectual disabilities : JARID",
+    "Journal of intellectual disability research : JIDR",
+    "Journal of Neurodevelopmental Disorders",
+    "Journal of Positive Behavior Interventions",
+    "Focus on Autism and Other Developmental Disabilities",
+    "Learning disability quarterly : journal of the Division for Children with Learning Disabilities",
+    "Research and practice for persons with severe disabilities : the journal of TASH",
+    "Augmentative and alternative communication (Baltimore, Md. : 1985)",
+    "Review Journal of Autism and Developmental Disorders",
+    "American Journal on Intellectual and Developmental Disabilities",
+    "Intellectual and Developmental Disabilities",
+    "Journal of Developmental and Physical Disabilities",
+    "Education and Training in Autism and Developmental Disabilities"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_radiology_medical_imaging
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Radiology & Medical Imaging según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Radiology[JO]|IEEE Trans Med Imaging[JO]|JACC Cardiovasc Imaging[JO]|Eur Radiol[JO]|Magn Reson Med[JO]|Med Image Comput Comput Assist Interv[JO]|Med Phys[JO]|Phys Med Biol[JO]|J Magn Reson Imaging[JO]|Eur Heart J Cardiovasc Imaging[JO]|Endoscopy[JO]|AJR Am J Roentgenol[JO]|AJNR Am J Neuroradiol[JO]|Radiographics[JO]|Circ Cardiovasc Imaging[JO]|Eur J Radiol[JO]|Proc IEEE Int Symp Biomed Imaging[JO]|J Am Coll Radiol[JO]|Invest Radiol[JO]|J Am Soc Echocardiogr[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Radiology & Medical Imaging",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Radiology",
+    "IEEE Transactions on Medical Imaging",
+    "JACC. Cardiovascular imaging",
+    "European Radiology",
+    "Magnetic Resonance in Medicine",
+    "Medical image computing and computer-assisted intervention : MICCAI ... International Conference on Medical Image Computing and Computer-Assisted Intervention",
+    "Medical Physics",
+    "Physics in medicine and biology",
+    "Journal of magnetic resonance imaging : JMRI",
+    "European heart journal. Cardiovascular Imaging",
+    "Endoscopy",
+    "AJR. American journal of roentgenology",
+    "AJNR. American journal of neuroradiology",
+    "Radiographics : a review publication of the Radiological Society of North America, Inc",
+    "Circulation. Cardiovascular imaging",
+    "European Journal of Radiology",
+    "Proceedings / IEEE International Symposium on Biomedical Imaging: from nano to macro",
+    "Journal of the American College of Radiology : JACR",
+    "Investigative Radiology",
+    "Journal of the American Society of Echocardiography : official publication of the American Society of Echocardiography"
+  ]
+}

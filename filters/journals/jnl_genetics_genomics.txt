@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_genetics_genomics
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Genetics & Genomics según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Oncogene[JO]|Am J Hum Genet[JO]|Genome Res[JO]|PLoS Genet[JO]|Genet Med[JO]|BMC Genomics[JO]|Hum Mol Genet[JO]|Genome Med[JO]|Trends Genet[JO]|Genetics[JO]|Front Genet[JO]|Genes (Basel)[JO]|Gene[JO]|Eur J Hum Genet[JO]|Curr Opin Genet Dev[JO]|Clin Epigenetics[JO]|Forensic Sci Int Genet[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Genetics & Genomics",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Nature Genetics",
+    "Genome Biology",
+    "Nature reviews. Genetics",
+    "Oncogene",
+    "American journal of human genetics",
+    "Genome Research",
+    "PLOS Genetics",
+    "Genetics in medicine : official journal of the American College of Medical Genetics",
+    "BMC Genomics",
+    "Human Molecular Genetics",
+    "Genome Medicine",
+    "Trends in genetics : TIG",
+    "Genetics",
+    "Frontiers in Genetics",
+    "Genes",
+    "Gene",
+    "European journal of human genetics : EJHG",
+    "Current Opinion in Genetics & Development",
+    "Clinical Epigenetics",
+    "Forensic science international. Genetics"
+  ]
+}

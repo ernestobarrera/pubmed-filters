@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_primary_health_care
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Primary Health Care según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Gen Intern Med[JO]|Am Fam Physician[JO]|Br J Gen Pract[JO]|BMC Fam Pract[JO]|Ann Fam Med[JO]|Can Fam Physician[JO]|J Am Board Fam Med[JO]|Fam Pract[JO]|Prim Care[JO]|Aust Prescr[JO]|Aust J Gen Pract[JO]|Scand J Prim Health Care[JO]|J Am Assoc Nurse Pract[JO]|Afr J Prim Health Care Fam Med[JO]|Eur J Gen Pract[JO]|J Prim Care Community Health[JO]|J Nurse Pract[JO]|J Am Acad Physician Assist[JO]|Prim Health Care Res Dev[JO]|J Family Community Med[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Primary Health Care",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of General Internal Medicine",
+    "American Family Physician",
+    "The British journal of general practice : the journal of the Royal College of General Practitioners",
+    "BMC Family Practice",
+    "Annals of family medicine",
+    "Canadian family physician Medecin de famille canadien",
+    "Journal of the American Board of Family Medicine : JABFM",
+    "Family Practice",
+    "Primary care",
+    "Australian Prescriber",
+    "Australian Journal of General Practice",
+    "Scandinavian Journal of Primary Health Care",
+    "Journal of the American Association of Nurse Practitioners",
+    "African journal of primary health care & family medicine",
+    "The European journal of general practice",
+    "Journal of Primary Care & Community Health",
+    "The journal for nurse practitioners : JNP",
+    "Journal of the American Academy of Physician Assistants",
+    "Primary Health Care Research & Development",
+    "Journal of family & community medicine"
+  ]
+}

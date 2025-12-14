@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_pathology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Pathology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Acta Neuropathol[JO]|Am J Surg Pathol[JO]|Mod Pathol[JO]|J Pathol[JO]|Arch Pathol Lab Med[JO]|Acta Neuropathol Commun[JO]|Am J Pathol[JO]|Annu Rev Pathol[JO]|Histopathology[JO]|Virchows Arch[JO]|Brain Pathol[JO]|Hum Pathol[JO]|Lab Invest[JO]|Neuropathol Appl Neurobiol[JO]|Expert Rev Mol Diagn[JO]|Cancer Cytopathol[JO]|J Neuropathol Exp Neurol[JO]|J Clin Pathol[JO]|Am J Clin Pathol[JO]|Pathology[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Pathology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Acta Neuropathologica",
+    "The American Journal of Surgical Pathology",
+    "Modern pathology : an official journal of the United States and Canadian Academy of Pathology, Inc",
+    "The Journal of pathology",
+    "Archives of Pathology & Laboratory Medicine",
+    "Acta Neuropathologica Communications",
+    "The American Journal of Pathology",
+    "Annual review of pathology",
+    "Histopathology",
+    "Virchows Archiv : an international journal of pathology",
+    "Brain pathology (Zurich, Switzerland)",
+    "Human Pathology",
+    "Laboratory Investigation; a Journal of Technical Methods and Pathology",
+    "Neuropathology and Applied Neurobiology",
+    "Expert Review of Molecular Diagnostics",
+    "Cancer Cytopathology",
+    "Journal of Neuropathology and Experimental Neurology",
+    "Journal of Clinical Pathology",
+    "American Journal of Clinical Pathology",
+    "Pathology"
+  ]
+}

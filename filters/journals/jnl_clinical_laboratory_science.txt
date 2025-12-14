@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_clinical_laboratory_science
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Clinical Laboratory Science según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Clin Chem[JO]|Clin Chim Acta[JO]|Clin Chem Lab Med[JO]|Clin Biochem[JO]|Crit Rev Clin Lab Sci[JO]|Adv Clin Chem[JO]|Int J Lab Hematol[JO]|J Clin Lab Anal[JO]|Ann Lab Med[JO]|Ann Clin Biochem[JO]|Indian J Clin Biochem[JO]|Scand J Clin Lab Invest[JO]|Clin Lab Med[JO]|Biochem Med (Zagreb)[JO]|J Anal Methods Chem[JO]|Clin Lab[JO]|EJIFCC[JO]|J Med Biochem[JO]|Lab Med[JO]|Ann Clin Lab Sci[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Clinical Laboratory Science",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Clinical Chemistry",
+    "Clinica chimica acta; international journal of clinical chemistry",
+    "Clinical Chemistry and Laboratory Medicine",
+    "Clinical Biochemistry",
+    "Critical Reviews in Clinical Laboratory Sciences",
+    "Advances in Clinical Chemistry",
+    "International Journal of Laboratory Hematology",
+    "Journal of Clinical Laboratory Analysis",
+    "Annals of Laboratory Medicine",
+    "Annals of Clinical Biochemistry",
+    "Indian journal of clinical biochemistry : IJCB",
+    "Scandinavian Journal of Clinical and Laboratory Investigation",
+    "Clinics in Laboratory Medicine",
+    "Biochemia Medica",
+    "Journal of Analytical Methods in Chemistry",
+    "Clinical Laboratory",
+    "EJIFCC",
+    "Journal of Medical Biochemistry",
+    "Laboratory Medicine",
+    "Annals of clinical and laboratory science"
+  ]
+}

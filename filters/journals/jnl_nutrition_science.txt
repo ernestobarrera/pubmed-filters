@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_nutrition_science
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Nutrition Science según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Nutrients[JO]|Crit Rev Food Sci Nutr[JO]|Am J Clin Nutr[JO]|Clin Nutr[JO]|Adv Nutr[JO]|J Nutr[JO]|Eur J Nutr[JO]|Mol Nutr Food Res[JO]|Nutrition[JO]|J Funct Foods[JO]|Br J Nutr[JO]|Public Health Nutr[JO]|Eur J Clin Nutr[JO]|J Nutr Biochem[JO]|J Acad Nutr Diet[JO]|Nutr Rev[JO]|Proc Nutr Soc[JO]|Matern Child Nutr[JO]|JPEN J Parenter Enteral Nutr[JO]|Front Nutr[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Nutrition Science",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Nutrients",
+    "Critical Reviews in Food Science and Nutrition",
+    "The American Journal of Clinical Nutrition",
+    "Clinical nutrition (Edinburgh, Scotland)",
+    "Advances in nutrition (Bethesda, Md.)",
+    "The Journal of Nutrition",
+    "European Journal of Nutrition",
+    "Molecular Nutrition & Food Research",
+    "Nutrition (Burbank, Los Angeles County, Calif.)",
+    "Journal of Functional Foods",
+    "The British journal of nutrition",
+    "Public Health Nutrition",
+    "European Journal of Clinical Nutrition",
+    "The Journal of Nutritional Biochemistry",
+    "Journal of the Academy of Nutrition and Dietetics",
+    "Nutrition Reviews",
+    "The Proceedings of the Nutrition Society",
+    "Maternal & Child Nutrition",
+    "JPEN. Journal of parenteral and enteral nutrition",
+    "Frontiers in Nutrition"
+  ]
+}

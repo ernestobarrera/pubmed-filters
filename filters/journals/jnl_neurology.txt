@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_neurology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Neurology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Neuron[JO]|Nat Neurosci[JO]|Lancet Neurol[JO]|Neuroimage[JO]|Nat Rev Neurosci[JO]|Neurology[JO]|Neurosci Biobehav Rev[JO]|Brain[JO]|J Neurosci[JO]|Nat Rev Neurol[JO]|JAMA Neurol[JO]|Acta Neuropathol[JO]|Ann Neurol[JO]|Front Neurosci[JO]|Mov Disord[JO]|Cereb Cortex[JO]|J Alzheimers Dis[JO]|J Neurol Neurosurg Psychiatry[JO]|Mol Neurobiol[JO]|Front Hum Neurosci[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Neurology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Neuron",
+    "Nature Neuroscience",
+    "The Lancet. Neurology",
+    "NeuroImage",
+    "Nature reviews. Neuroscience",
+    "Neurology",
+    "Neuroscience and biobehavioral reviews",
+    "Brain : a journal of neurology",
+    "The Journal of neuroscience : the official journal of the Society for Neuroscience",
+    "Nature Reviews. Neurology",
+    "JAMA Neurology",
+    "Acta Neuropathologica",
+    "Annals of Neurology",
+    "Frontiers in Neuroscience",
+    "Movement disorders : official journal of the Movement Disorder Society",
+    "Cerebral cortex (New York, N.Y. : 1991)",
+    "Journal of Alzheimer's disease : JAD",
+    "Journal of neurology, neurosurgery, and psychiatry",
+    "Molecular Neurobiology",
+    "Frontiers in Human Neuroscience"
+  ]
+}

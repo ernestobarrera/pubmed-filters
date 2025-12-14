@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_emergency_medicine
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Emergency Medicine según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Resuscitation[JO]|Ann Emerg Med[JO]|J Trauma[JO]|Am J Emerg Med[JO]|Acad Emerg Med[JO]|World J Emerg Surg[JO]|J Intensive Care[JO]|Clin Toxicol[JO]|Scand J Trauma Resusc Emerg Med[JO]|J Emerg Med[JO]|West J Emerg Med[JO]|Emerg Med J[JO]|Intern Emerg Med[JO]|Curr Opin Crit Care[JO]|Crit Care Clin[JO]|Eur J Trauma Emerg Surg[JO]|Int Emerg Nurs[JO]|Prehosp Emerg Care[JO]|Emerg Med Clin North Am[JO]|Disaster Med Public Health Prep[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Emergency Medicine",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Resuscitation",
+    "Annals of Emergency Medicine",
+    "The Journal of trauma",
+    "The American Journal of Emergency Medicine",
+    "Academic emergency medicine : official journal of the Society for Academic Emergency Medicine",
+    "World journal of emergency surgery : WJES",
+    "Journal of Intensive Care",
+    "Clinical Toxicology",
+    "Scandinavian Journal of Trauma, Resuscitation and Emergency Medicine",
+    "The Journal of Emergency Medicine",
+    "The western journal of emergency medicine",
+    "Emergency medicine journal : EMJ",
+    "Internal and Emergency Medicine",
+    "Current Opinion in Critical Care",
+    "Critical Care Clinics",
+    "European journal of trauma and emergency surgery : official publication of the European Trauma Society",
+    "International Emergency Nursing",
+    "Prehospital emergency care : official journal of the National Association of EMS Physicians and the National Association of State EMS Directors",
+    "Emergency medicine clinics of North America",
+    "Disaster Medicine and Public Health Preparedness"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_bioethics
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Bioethics según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Nurs Ethics[JO]|J Med Ethics[JO]|BMC Med Ethics[JO]|Am J Bioeth[JO]|J Law Med Ethics[JO]|Hastings Cent Rep[JO]|Med Health Care Philos[JO]|Bioethics[JO]|J Bioeth Inq[JO]|J Med Philos[JO]|J Empir Res Hum Res Ethics[JO]|Camb Q Healthc Ethics[JO]|Dev World Bioeth[JO]|Health Care Anal[JO]|AJOB Neurosci[JO]|AJOB Empir Bioeth[JO]|Public Health Ethics[JO]|HEC Forum[JO]|Indian J Med Ethics[JO]|Nanoethics[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Bioethics",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Nursing Ethics",
+    "Journal of Medical Ethics",
+    "BMC Medical Ethics",
+    "The American journal of bioethics : AJOB",
+    "The Journal of law, medicine & ethics : a journal of the American Society of Law, Medicine & Ethics",
+    "The Hastings Center report",
+    "Medicine, health care, and philosophy",
+    "Bioethics",
+    "Journal of Bioethical Inquiry",
+    "The Journal of medicine and philosophy",
+    "Journal of empirical research on human research ethics : JERHRE",
+    "Cambridge quarterly of healthcare ethics : CQ : the international journal of healthcare ethics committees",
+    "Developing World Bioethics",
+    "Health care analysis : HCA : journal of health philosophy and policy",
+    "AJOB neuroscience",
+    "AJOB Empirical Bioethics",
+    "Public Health Ethics",
+    "HEC forum : an interdisciplinary journal on hospitals' ethical and legal issues",
+    "Indian Journal of Medical Ethics",
+    "NanoEthics"
+  ]
+}

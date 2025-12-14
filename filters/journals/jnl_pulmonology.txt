@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_pulmonology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Pulmonology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Am J Respir Crit Care Med[JO]|Lancet Respir Med[JO]|Eur Respir J[JO]|J Thorac Oncol[JO]|Chest[JO]|Thorax[JO]|Ann Am Thorac Soc[JO]|Lung Cancer[JO]|Respir Res[JO]|Respirology[JO]|J Thorac Dis[JO]|Respir Med[JO]|Eur Respir Rev[JO]|Int J Chron Obstruct Pulmon Dis[JO]|Am J Respir Cell Mol Biol[JO]|BMC Pulm Med[JO]|J Cyst Fibros[JO]|Clin Lung Cancer[JO]|Pediatr Pulmonol[JO]|Allergol Int[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Pulmonology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "American Journal of Respiratory and Critical Care Medicine",
+    "The Lancet. Respiratory Medicine",
+    "The European respiratory journal",
+    "Journal of thoracic oncology : official publication of the International Association for the Study of Lung Cancer",
+    "Chest",
+    "Thorax",
+    "Annals of the American Thoracic Society",
+    "Lung cancer (Amsterdam, Netherlands)",
+    "Respiratory Research",
+    "Respirology (Carlton, Vic.)",
+    "Journal of Thoracic Disease",
+    "Respiratory Medicine",
+    "European respiratory review : an official journal of the European Respiratory Society",
+    "International Journal of Chronic Obstructive Pulmonary Disease",
+    "American Journal of Respiratory Cell and Molecular Biology",
+    "BMC Pulmonary Medicine",
+    "Journal of cystic fibrosis : official journal of the European Cystic Fibrosis Society",
+    "Clinical Lung Cancer",
+    "Pediatric Pulmonology",
+    "Allergology international : official journal of the Japanese Society of Allergology"
+  ]
+}

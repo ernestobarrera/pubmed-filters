@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_orthopedic_medicine_surgery
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Orthopedic Medicine & Surgery según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Am J Sports Med[JO]|J Arthroplasty[JO]|J Bone Joint Surg Am[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|Clin Orthop Relat Res[JO]|Bone Joint J[JO]|Arthroscopy[JO]|Spine (Phila Pa 1976)[JO]|Eur Spine J[JO]|J Shoulder Elbow Surg[JO]|BMC Musculoskelet Disord[JO]|Injury[JO]|Spine J[JO]|Orthop J Sports Med[JO]|J Orthop Res[JO]|Int Orthop[JO]|J Am Acad Orthop Surg[JO]|Sports Health[JO]|Acta Orthop[JO]|J Orthop Trauma[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Orthopedic Medicine & Surgery",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "The American Journal of Sports Medicine",
+    "The Journal of Arthroplasty",
+    "The Journal of bone and joint surgery. American volume",
+    "Knee surgery, sports traumatology, arthroscopy : official journal of the ESSKA",
+    "Clinical Orthopaedics and Related Research",
+    "The Bone & Joint Journal",
+    "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association",
+    "Spine",
+    "European spine journal : official publication of the European Spine Society, the European Spinal Deformity Society, and the European Section of the Cervical Spine Research Society",
+    "Journal of shoulder and elbow surgery",
+    "BMC Musculoskeletal Disorders",
+    "Injury",
+    "The spine journal : official journal of the North American Spine Society",
+    "Orthopaedic Journal of Sports Medicine",
+    "Journal of orthopaedic research : official publication of the Orthopaedic Research Society",
+    "International Orthopaedics",
+    "The Journal of the American Academy of Orthopaedic Surgeons",
+    "Sports Health",
+    "Acta Orthopaedica",
+    "Journal of Orthopaedic Trauma"
+  ]
+}

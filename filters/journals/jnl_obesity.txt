@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_obesity
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Obesity según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Obes Rev[JO]|Diabetes Obes Metab[JO]|Obesity (Silver Spring)[JO]|Mol Metab[JO]|Int J Obes[JO]|Obes Surg[JO]|Surg Obes Relat Dis[JO]|Curr Obes Rep[JO]|Eat Weight Disord[JO]|Pediatr Obes[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Facts[JO]|Diabetes Metab Syndr Obes[JO]|Obes Res Clin Pract[JO]|Child Obes[JO]|Clin Obes[JO]|J Obes[JO]|Ther Adv Endocrinol Metab[JO]|BMC Obes[JO]|Obes Sci Pract[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Obesity",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Obesity reviews : an official journal of the International Association for the Study of Obesity",
+    "Diabetes, obesity & metabolism",
+    "Obesity (Silver Spring, Md.)",
+    "Molecular Metabolism",
+    "International Journal of Obesity",
+    "Obesity Surgery",
+    "Surgery for obesity and related diseases : official journal of the American Society for Bariatric Surgery",
+    "Current Obesity Reports",
+    "Eating and weight disorders : EWD",
+    "Pediatric Obesity",
+    "Current opinion in endocrinology, diabetes, and obesity",
+    "Obesity Facts",
+    "Diabetes, metabolic syndrome and obesity : targets and therapy",
+    "Obesity Research & Clinical Practice",
+    "Childhood obesity (Print)",
+    "Clinical Obesity",
+    "Journal of Obesity",
+    "Therapeutic Advances in Endocrinology and Metabolism",
+    "BMC Obesity",
+    "Obesity Science & Practice"
+  ]
+}

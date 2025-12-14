@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_pharmacology_pharmacy
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Pharmacology & Pharmacy según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Nat Rev Drug Discov[JO]|Adv Drug Deliv Rev[JO]|J Control Release[JO]|J Med Chem[JO]|Neuropsychopharmacology[JO]|Br J Pharmacol[JO]|Pharmacol Ther[JO]|Pharmacol Res[JO]|Int J Pharm[JO]|Trends Pharmacol Sci[JO]|Int J Nanomedicine[JO]|Neuropharmacology[JO]|Drugs[JO]|Clin Pharmacol Ther[JO]|J Ethnopharmacol[JO]|Biochem Pharmacol[JO]|Br J Clin Pharmacol[JO]|Eur J Pharmacol[JO]|Phytother Res[JO]|Prog Neuropsychopharmacol Biol Psychiatry[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Pharmacology & Pharmacy",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Nature reviews. Drug discovery",
+    "Advanced Drug Delivery Reviews",
+    "Journal of controlled release : official journal of the Controlled Release Society",
+    "Journal of Medicinal Chemistry",
+    "Neuropsychopharmacology : official publication of the American College of Neuropsychopharmacology",
+    "British Journal of Pharmacology",
+    "Pharmacology & Therapeutics",
+    "Pharmacological Research",
+    "International Journal of Pharmaceutics",
+    "Trends in Pharmacological Sciences",
+    "International Journal of Nanomedicine",
+    "Neuropharmacology",
+    "Drugs",
+    "Clinical pharmacology and therapeutics",
+    "Journal of Ethnopharmacology",
+    "Biochemical Pharmacology",
+    "British Journal of Clinical Pharmacology",
+    "European Journal of Pharmacology",
+    "Phytotherapy research : PTR",
+    "Progress in neuro-psychopharmacology & biological psychiatry"
+  ]
+}

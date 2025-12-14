@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_toxicology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Toxicology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Environ Res[JO]|Environ Health Perspect[JO]|Ecotoxicol Environ Saf[JO]|Arch Toxicol[JO]|Toxins (Basel)[JO]|Food Chem Toxicol[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Biol Interact[JO]|Nanotoxicology[JO]|Aquat Toxicol[JO]|Toxicol Sci[JO]|Toxicol Appl Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Lett[JO]|Regul Toxicol Pharmacol[JO]|Part Fibre Toxicol[JO]|Chem Res Toxicol[JO]|Mutat Res[JO]|Carcinogenesis[JO]|Neurotoxicology[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Toxicology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Environmental Research",
+    "Environmental Health Perspectives",
+    "Ecotoxicology and Environmental Safety",
+    "Archives of Toxicology",
+    "Toxins",
+    "Food and chemical toxicology : an international journal published for the British Industrial Biological Research Association",
+    "Annual Review of Pharmacology and Toxicology",
+    "Chemico-Biological Interactions",
+    "Nanotoxicology",
+    "Aquatic toxicology (Amsterdam, Netherlands)",
+    "Toxicological sciences : an official journal of the Society of Toxicology",
+    "Toxicology and Applied Pharmacology",
+    "Environmental Toxicology and Pharmacology",
+    "Toxicology Letters",
+    "Regulatory toxicology and pharmacology : RTP",
+    "Particle and Fibre Toxicology",
+    "Chemical Research in Toxicology",
+    "Mutation Research",
+    "Carcinogenesis",
+    "NeuroToxicology"
+  ]
+}

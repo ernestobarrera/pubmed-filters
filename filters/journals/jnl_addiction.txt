@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_addiction
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Addiction según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Addiction[JO]|Drug Alcohol Depend[JO]|Addict Behav[JO]|Int J Drug Policy[JO]|J Behav Addict[JO]|Nicotine Tob Res[JO]|Alcohol Clin Exp Res[JO]|Int J Ment Health Addict[JO]|Addict Biol[JO]|J Subst Abuse Treat[JO]|Harm Reduct J[JO]|Psychol Addict Behav[JO]|J Stud Alcohol Drugs[JO]|Drug Alcohol Rev[JO]|Cannabis Cannabinoid Res[JO]|Am J Drug Alcohol Abuse[JO]|Alcohol Alcohol[JO]|Am J Addict[JO]|Subst Abus[JO]|J Addict Med[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Addiction",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Addiction (Abingdon, England)",
+    "Drug and Alcohol Dependence",
+    "Addictive Behaviors",
+    "The International journal on drug policy",
+    "Journal of Behavioral Addictions",
+    "Nicotine & tobacco research : official journal of the Society for Research on Nicotine and Tobacco",
+    "Alcoholism, clinical and experimental research",
+    "International Journal of Mental Health and Addiction",
+    "Addiction Biology",
+    "Journal of Substance Abuse Treatment",
+    "Harm Reduction Journal",
+    "Psychology of addictive behaviors : journal of the Society of Psychologists in Addictive Behaviors",
+    "Journal of Studies on Alcohol and Drugs",
+    "Drug and Alcohol Review",
+    "Cannabis and Cannabinoid Research",
+    "The American Journal of Drug and Alcohol Abuse",
+    "Alcohol and alcoholism (Oxford, Oxfordshire)",
+    "The American Journal on addictions",
+    "Substance Abuse",
+    "Journal of Addiction Medicine"
+  ]
+}

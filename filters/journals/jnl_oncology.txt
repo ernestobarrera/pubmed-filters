@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_oncology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Oncology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Clin Oncol[JO]|Lancet Oncol[JO]|Ann Oncol[JO]|Clin Cancer Res[JO]|JAMA Oncol[JO]|Cancer Cell[JO]|Nat Rev Cancer[JO]|Cancer Res[JO]|Oncotarget[JO]|Cancer Discov[JO]|Mol Cancer[JO]|Nat Rev Clin Oncol[JO]|Oncogene[JO]|J Thorac Oncol[JO]|Cancer Lett[JO]|Eur J Cancer[JO]|Leukemia[JO]|Neuro Oncol[JO]|J Natl Cancer Inst[JO]|Cancer[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Oncology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of clinical oncology : official journal of the American Society of Clinical Oncology",
+    "The Lancet. Oncology",
+    "Annals of oncology : official journal of the European Society for Medical Oncology",
+    "Clinical cancer research : an official journal of the American Association for Cancer Research",
+    "JAMA Oncology",
+    "Cancer Cell",
+    "Nature reviews. Cancer",
+    "Cancer Research",
+    "Oncotarget",
+    "Cancer Discovery",
+    "Molecular Cancer",
+    "Nature reviews. Clinical oncology",
+    "Oncogene",
+    "Journal of thoracic oncology : official publication of the International Association for the Study of Lung Cancer",
+    "Cancer Letters",
+    "European Journal of Cancer",
+    "Leukemia",
+    "Neuro-Oncology",
+    "Journal of the National Cancer Institute",
+    "Cancer"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_rehabilitation_therapy
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Rehabilitation Therapy según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(IEEE Trans Neural Syst Rehabil Eng[JO]|Arch Phys Med Rehabil[JO]|J Neuroeng Rehabil[JO]|Neurorehabil Neural Repair[JO]|Disabil Rehabil[JO]|Clin Rehabil[JO]|Ann Phys Rehabil Med[JO]|PM R[JO]|Spinal Cord[JO]|Man Ther[JO]|Eur J Phys Rehabil Med[JO]|Disabil Rehabil Assist Technol[JO]|Am J Phys Med Rehabil[JO]|Neuropsychol Rehabil[JO]|Brain Inj[JO]|J Head Trauma Rehabil[JO]|J Rehabil Med[JO]|Phys Med Rehabil Clin N Am[JO]|Top Stroke Rehabil[JO]|NeuroRehabilitation[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Rehabilitation Therapy",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "IEEE transactions on neural systems and rehabilitation engineering : a publication of the IEEE Engineering in Medicine and Biology Society",
+    "Archives of Physical Medicine and Rehabilitation",
+    "Journal of NeuroEngineering and Rehabilitation",
+    "Neurorehabilitation and Neural Repair",
+    "Disability and Rehabilitation",
+    "Clinical Rehabilitation",
+    "Annals of Physical and Rehabilitation Medicine",
+    "PM & R : the journal of injury, function, and rehabilitation",
+    "Spinal Cord",
+    "Manual Therapy",
+    "European Journal of Physical and Rehabilitation Medicine",
+    "Disability and rehabilitation. Assistive technology",
+    "American Journal of Physical Medicine & Rehabilitation",
+    "Neuropsychological Rehabilitation",
+    "Brain Injury",
+    "The Journal of head trauma rehabilitation",
+    "Journal of rehabilitation medicine",
+    "Physical medicine and rehabilitation clinics of North America",
+    "Topics in Stroke Rehabilitation",
+    "NeuroRehabilitation"
+  ]
+}

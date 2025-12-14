@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_nursing
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Nursing según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Int J Nurs Stud[JO]|Nurse Educ Today[JO]|J Clin Nurs[JO]|J Adv Nurs[JO]|J Nurs Manag[JO]|Nurse Educ Pract[JO]|Rev Lat Am Enfermagem[JO]|Rev Bras Enferm[JO]|Appl Nurs Res[JO]|J Nurs Scholarsh[JO]|Nurs Ethics[JO]|BMC Nurs[JO]|Clin Simul Nurs[JO]|Eur J Cancer Care (Engl)[JO]|J Pediatr Nurs[JO]|Scand J Caring Sci[JO]|Rev Esc Enferm USP[JO]|Nurs Outlook[JO]|J Wound Care[JO]|Int J Ment Health Nurs[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Nursing",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "International Journal of Nursing Studies",
+    "Nurse Education Today",
+    "Journal of Clinical Nursing",
+    "Journal of Advanced Nursing",
+    "Journal of Nursing Management",
+    "Nurse Education in Practice",
+    "Revista Latino-Americana de Enfermagem",
+    "Revista Brasileira de Enfermagem",
+    "Applied nursing research : ANR",
+    "Journal of nursing scholarship : an official publication of Sigma Theta Tau International Honor Society of Nursing",
+    "Nursing Ethics",
+    "BMC Nursing",
+    "Clinical Simulation in Nursing",
+    "European Journal of Cancer Care",
+    "Journal of Pediatric Nursing",
+    "Scandinavian Journal of Caring Sciences",
+    "Revista da Escola de Enfermagem da U S P",
+    "Nursing Outlook",
+    "Journal of Wound Care",
+    "International Journal of Mental Health Nursing"
+  ]
+}

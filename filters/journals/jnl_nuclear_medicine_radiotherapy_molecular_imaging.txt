@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_nuclear_medicine_radiotherapy_molecular_imaging
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Nuclear Medicine, Radiotherapy & Molecular Imaging según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Nucl Med[JO]|Int J Radiat Oncol Biol Phys[JO]|Eur J Nucl Med Mol Imaging[JO]|Radiother Oncol[JO]|Med Phys[JO]|Phys Med Biol[JO]|NMR Biomed[JO]|Radiat Oncol[JO]|Diagnostics (Basel)[JO]|J Nucl Cardiol[JO]|Phys Med[JO]|Clin Nucl Med[JO]|Mol Imaging Biol[JO]|Clin Oncol[JO]|Semin Nucl Med[JO]|EJNMMI Res[JO]|Radiat Res[JO]|Int J Radiat Biol[JO]|Pract Radiat Oncol[JO]|Strahlenther Onkol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Nuclear Medicine, Radiotherapy & Molecular Imaging",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of nuclear medicine : official publication, Society of Nuclear Medicine",
+    "International journal of radiation oncology, biology, physics",
+    "European Journal of Nuclear Medicine and Molecular Imaging",
+    "Radiotherapy and oncology : journal of the European Society for Therapeutic Radiology and Oncology",
+    "Medical Physics",
+    "Physics in medicine and biology",
+    "NMR in biomedicine",
+    "Radiation oncology (London, England)",
+    "Diagnostics (Basel, Switzerland)",
+    "Journal of nuclear cardiology : official publication of the American Society of Nuclear Cardiology",
+    "Physica medica : PM : an international journal devoted to the applications of physics to medicine and biology : official journal of the Italian Association of Biomedical Physics (AIFB)",
+    "Clinical Nuclear Medicine",
+    "Molecular Imaging and Biology",
+    "Clinical Oncology",
+    "Seminars in Nuclear Medicine",
+    "EJNMMI Research",
+    "Radiation Research",
+    "International Journal of Radiation Biology",
+    "Practical Radiation Oncology",
+    "Strahlentherapie und Onkologie : Organ der Deutschen Rontgengesellschaft ... [et al]"
+  ]
+}

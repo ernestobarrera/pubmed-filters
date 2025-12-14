@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_dentistry
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Dentistry según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Clin Periodontol[JO]|J Dent Res[JO]|J Endod[JO]|Dent Mater[JO]|Clin Oral Implants Res[JO]|J Prosthet Dent[JO]|Int Endod J[JO]|Periodontol 2000[JO]|J Periodontol[JO]|Clin Oral Investig[JO]|J Dent[JO]|Clin Implant Dent Relat Res[JO]|Am J Orthod Dentofacial Orthop[JO]|J Am Dent Assoc[JO]|Oral Dis[JO]|BMC Oral Health[JO]|J Oral Rehabil[JO]|Oper Dent[JO]|J Prosthodont[JO]|Arch Oral Biol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Dentistry",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of Clinical Periodontology",
+    "Journal of Dental Research",
+    "Journal of Endodontics",
+    "Dental materials : official publication of the Academy of Dental Materials",
+    "Clinical Oral Implants Research",
+    "The Journal of Prosthetic Dentistry",
+    "International Endodontic Journal",
+    "Periodontology 2000",
+    "Journal of Periodontology",
+    "Clinical Oral Investigations",
+    "Journal of Dentistry",
+    "Clinical Implant Dentistry and Related Research",
+    "American journal of orthodontics and dentofacial orthopedics : official publication of the American Association of Orthodontists, its constituent societies, and the American Board of Orthodontics",
+    "Journal of the American Dental Association (1939)",
+    "Oral Diseases",
+    "BMC Oral Health",
+    "Journal of Oral Rehabilitation",
+    "Operative Dentistry",
+    "Journal of prosthodontics : official journal of the American College of Prosthodontists",
+    "Archives of Oral Biology"
+  ]
+}

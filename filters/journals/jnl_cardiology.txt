@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_cardiology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Cardiology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Circulation[JO]|J Am Coll Cardiol[JO]|Eur Heart J[JO]|Circ Res[JO]|JAMA Cardiol[JO]|Eur J Heart Fail[JO]|J Am Heart Assoc[JO]|Nat Rev Cardiol[JO]|JACC Cardiovasc Imaging[JO]|JACC Cardiovasc Interv[JO]|Int J Cardiol[JO]|Heart Rhythm[JO]|Cardiovasc Res[JO]|Heart[JO]|JACC Heart Fail[JO]|Eur J Cardiovasc Prev Rehabil[JO]|Ann Thorac Surg[JO]|Europace[JO]|J Thorac Cardiovasc Surg[JO]|Eur Heart J Cardiovasc Imaging[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Cardiology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Circulation",
+    "Journal of the American College of Cardiology",
+    "European Heart Journal",
+    "Circulation Research",
+    "JAMA Cardiology",
+    "European Journal of Heart Failure",
+    "Journal of the American Heart Association",
+    "Nature Reviews. Cardiology",
+    "JACC. Cardiovascular imaging",
+    "JACC. Cardiovascular Interventions",
+    "International Journal of Cardiology",
+    "Heart rhythm",
+    "Cardiovascular Research",
+    "Heart (British Cardiac Society)",
+    "JACC. Heart Failure",
+    "European journal of cardiovascular prevention and rehabilitation : official journal of the European Society of Cardiology, Working Groups on Epidemiology & Prevention and Cardiac Rehabilitation and Exercise Physiology",
+    "The Annals of Thoracic Surgery",
+    "Europace : European pacing, arrhythmias, and cardiac electrophysiology : journal of the working groups on cardiac pacing, arrhythmias, and cardiac cellular electrophysiology of the European Society of Cardiology",
+    "The Journal of Thoracic and Cardiovascular Surgery",
+    "European heart journal. Cardiovascular Imaging"
+  ]
+}

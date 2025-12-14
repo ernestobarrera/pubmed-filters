@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_neurosurgery
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Neurosurgery según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Neurosurg[JO]|Neurosurgery[JO]|World Neurosurg[JO]|J Neurosurg Spine[JO]|Neurosurg Focus[JO]|Acta Neurochir (Wien)[JO]|J Neurosurg[JO]|Neurosurg Rev[JO]|Neurosurg Clin N Am[JO]|Br J Neurosurg[JO]|Surg Neurol Int[JO]|Neurol Med Chir (Tokyo)[JO]|Oper Neurosurg (Hagerstown)[JO]|J Korean Neurosurg Soc[JO]|J Neurol Surg B Skull Base[JO]|Stereotact Funct Neurosurg[JO]|J Neurosurg Sci[JO]|Acta Neurochir Suppl[JO]|Neurospine[JO]|Asian J Neurosurg[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Neurosurgery",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of Neurosurgery",
+    "Neurosurgery",
+    "World Neurosurgery",
+    "Journal of Neurosurgery. Spine",
+    "Neurosurgical Focus",
+    "Acta Neurochirurgica",
+    "Journal of neurosurgery",
+    "Neurosurgical Review",
+    "Neurosurgery clinics of North America",
+    "British Journal of Neurosurgery",
+    "Surgical Neurology International",
+    "Neurologia Medico-chirurgica",
+    "Operative neurosurgery (Hagerstown, Md.)",
+    "Journal of Korean Neurosurgical Society",
+    "Journal of neurological surgery. Part B, Skull base",
+    "Stereotactic and Functional Neurosurgery",
+    "Journal of Neurosurgical Sciences",
+    "Acta neurochirurgica. Supplement",
+    "Neurospine",
+    "Asian Journal of Neurosurgery"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_diabetes
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Diabetes según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Diabetologia[JO]|Diabetes[JO]|Diabetes Obes Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Metab Syndr[JO]|J Diabetes Res[JO]|Diabetes Res Clin Pract[JO]|Diabetes Metab Res Rev[JO]|Diabet Med[JO]|Curr Diab Rep[JO]|Diabetes Technol Ther[JO]|Pediatr Diabetes[JO]|J Diabetes Complications[JO]|J Diabetes Investig[JO]|J Diabetes Sci Technol[JO]|Can J Diabetes[JO]|Acta Diabetol[JO]|Diabetes Metab J[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Diabetes",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Diabetes Care",
+    "The lancet. Diabetes & endocrinology",
+    "Diabetologia",
+    "Diabetes",
+    "Diabetes, obesity & metabolism",
+    "Cardiovascular Diabetology",
+    "Diabetes & metabolic syndrome",
+    "Journal of Diabetes Research",
+    "Diabetes Research and Clinical Practice",
+    "Diabetes/metabolism research and reviews",
+    "Diabetic medicine : a journal of the British Diabetic Association",
+    "Current Diabetes Reports",
+    "Diabetes Technology & Therapeutics",
+    "Pediatric Diabetes",
+    "Journal of diabetes and its complications",
+    "Journal of Diabetes Investigation",
+    "Journal of Diabetes Science and Technology",
+    "Canadian Journal of Diabetes",
+    "Acta Diabetologica",
+    "Diabetes & Metabolism Journal"
+  ]
+}

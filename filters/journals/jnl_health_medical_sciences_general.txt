@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_health_medical_sciences_general
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Health & Medical Sciences (general) según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(N Engl J Med[JO]|Lancet[JO]|JAMA[JO]|Proc Natl Acad Sci U S A[JO]|Nat Med[JO]|PLoS One[JO]|BMJ[JO]|Cochrane Database Syst Rev[JO]|Int J Mol Sci[JO]|Cell Metab[JO]|J Clin Invest[JO]|Sci Transl Med[JO]|Ann Intern Med[JO]|JAMA Intern Med[JO]|Cell Host Microbe[JO]|Nat Microbiol[JO]|Nat Rev Dis Primers[JO]|PLoS Med[JO]|BMJ Open[JO]|Lancet Glob Health[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Health & Medical Sciences (general)",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "The New England Journal of Medicine",
+    "Lancet (London, England)",
+    "JAMA",
+    "Proceedings of the National Academy of Sciences of the United States of America",
+    "Nature Medicine",
+    "PLoS ONE",
+    "BMJ (Clinical research ed.)",
+    "The Cochrane Database of Systematic Reviews",
+    "International Journal of Molecular Sciences",
+    "Cell Metabolism",
+    "The Journal of Clinical Investigation",
+    "Science Translational Medicine",
+    "Annals of Internal Medicine",
+    "JAMA Internal Medicine",
+    "Cell Host & Microbe",
+    "Nature Microbiology",
+    "Nature reviews. Disease primers",
+    "PLOS Medicine",
+    "BMJ open",
+    "The Lancet. Global health"
+  ]
+}

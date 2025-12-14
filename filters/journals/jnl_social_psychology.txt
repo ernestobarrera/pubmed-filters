@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_social_psychology
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Social Psychology según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Pers Individ Dif[JO]|J Pers Soc Psychol[JO]|Soc Psychol Personal Sci[JO]|J Exp Soc Psychol[JO]|Cyberpsychol Behav Soc Netw[JO]|Pers Soc Psychol Bull[JO]|J Pers[JO]|J Res Pers[JO]|Eur J Soc Psychol[JO]|Group Process Intergroup Relat[JO]|Soc Personal Psychol Compass[JO]|Eur J Pers[JO]|J Soc Pers Relat[JO]|Br J Soc Psychol[JO]|Soc Behav Pers[JO]|Psychol Pop Media Cult[JO]|J Soc Psychol[JO]|Self Identity[JO]|Soc Psychol[JO]|Polit Psychol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Social Psychology",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Personality and Individual Differences",
+    "Journal of Personality and Social Psychology",
+    "Social Psychological and Personality Science",
+    "Journal of Experimental Social Psychology",
+    "Cyberpsychology, behavior and social networking",
+    "Personality & social psychology bulletin",
+    "Journal of Personality",
+    "Journal of Research in Personality",
+    "European Journal of Social Psychology",
+    "Group processes & intergroup relations : GPIR",
+    "Social and Personality Psychology Compass",
+    "European Journal of Personality",
+    "Journal of Social and Personal Relationships",
+    "The British journal of social psychology",
+    "Social behavior and personality",
+    "Psychology of Popular Media Culture",
+    "The Journal of Social Psychology",
+    "Self and identity : the journal of the International Society for Self and Identity",
+    "Social Psychology",
+    "Political psychology"
+  ]
+}

@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_communicable_diseases
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Communicable Diseases según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Lancet Infect Dis[JO]|Clin Infect Dis[JO]|Emerg Infect Dis[JO]|J Med Virol[JO]|J Infect Dis[JO]|Euro Surveill[JO]|Antimicrob Agents Chemother[JO]|Clin Microbiol Infect[JO]|J Clin Microbiol[JO]|Int J Infect Dis[JO]|PLoS Negl Trop Dis[JO]|Vaccine[JO]|J Infect[JO]|J Antimicrob Chemother[JO]|Clin Microbiol Rev[JO]|Emerg Microbes Infect[JO]|Front Cell Infect Microbiol[JO]|Int J Antimicrob Agents[JO]|BMC Infect Dis[JO]|J Clin Virol[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Communicable Diseases",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "The Lancet. Infectious diseases",
+    "Clinical infectious diseases : an official publication of the Infectious Diseases Society of America",
+    "Emerging Infectious Diseases",
+    "Journal of Medical Virology",
+    "The Journal of Infectious Diseases",
+    "Euro surveillance : bulletin Europeen sur les maladies transmissibles = European communicable disease bulletin",
+    "Antimicrobial Agents and Chemotherapy",
+    "Clinical microbiology and infection : the official publication of the European Society of Clinical Microbiology and Infectious Diseases",
+    "Journal of Clinical Microbiology",
+    "International journal of infectious diseases : IJID : official publication of the International Society for Infectious Diseases",
+    "PLOS Neglected Tropical Diseases",
+    "Vaccine",
+    "The Journal of infection",
+    "The Journal of antimicrobial chemotherapy",
+    "Clinical Microbiology Reviews",
+    "Emerging Microbes & Infections",
+    "Frontiers in Cellular and Infection Microbiology",
+    "International Journal of Antimicrobial Agents",
+    "BMC Infectious Diseases",
+    "Journal of clinical virology : the official publication of the Pan American Society for Clinical Virology"
+  ]
+}

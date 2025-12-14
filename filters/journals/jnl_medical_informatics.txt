@@ -1,0 +1,37 @@
+# Filtro: journals/jnl_medical_informatics
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2025-12-13
+# Descripción: Top 20 revistas en Medical Informatics según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(J Med Internet Res[JO]|J Am Med Inform Assoc[JO]|IEEE J Biomed Health Inform[JO]|JMIR Mhealth Uhealth[JO]|J Med Syst[JO]|Int J Med Inform[JO]|J Biomed Inform[JO]|BMC Med Inform Decis Mak[JO]|NPJ Digit Med[JO]|Artif Intell Med[JO]|Telemed J E Health[JO]|J Telemed Telecare[JO]|JMIR Med Inform[JO]|Lancet Digit Health[JO]|JMIR Res Protoc[JO]|Health Informatics J[JO]|AMIA Annu Symp Proc[JO]|Stud Health Technol Inform[JO]|J Biomed Semantics[JO]|Healthc Inform Res[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Medical Informatics",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "journals": [
+    "Journal of Medical Internet Research",
+    "Journal of the American Medical Informatics Association : JAMIA",
+    "IEEE Journal of Biomedical and Health Informatics",
+    "JMIR mHealth and uHealth",
+    "Journal of Medical Systems",
+    "International Journal of Medical Informatics",
+    "Journal of Biomedical Informatics",
+    "BMC Medical Informatics and Decision Making",
+    "NPJ Digital Medicine",
+    "Artificial Intelligence in Medicine",
+    "Telemedicine journal and e-health : the official journal of the American Telemedicine Association",
+    "Journal of Telemedicine and Telecare",
+    "JMIR Medical Informatics",
+    "The Lancet. Digital health",
+    "JMIR Research Protocols",
+    "Health Informatics Journal",
+    "AMIA ... Annual Symposium proceedings. AMIA Symposium",
+    "Studies in Health Technology and Informatics",
+    "Journal of Biomedical Semantics",
+    "Healthcare Informatics Research"
+  ]
+}
