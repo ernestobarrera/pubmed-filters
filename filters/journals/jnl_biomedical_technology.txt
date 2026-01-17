@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_biomedical_technology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Biomedical Technology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Biomaterials[JO]|Acta Biomater[JO]|IEEE Trans Biomed Eng[JO]|Biofabrication[JO]|J Mech Behav Biomed Mater[JO]|ACS Biomater Sci Eng[JO]|J Neural Eng[JO]|Ann Biomed Eng[JO]|IEEE Trans Biomed Circuits Syst[JO]|J Biomed Mater Res A[JO]|J Biomed Mater Res B Appl Biomater[JO]|J Tissue Eng Regen Med[JO]|Bioact Mater[JO]|Tissue Eng Part A[JO]|Physiol Meas[JO]|Biomech Model Mechanobiol[JO]|Med Biol Eng Comput[JO]|Tissue Eng Part B Rev[JO]|Med Eng Phys[JO]|Biomed Mater[JO])
+(Bioact Mater[JO]|Biomaterials[JO]|Front Bioeng Biotechnol[JO]|Acta Biomater[JO]|ACS Biomater Sci Eng[JO]|Mater Today Bio[JO]|IEEE Trans Biomed Eng[JO]|Biofabrication[JO]|J Mech Behav Biomed Mater[JO]|Biocybern Biomed Eng[JO]|J Neural Eng[JO]|Ann Biomed Eng[JO]|J Funct Biomater[JO]|J Biomed Mater Res A[JO]|IEEE Rev Biomed Eng[JO]|Biomater Res[JO]|IEEE Trans Biomed Circuits Syst[JO]|Med Biol Eng Comput[JO]|J Biomed Mater Res B Appl Biomater[JO]|Eng Regen[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Biomedical Technology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
+    "Bioactive Materials",
     "Biomaterials",
+    "Frontiers in Bioengineering and Biotechnology",
     "Acta Biomaterialia",
-    "IEEE transactions on bio-medical engineering",
+    "ACS Biomaterials Science & Engineering",
+    "Materials Today Bio",
+    "IEEE Transactions on Biomedical Engineering",
     "Biofabrication",
     "Journal of the Mechanical Behavior of Biomedical Materials",
-    "ACS Biomaterials Science & Engineering",
+    "Biocybernetics and Biomedical Engineering",
     "Journal of Neural Engineering",
     "Annals of Biomedical Engineering",
+    "Journal of Functional Biomaterials",
+    "Journal of Biomedical Materials Research Part A",
+    "IEEE Reviews in Biomedical Engineering",
+    "Biomaterials Research",
     "IEEE Transactions on Biomedical Circuits and Systems",
-    "Journal of biomedical materials research. Part A",
-    "Journal of biomedical materials research. Part B, Applied biomaterials",
-    "Journal of Tissue Engineering and Regenerative Medicine",
-    "Bioactive Materials",
-    "Tissue engineering. Part A",
-    "Physiological Measurement",
-    "Biomechanics and Modeling in Mechanobiology",
     "Medical & Biological Engineering & Computing",
-    "Tissue engineering. Part B, Reviews",
-    "Medical Engineering & Physics",
-    "Biomedical materials (Bristol, England)"
+    "Journal of Biomedical Materials Research Part B: Applied Biomaterials",
+    "Engineered Regeneration"
   ]
 }

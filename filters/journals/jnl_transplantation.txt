@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_transplantation
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Transplantation según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Am J Transplant[JO]|J Heart Lung Transplant[JO]|Transplantation[JO]|Biol Blood Marrow Transplant[JO]|Bone Marrow Transplant[JO]|Liver Transpl[JO]|Cell Transplant[JO]|Transpl Int[JO]|Clin Transplant[JO]|Transpl Infect Dis[JO]|Curr Opin Organ Transplant[JO]|World J Transplant[JO]|Transplant Proc[JO]|Xenotransplantation[JO]|Transplant Rev[JO]|Transplant Direct[JO]|Pediatr Transplant[JO]|Exp Clin Transplant[JO]|Curr Transplant Rep[JO]|Ann Transplant[JO])
+(Am J Transplant[JO]|Transplantation[JO]|J Heart Lung Transplant[JO]|Bone Marrow Transplant[JO]|Transplant Cell Ther[JO]|Biol Blood Marrow Transplant[JO]|Liver Transpl[JO]|Transpl Int[JO]|Transpl Infect Dis[JO]|Cell Transplant[JO]|Clin Transplant[JO]|Transplant Direct[JO]|Xenotransplantation[JO]|Transplant Rev[JO]|Transplant Proc[JO]|Pediatr Transplant[JO]|Curr Opin Organ Transplant[JO]|World J Transplant[JO]|Transplant Immunol[JO]|Curr Transplant Rep[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Transplantation",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "American journal of transplantation : official journal of the American Society of Transplantation and the American Society of Transplant Surgeons",
-    "The Journal of heart and lung transplantation : the official publication of the International Society for Heart Transplantation",
+    "American Journal of Transplantation",
     "Transplantation",
-    "Biology of blood and marrow transplantation : journal of the American Society for Blood and Marrow Transplantation",
+    "The Journal of Heart and Lung Transplantation",
     "Bone Marrow Transplantation",
-    "Liver transplantation : official publication of the American Association for the Study of Liver Diseases and the International Liver Transplantation Society",
+    "Transplantation and Cellular Therapy",
+    "Biology of Blood and Marrow Transplantation",
+    "Liver Transplantation",
+    "Transplant International",
+    "Transplant Infectious Disease",
     "Cell Transplantation",
-    "Transplant international : official journal of the European Society for Organ Transplantation",
     "Clinical Transplantation",
-    "Transplant infectious disease : an official journal of the Transplantation Society",
-    "Current Opinion in Organ Transplantation",
-    "World Journal of Transplantation",
-    "Transplantation Proceedings",
+    "Transplantation Direct",
     "Xenotransplantation",
     "Transplantation Reviews",
-    "Transplantation Direct",
+    "Transplantation Proceedings",
     "Pediatric Transplantation",
-    "Experimental and clinical transplantation : official journal of the Middle East Society for Organ Transplantation",
-    "Current Transplantation Reports",
-    "Annals of Transplantation"
+    "Current Opinion in Organ Transplantation",
+    "World Journal of Transplantation",
+    "Transplant Immunology",
+    "Current Transplantation Reports"
   ]
 }

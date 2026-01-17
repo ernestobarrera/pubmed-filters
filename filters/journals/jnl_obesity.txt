@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_obesity
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Obesity según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Obes Rev[JO]|Diabetes Obes Metab[JO]|Obesity (Silver Spring)[JO]|Mol Metab[JO]|Int J Obes[JO]|Obes Surg[JO]|Surg Obes Relat Dis[JO]|Curr Obes Rep[JO]|Eat Weight Disord[JO]|Pediatr Obes[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Facts[JO]|Diabetes Metab Syndr Obes[JO]|Obes Res Clin Pract[JO]|Child Obes[JO]|Clin Obes[JO]|J Obes[JO]|Ther Adv Endocrinol Metab[JO]|BMC Obes[JO]|Obes Sci Pract[JO])
+(Obes Rev[JO]|Diabetes Obes Metab[JO]|Obesity (Silver Spring)[JO]|Mol Metab[JO]|Int J Obes (Lond)[JO]|Diabetes Metab Syndr Obes[JO]|Obes Surg[JO]|Eat Weight Disord[JO]|Curr Obes Rep[JO]|Surg Obes Relat Dis[JO]|Pediatr Obes[JO]|Obes Facts[JO]|Ther Adv Endocrinol Metab[JO]|Obes Res Clin Pract[JO]|Obes Med[JO]|J Obes Metab Syndr[JO]|Endocrinol Diabetes Metab[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Sci Pract[JO]|Clin Obes[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Obesity",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Obesity reviews : an official journal of the International Association for the Study of Obesity",
-    "Diabetes, obesity & metabolism",
-    "Obesity (Silver Spring, Md.)",
+    "Obesity Reviews",
+    "Diabetes, Obesity and Metabolism",
+    "Obesity",
     "Molecular Metabolism",
     "International Journal of Obesity",
+    "Diabetes, Metabolic Syndrome and Obesity",
     "Obesity Surgery",
-    "Surgery for obesity and related diseases : official journal of the American Society for Bariatric Surgery",
+    "Eating and Weight Disorders",
     "Current Obesity Reports",
-    "Eating and weight disorders : EWD",
+    "Surgery for Obesity and Related Diseases",
     "Pediatric Obesity",
-    "Current opinion in endocrinology, diabetes, and obesity",
     "Obesity Facts",
-    "Diabetes, metabolic syndrome and obesity : targets and therapy",
-    "Obesity Research & Clinical Practice",
-    "Childhood obesity (Print)",
-    "Clinical Obesity",
-    "Journal of Obesity",
     "Therapeutic Advances in Endocrinology and Metabolism",
-    "BMC Obesity",
-    "Obesity Science & Practice"
+    "Obesity Research & Clinical Practice",
+    "Obesity Medicine",
+    "Journal of Obesity & Metabolic Syndrome",
+    "Endocrinology, Diabetes & Metabolism",
+    "Current Opinion in Endocrinology, Diabetes and Obesity",
+    "Obesity Science & Practice",
+    "Clinical Obesity"
   ]
 }

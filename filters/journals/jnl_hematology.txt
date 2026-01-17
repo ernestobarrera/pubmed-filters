@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_hematology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Hematology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Blood[JO]|Leukemia[JO]|J Hematol Oncol[JO]|J Thromb Haemost[JO]|Haematologica[JO]|Am J Hematol[JO]|Br J Haematol[JO]|Lancet Haematol[JO]|Thromb Haemost[JO]|Blood Adv[JO]|Biol Blood Marrow Transplant[JO]|Transfusion[JO]|Bone Marrow Transplant[JO]|Thromb Res[JO]|Blood Cancer J[JO]|Blood Rev[JO]|J Thromb Thrombolysis[JO]|Semin Thromb Hemost[JO]|Ann Hematol[JO]|Exp Hematol[JO])
+(Blood[JO]|J Hematol Oncol[JO]|Blood Adv[JO]|Leukemia[JO]|J Thromb Haemost[JO]|Lancet Haematol[JO]|Haematologica[JO]|Br J Haematol[JO]|Am J Hematol[JO]|Blood Cancer J[JO]|Thromb Res[JO]|J Thromb Thrombolysis[JO]|Thromb Haemost[JO]|Bone Marrow Transplant[JO]|Exp Hematol Oncol[JO]|Blood Rev[JO]|Transfusion[JO]|Ann Hematol[JO]|Res Pract Thromb Haemost[JO]|Transplant Cell Ther[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Hematology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Blood",
-    "Leukemia",
     "Journal of Hematology & Oncology",
-    "Journal of thrombosis and haemostasis : JTH",
-    "Haematologica",
-    "American Journal of Hematology",
-    "British Journal of Haematology",
-    "The Lancet. Haematology",
-    "Thrombosis and Haemostasis",
     "Blood Advances",
-    "Biology of blood and marrow transplantation : journal of the American Society for Blood and Marrow Transplantation",
-    "Transfusion",
-    "Bone Marrow Transplantation",
-    "Thrombosis Research",
+    "Leukemia",
+    "Journal of Thrombosis and Haemostasis",
+    "The Lancet Haematology",
+    "Haematologica",
+    "British Journal of Haematology",
+    "American Journal of Hematology",
     "Blood Cancer Journal",
-    "Blood Reviews",
+    "Thrombosis Research",
     "Journal of Thrombosis and Thrombolysis",
-    "Seminars in Thrombosis and Hemostasis",
+    "Thrombosis and Haemostasis",
+    "Bone Marrow Transplantation",
+    "Experimental Hematology & Oncology",
+    "Blood Reviews",
+    "Transfusion",
     "Annals of Hematology",
-    "Experimental Hematology"
+    "Research and Practice in Thrombosis and Haemostasis",
+    "Transplantation and Cellular Therapy"
   ]
 }

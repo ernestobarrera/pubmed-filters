@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_dermatology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Dermatology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Am Acad Dermatol[JO]|Br J Dermatol[JO]|J Invest Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|JAMA Dermatol[JO]|Am J Clin Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|J Dermatol Sci[JO]|J Dermatol[JO]|Contact Dermatitis[JO]|Clin Dermatol[JO]|Dermatol Clin[JO]|Int J Dermatol[JO]|Dermatol Surg[JO]|Dermatol Ther (Heidelb)[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|J Dtsch Dermatol Ges[JO]|Pediatr Dermatol[JO])
+(J Am Acad Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|Br J Dermatol[JO]|JAMA Dermatol[JO]|J Invest Dermatol[JO]|Am J Clin Dermatol[JO]|Dermatol Ther[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|Dermatol Ther (Heidelb)[JO]|Int J Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|Clin Cosmet Investig Dermatol[JO]|Clin Exp Dermatol[JO]|J Dtsch Dermatol Ges[JO]|J Dermatol[JO]|Clin Dermatol[JO]|Dermatology[JO]|Contact Dermatitis[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Dermatology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Journal of the American Academy of Dermatology",
-    "The British journal of dermatology",
-    "The Journal of investigative dermatology",
-    "Journal of the European Academy of Dermatology and Venereology : JEADV",
+    "Journal of the European Academy of Dermatology & Venereology",
+    "British Journal of Dermatology",
     "JAMA Dermatology",
+    "Journal of Investigative Dermatology",
     "American Journal of Clinical Dermatology",
+    "Dermatologic Therapy",
+    "Journal of Cosmetic Dermatology",
+    "Journal of Dermatological Treatment",
+    "Dermatology and Therapy",
+    "International Journal of Dermatology",
     "Experimental Dermatology",
     "Acta Dermato-Venereologica",
-    "Journal of Dermatological Science",
+    "Clinical, Cosmetic and Investigational Dermatology",
+    "Clinical and Experimental Dermatology",
+    "Journal of the German Society of Dermatology",
     "The Journal of Dermatology",
-    "Contact Dermatitis",
     "Clinics in Dermatology",
-    "Dermatologic Clinics",
-    "International Journal of Dermatology",
-    "Dermatologic surgery : official publication for American Society for Dermatologic Surgery [et al.]",
-    "Dermatology and Therapy",
-    "Journal of Cosmetic Dermatology",
-    "The Journal of dermatological treatment",
-    "Journal der Deutschen Dermatologischen Gesellschaft = Journal of the German Society of Dermatology : JDDG",
-    "Pediatric Dermatology"
+    "Dermatology",
+    "Contact Dermatitis"
   ]
 }

@@ -1,10 +1,11 @@
 # Filtro: journals/jnl_oncology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Oncology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
+# Actualizado: Verificadas siglas en NLM Catalog
 
-(J Clin Oncol[JO]|Lancet Oncol[JO]|Ann Oncol[JO]|Clin Cancer Res[JO]|JAMA Oncol[JO]|Cancer Cell[JO]|Nat Rev Cancer[JO]|Cancer Res[JO]|Oncotarget[JO]|Cancer Discov[JO]|Mol Cancer[JO]|Nat Rev Clin Oncol[JO]|Oncogene[JO]|J Thorac Oncol[JO]|Cancer Lett[JO]|Eur J Cancer[JO]|Leukemia[JO]|Neuro Oncol[JO]|J Natl Cancer Inst[JO]|Cancer[JO])
+(J Clin Oncol[JO]|Lancet Oncol[JO]|Ann Oncol[JO]|Cancer Cell[JO]|Cancers (Basel)[JO]|Mol Cancer[JO]|J Hematol Oncol[JO]|Clin Cancer Res[JO]|Cancer Discov[JO]|Front Oncol[JO]|JAMA Oncol[JO]|Nat Rev Clin Oncol[JO]|Nat Rev Cancer[JO]|Cancer Res[JO]|J Immunother Cancer[JO]|Semin Cancer Biol[JO]|Nat Cancer[JO]|J Thorac Oncol[JO]|J Exp Clin Cancer Res[JO]|Cancer Lett[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +13,27 @@
   "specialty": "Oncology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Journal of clinical oncology : official journal of the American Society of Clinical Oncology",
-    "The Lancet. Oncology",
-    "Annals of oncology : official journal of the European Society for Medical Oncology",
-    "Clinical cancer research : an official journal of the American Association for Cancer Research",
-    "JAMA Oncology",
+    "Journal of Clinical Oncology",
+    "The Lancet Oncology",
+    "Annals of Oncology",
     "Cancer Cell",
-    "Nature reviews. Cancer",
-    "Cancer Research",
-    "Oncotarget",
-    "Cancer Discovery",
+    "Cancers",
     "Molecular Cancer",
-    "Nature reviews. Clinical oncology",
-    "Oncogene",
-    "Journal of thoracic oncology : official publication of the International Association for the Study of Lung Cancer",
-    "Cancer Letters",
-    "European Journal of Cancer",
-    "Leukemia",
-    "Neuro-Oncology",
-    "Journal of the National Cancer Institute",
-    "Cancer"
+    "Journal of Hematology & Oncology",
+    "Clinical Cancer Research",
+    "Cancer Discovery",
+    "Frontiers in Oncology",
+    "JAMA Oncology",
+    "Nature Reviews Clinical Oncology",
+    "Nature Reviews Cancer",
+    "Cancer Research",
+    "Journal for ImmunoTherapy of Cancer",
+    "Seminars in Cancer Biology",
+    "Nature Cancer",
+    "Journal of Thoracic Oncology",
+    "Journal of Experimental & Clinical Cancer Research",
+    "Cancer Letters"
   ]
 }

@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_bioethics
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Bioethics según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Nurs Ethics[JO]|J Med Ethics[JO]|BMC Med Ethics[JO]|Am J Bioeth[JO]|J Law Med Ethics[JO]|Hastings Cent Rep[JO]|Med Health Care Philos[JO]|Bioethics[JO]|J Bioeth Inq[JO]|J Med Philos[JO]|J Empir Res Hum Res Ethics[JO]|Camb Q Healthc Ethics[JO]|Dev World Bioeth[JO]|Health Care Anal[JO]|AJOB Neurosci[JO]|AJOB Empir Bioeth[JO]|Public Health Ethics[JO]|HEC Forum[JO]|Indian J Med Ethics[JO]|Nanoethics[JO])
+(J Med Ethics[JO]|Nurs Ethics[JO]|Am J Bioeth[JO]|BMC Med Ethics[JO]|Bioethics[JO]|Med Health Care Philos[JO]|J Bioeth Inq[JO]|J Law Med Ethics[JO]|Hastings Cent Rep[JO]|Camb Q Healthc Ethics[JO]|Am J Bioeth Neurosci[JO]|Ethics Med Public Health[JO]|Asian Bioeth Rev[JO]|Neuroethics[JO]|J Empir Res Hum Res Ethics[JO]|J Med Philos[JO]|Public Health Ethics[JO]|Health Care Anal[JO]|HEC Forum[JO]|AJOB Empir Bioeth[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Bioethics",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Nursing Ethics",
     "Journal of Medical Ethics",
+    "Nursing Ethics",
+    "The American Journal of Bioethics",
     "BMC Medical Ethics",
-    "The American journal of bioethics : AJOB",
-    "The Journal of law, medicine & ethics : a journal of the American Society of Law, Medicine & Ethics",
-    "The Hastings Center report",
-    "Medicine, health care, and philosophy",
     "Bioethics",
+    "Medicine, Health Care and Philosophy",
     "Journal of Bioethical Inquiry",
-    "The Journal of medicine and philosophy",
-    "Journal of empirical research on human research ethics : JERHRE",
-    "Cambridge quarterly of healthcare ethics : CQ : the international journal of healthcare ethics committees",
-    "Developing World Bioethics",
-    "Health care analysis : HCA : journal of health philosophy and policy",
-    "AJOB neuroscience",
-    "AJOB Empirical Bioethics",
+    "Journal of Law, Medicine & Ethics",
+    "Hastings Center Report",
+    "Cambridge Quarterly of Healthcare Ethics",
+    "American Journal of Bioethics Neuroscience",
+    "Ethics, Medicine and Public Health",
+    "Asian Bioethics Review",
+    "Neuroethics",
+    "Journal of Empirical Research on Human Research Ethics",
+    "The Journal of Medicine and Philosophy",
     "Public Health Ethics",
-    "HEC forum : an interdisciplinary journal on hospitals' ethical and legal issues",
-    "Indian Journal of Medical Ethics",
-    "NanoEthics"
+    "Health Care Analysis",
+    "HEC Forum",
+    "AJOB Empirical Bioethics"
   ]
 }

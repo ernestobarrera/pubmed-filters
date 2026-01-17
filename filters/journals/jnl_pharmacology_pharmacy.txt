@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pharmacology_pharmacy
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pharmacology & Pharmacy según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Nat Rev Drug Discov[JO]|Adv Drug Deliv Rev[JO]|J Control Release[JO]|J Med Chem[JO]|Neuropsychopharmacology[JO]|Br J Pharmacol[JO]|Pharmacol Ther[JO]|Pharmacol Res[JO]|Int J Pharm[JO]|Trends Pharmacol Sci[JO]|Int J Nanomedicine[JO]|Neuropharmacology[JO]|Drugs[JO]|Clin Pharmacol Ther[JO]|J Ethnopharmacol[JO]|Biochem Pharmacol[JO]|Br J Clin Pharmacol[JO]|Eur J Pharmacol[JO]|Phytother Res[JO]|Prog Neuropsychopharmacol Biol Psychiatry[JO])
+(Front Pharmacol[JO]|Nat Rev Drug Discov[JO]|J Control Release[JO]|Pharmaceutics[JO]|Pharmacol Res[JO]|Adv Drug Deliv Rev[JO]|J Med Chem[JO]|Acta Pharm Sin B[JO]|Int J Nanomedicine[JO]|Int J Pharm[JO]|Pharmacol Ther[JO]|Drugs[JO]|Pharmaceuticals (Basel)[JO]|J Ethnopharmacol[JO]|Br J Pharmacol[JO]|Phytother Res[JO]|Neuropsychopharmacology[JO]|J Drug Deliv Sci Technol[JO]|Eur J Pharmacol[JO]|Med Res Rev[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pharmacology & Pharmacy",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Nature reviews. Drug discovery",
-    "Advanced Drug Delivery Reviews",
-    "Journal of controlled release : official journal of the Controlled Release Society",
-    "Journal of Medicinal Chemistry",
-    "Neuropsychopharmacology : official publication of the American College of Neuropsychopharmacology",
-    "British Journal of Pharmacology",
-    "Pharmacology & Therapeutics",
+    "Frontiers in Pharmacology",
+    "Nature Reviews Drug Discovery",
+    "Journal of Controlled Release",
+    "Pharmaceutics",
     "Pharmacological Research",
-    "International Journal of Pharmaceutics",
-    "Trends in Pharmacological Sciences",
+    "Advanced Drug Delivery Reviews",
+    "Journal of Medicinal Chemistry",
+    "Acta Pharmaceutica Sinica B",
     "International Journal of Nanomedicine",
-    "Neuropharmacology",
+    "International Journal of Pharmaceutics",
+    "Pharmacology & Therapeutics",
     "Drugs",
-    "Clinical pharmacology and therapeutics",
+    "Pharmaceuticals",
     "Journal of Ethnopharmacology",
-    "Biochemical Pharmacology",
-    "British Journal of Clinical Pharmacology",
+    "British Journal of Pharmacology",
+    "Phytotherapy Research",
+    "Neuropsychopharmacology",
+    "Journal of Drug Delivery Science and Technology",
     "European Journal of Pharmacology",
-    "Phytotherapy research : PTR",
-    "Progress in neuro-psychopharmacology & biological psychiatry"
+    "Medicinal Research Reviews"
   ]
 }

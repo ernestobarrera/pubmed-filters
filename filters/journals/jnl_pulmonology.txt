@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pulmonology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pulmonology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Am J Respir Crit Care Med[JO]|Lancet Respir Med[JO]|Eur Respir J[JO]|J Thorac Oncol[JO]|Chest[JO]|Thorax[JO]|Ann Am Thorac Soc[JO]|Lung Cancer[JO]|Respir Res[JO]|Respirology[JO]|J Thorac Dis[JO]|Respir Med[JO]|Eur Respir Rev[JO]|Int J Chron Obstruct Pulmon Dis[JO]|Am J Respir Cell Mol Biol[JO]|BMC Pulm Med[JO]|J Cyst Fibros[JO]|Clin Lung Cancer[JO]|Pediatr Pulmonol[JO]|Allergol Int[JO])
+(Lancet Respir Med[JO]|Eur Respir J[JO]|Am J Respir Crit Care Med[JO]|J Thorac Oncol[JO]|Chest[JO]|Thorax[JO]|Eur Respir Rev[JO]|Respir Res[JO]|Ann Am Thorac Soc[JO]|Lung Cancer[JO]|Respir Med[JO]|J Cyst Fibros[JO]|Pediatr Pulmonol[JO]|Respirology[JO]|J Thorac Dis[JO]|ERJ Open Res[JO]|Am J Respir Cell Mol Biol[JO]|BMC Pulm Med[JO]|BMJ Open Respir Res[JO]|Transl Lung Cancer Res[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pulmonology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
+    "The Lancet Respiratory Medicine",
+    "European Respiratory Journal",
     "American Journal of Respiratory and Critical Care Medicine",
-    "The Lancet. Respiratory Medicine",
-    "The European respiratory journal",
-    "Journal of thoracic oncology : official publication of the International Association for the Study of Lung Cancer",
+    "Journal of Thoracic Oncology",
     "Chest",
     "Thorax",
-    "Annals of the American Thoracic Society",
-    "Lung cancer (Amsterdam, Netherlands)",
+    "European Respiratory Review",
     "Respiratory Research",
-    "Respirology (Carlton, Vic.)",
-    "Journal of Thoracic Disease",
+    "Annals of the American Thoracic Society",
+    "Lung Cancer",
     "Respiratory Medicine",
-    "European respiratory review : an official journal of the European Respiratory Society",
-    "International Journal of Chronic Obstructive Pulmonary Disease",
+    "Journal of Cystic Fibrosis",
+    "Pediatric Pulmonology",
+    "Respirology",
+    "Journal of Thoracic Disease",
+    "ERJ Open Research",
     "American Journal of Respiratory Cell and Molecular Biology",
     "BMC Pulmonary Medicine",
-    "Journal of cystic fibrosis : official journal of the European Cystic Fibrosis Society",
-    "Clinical Lung Cancer",
-    "Pediatric Pulmonology",
-    "Allergology international : official journal of the Japanese Society of Allergology"
+    "BMJ Open Respiratory Research",
+    "Translational Lung Cancer Research"
   ]
 }

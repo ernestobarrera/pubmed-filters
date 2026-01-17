@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_public_health
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Public Health según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Int J Environ Res Public Health[JO]|Am J Public Health[JO]|BMC Public Health[JO]|Am J Prev Med[JO]|Int J Behav Nutr Phys Act[JO]|Lancet Public Health[JO]|Bull World Health Organ[JO]|Prev Med[JO]|Tob Control[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|AIDS Behav[JO]|JMIR Public Health Surveill[JO]|Int J Equity Health[JO]|Health Policy Plan[JO]|Eur J Public Health[JO]|Public Health[JO]|Prev Med Rep[JO]|J Glob Health[JO]|Glob Health Action[JO])
+(Int J Environ Res Public Health[JO]|BMC Public Health[JO]|Lancet Public Health[JO]|Am J Public Health[JO]|Int J Behav Nutr Phys Act[JO]|JMIR Public Health Surveill[JO]|Prev Med[JO]|Public Health[JO]|Am J Prev Med[JO]|SSM Popul Health[JO]|Int J Equity Health[JO]|J Glob Health[JO]|J Am Coll Health[JO]|AIDS Behav[JO]|J Public Health (Oxf)[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|J Racial Ethn Health Disparities[JO]|Bull World Health Organ[JO]|Tob Control[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Public Health",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "International Journal of Environmental Research and Public Health",
-    "American Journal of Public Health",
+    "Int J Environmental Research and Public Health",
     "BMC Public Health",
-    "American Journal of Preventive Medicine",
-    "The international journal of behavioral nutrition and physical activity",
-    "The Lancet. Public Health",
-    "Bulletin of the World Health Organization",
-    "Preventive Medicine",
-    "Tobacco Control",
-    "Annual Review of Public Health",
-    "Nicotine & tobacco research : official journal of the Society for Research on Nicotine and Tobacco",
-    "AIDS and behavior",
+    "The Lancet Public Health",
+    "American Journal of Public Health",
+    "Int J Behavioral Nutrition and Physical Activity",
     "JMIR Public Health and Surveillance",
-    "International Journal for Equity in Health",
-    "Health Policy and Planning",
-    "European Journal of Public Health",
+    "Preventive Medicine",
     "Public Health",
-    "Preventive Medicine Reports",
+    "American Journal of Preventive Medicine",
+    "SSM-Population Health",
+    "Int J for Equity in Health",
     "Journal of Global Health",
-    "Global Health Action"
+    "Journal of American College Health",
+    "AIDS and Behavior",
+    "Journal of Public Health",
+    "Annual Reviews of Public Health",
+    "Nicotine and Tobacco Research",
+    "J Racial and Ethnic Health Disparities",
+    "Bulletin of the World Health Organization",
+    "Tobacco Control"
   ]
 }

@@ -1,0 +1,38 @@
+# Filtro: journals/jnl_forensic_science
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2026-01-16
+# Descripción: Top 20 revistas en Forensic Science & Legal Medicine según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Forensic Sci Int[JO]|Int J Legal Med[JO]|Forensic Sci Int Genet[JO]|Forensic Sci Int Digit Investig[JO]|J Forensic Sci[JO]|J Anal Toxicol[JO]|Forensic Sci Int Synergy[JO]|Indian J Forensic Med Toxicol[JO]|Forensic Chem[JO]|Sci Justice[JO]|J Forensic Leg Med[JO]|Leg Med (Tokyo)[JO]|Forensic Sci Med Pathol[JO]|WIREs Forensic Sci[JO]|Forensic Sci Res[JO]|Forensic Toxicol[JO]|Aust J Forensic Sci[JO]|Forensic Sci Int Rep[JO]|J Am Acad Psychiatry Law[JO]|Med Leg J[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Forensic Science & Legal Medicine",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
+  "journals": [
+    "Forensic Science International",
+    "International Journal of Legal Medicine",
+    "Forensic Science International: Genetics",
+    "Forensic Science International: Digital Investigation",
+    "Journal of Forensic Sciences",
+    "Journal of Analytical Toxicology",
+    "Forensic Science International: Synergy",
+    "Indian Journal of Forensic Medicine & Toxicology",
+    "Forensic Chemistry",
+    "Science & Justice",
+    "Journal of Forensic and Legal Medicine",
+    "Legal Medicine",
+    "Forensic Science, Medicine and Pathology",
+    "Wiley Interdisciplinary Reviews: Forensic Science",
+    "Forensic Sciences Research",
+    "Forensic Toxicology",
+    "Australian Journal of Forensic Sciences",
+    "Forensic Science International: Reports",
+    "The Journal of the American Academy of Psychiatry and the Law",
+    "Medico-Legal Journal"
+  ]
+}

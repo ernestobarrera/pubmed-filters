@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_diabetes
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Diabetes según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Diabetologia[JO]|Diabetes[JO]|Diabetes Obes Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Metab Syndr[JO]|J Diabetes Res[JO]|Diabetes Res Clin Pract[JO]|Diabetes Metab Res Rev[JO]|Diabet Med[JO]|Curr Diab Rep[JO]|Diabetes Technol Ther[JO]|Pediatr Diabetes[JO]|J Diabetes Complications[JO]|J Diabetes Investig[JO]|J Diabetes Sci Technol[JO]|Can J Diabetes[JO]|Acta Diabetol[JO]|Diabetes Metab J[JO])
+(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Metabolism[JO]|Diabetologia[JO]|J Pineal Res[JO]|Diabetes[JO]|J Clin Endocrinol Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Obes Metab[JO]|Rev Endocr Metab Disord[JO]|Endocr Rev[JO]|Front Endocrinol (Lausanne)[JO]|J Cachexia Sarcopenia Muscle[JO]|Thyroid[JO]|Trends Endocrinol Metab[JO]|Mol Metab[JO]|Pediatr Diabetes[JO]|Diabetes Res Clin Pract[JO]|J Diabetes Complications[JO]|Diabet Med[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Diabetes",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Diabetes Care",
-    "The lancet. Diabetes & endocrinology",
+    "The Lancet Diabetes & Endocrinology",
+    "Metabolism",
     "Diabetologia",
+    "Journal of Pineal Research",
     "Diabetes",
-    "Diabetes, obesity & metabolism",
+    "Journal of Clinical Endocrinology & Metabolism",
     "Cardiovascular Diabetology",
-    "Diabetes & metabolic syndrome",
-    "Journal of Diabetes Research",
-    "Diabetes Research and Clinical Practice",
-    "Diabetes/metabolism research and reviews",
-    "Diabetic medicine : a journal of the British Diabetic Association",
-    "Current Diabetes Reports",
-    "Diabetes Technology & Therapeutics",
+    "Diabetes, Obesity and Metabolism",
+    "Reviews in Endocrine and Metabolic Disorders",
+    "Endocrine Reviews",
+    "Frontiers in Endocrinology",
+    "Journal of Cachexia, Sarcopenia and Muscle",
+    "Thyroid",
+    "Trends in Endocrinology & Metabolism",
+    "Molecular Metabolism",
     "Pediatric Diabetes",
-    "Journal of diabetes and its complications",
-    "Journal of Diabetes Investigation",
-    "Journal of Diabetes Science and Technology",
-    "Canadian Journal of Diabetes",
-    "Acta Diabetologica",
-    "Diabetes & Metabolism Journal"
+    "Diabetes Research and Clinical Practice",
+    "Journal of Diabetes and Its Complications",
+    "Diabetic Medicine"
   ]
 }

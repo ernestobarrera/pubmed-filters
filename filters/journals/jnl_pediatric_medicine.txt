@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pediatric_medicine
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pediatric Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Pediatrics[JO]|JAMA Pediatr[JO]|J Pediatr[JO]|J Pediatr Gastroenterol Nutr[JO]|Dev Med Child Neurol[JO]|Front Pediatr[JO]|Pediatr Res[JO]|Arch Dis Child[JO]|Acta Paediatr[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Crit Care Med[JO]|BMC Pediatr[JO]|Pediatr Diabetes[JO]|Pediatr Nephrol[JO]|Pediatr Infect Dis J[JO]|J Inherit Metab Dis[JO]|Eur J Pediatr[JO]|J Perinatol[JO]|Semin Fetal Neonatal Med[JO]|J Pediatr Surg[JO])
+(Pediatrics[JO]|JAMA Pediatr[JO]|Front Pediatr[JO]|J Pediatr[JO]|Pediatr Res[JO]|Children (Basel)[JO]|Eur J Pediatr[JO]|BMC Pediatr[JO]|Acta Paediatr[JO]|Arch Dis Child[JO]|Dev Med Child Neurol[JO]|Pediatr Infect Dis J[JO]|Pediatr Pulmonol[JO]|Ital J Pediatr[JO]|Pediatr Nephrol[JO]|Pediatr Allergy Immunol[JO]|Am J Perinatol[JO]|J Pediatr (Rio J)[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Diabetes[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pediatric Medicine",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Pediatrics",
     "JAMA Pediatrics",
-    "The Journal of Pediatrics",
-    "Journal of Pediatric Gastroenterology and Nutrition",
-    "Developmental medicine and child neurology",
     "Frontiers in Pediatrics",
+    "The Journal of Pediatrics",
     "Pediatric Research",
-    "Archives of Disease in Childhood",
-    "Acta Paediatrica",
-    "Archives of disease in childhood. Fetal and neonatal edition",
-    "Pediatric critical care medicine : a journal of the Society of Critical Care Medicine and the World Federation of Pediatric Intensive and Critical Care Societies",
-    "BMC Pediatrics",
-    "Pediatric Diabetes",
-    "Pediatric nephrology (Berlin, Germany)",
-    "The Pediatric Infectious Disease Journal",
-    "Journal of Inherited Metabolic Disease",
+    "Children",
     "European Journal of Pediatrics",
-    "Journal of perinatology : official journal of the California Perinatal Association",
-    "Seminars in fetal & neonatal medicine",
-    "Journal of Pediatric Surgery"
+    "BMC Pediatrics",
+    "Acta Paediatrica",
+    "Archives of Disease in Childhood",
+    "Developmental Medicine & Child Neurology",
+    "The Pediatric Infectious Disease Journal",
+    "Pediatric Pulmonology",
+    "Italian Journal of Pediatrics",
+    "Pediatric Nephrology",
+    "Pediatric Allergy and Immunology",
+    "American Journal of Perinatology",
+    "Jornal de Pediatria",
+    "Archives of Disease in Childhood-Fetal and Neonatal Edition",
+    "Pediatric Diabetes"
   ]
 }

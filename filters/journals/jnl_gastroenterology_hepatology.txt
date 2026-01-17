@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_gastroenterology_hepatology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Gastroenterology & Hepatology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Gastroenterology[JO]|Gut[JO]|J Hepatol[JO]|Hepatology[JO]|Nat Rev Gastroenterol Hepatol[JO]|World J Gastroenterol[JO]|Clin Gastroenterol Hepatol[JO]|Am J Gastroenterol[JO]|Aliment Pharmacol Ther[JO]|Aliment Pharmacol Ther[JO]|Gastrointest Endosc[JO]|J Crohns Colitis[JO]|Liver Int[JO]|Inflamm Bowel Dis[JO]|Endoscopy[JO]|J Gastroenterol Hepatol[JO]|Gastric Cancer[JO]|Dig Dis Sci[JO]|J Gastroenterol[JO]|J Pediatr Gastroenterol Nutr[JO])
+(Gastroenterology[JO]|Gut[JO]|J Hepatol[JO]|Hepatology[JO]|Nat Rev Gastroenterol Hepatol[JO]|Lancet Gastroenterol Hepatol[JO]|Clin Gastroenterol Hepatol[JO]|Gut Microbes[JO]|Am J Gastroenterol[JO]|World J Gastroenterol[JO]|Gastrointest Endosc[JO]|J Crohns Colitis[JO]|Aliment Pharmacol Ther[JO]|Liver Int[JO]|Endoscopy[JO]|JHEP Rep[JO]|Inflamm Bowel Dis[JO]|Cell Mol Gastroenterol Hepatol[JO]|Hepatol Commun[JO]|Clin Mol Hepatol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Gastroenterology & Hepatology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Gastroenterology",
     "Gut",
     "Journal of Hepatology",
-    "Hepatology (Baltimore, Md.)",
-    "Nature Reviews. Gastroenterology & Hepatology",
+    "Hepatology",
+    "Nature Reviews Gastroenterology & Hepatology",
+    "The Lancet Gastroenterology & Hepatology",
+    "Clinical Gastroenterology and Hepatology",
+    "Gut Microbes",
+    "American Journal of Gastroenterology",
     "World Journal of Gastroenterology",
-    "Clinical gastroenterology and hepatology : the official clinical practice journal of the American Gastroenterological Association",
-    "The American journal of gastroenterology",
-    "Alimentary Pharmacology & Therapeutics",
-    "Alimentary Pharmacology & Therapeutics",
     "Gastrointestinal Endoscopy",
-    "Journal of Crohn's & colitis",
-    "Liver international : official journal of the International Association for the Study of the Liver",
-    "Inflammatory Bowel Diseases",
+    "Journal of Crohn's and Colitis",
+    "Alimentary Pharmacology & Therapeutics",
+    "Liver International",
     "Endoscopy",
-    "Journal of Gastroenterology and Hepatology",
-    "Gastric cancer : official journal of the International Gastric Cancer Association and the Japanese Gastric Cancer Association",
-    "Digestive Diseases and Sciences",
-    "Journal of Gastroenterology",
-    "Journal of Pediatric Gastroenterology and Nutrition"
+    "JHEP Reports",
+    "Inflammatory Bowel Diseases",
+    "Cellular and Molecular Gastroenterology and Hepatology",
+    "Hepatology Communications",
+    "Clinical and Molecular Hepatology"
   ]
 }

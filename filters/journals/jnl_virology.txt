@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_virology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Virology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Med Virol[JO]|PLoS Pathog[JO]|Vaccine[JO]|J Virol[JO]|Viruses[JO]|Emerg Microbes Infect[JO]|Antiviral Res[JO]|J Clin Virol[JO]|Hum Vaccin Immunother[JO]|Transbound Emerg Dis[JO]|Curr Opin Virol[JO]|Virus Res[JO]|J Gen Virol[JO]|Virology[JO]|Arch Virol[JO]|Expert Rev Vaccines[JO]|Curr Opin HIV AIDS[JO]|Annu Rev Virol[JO]|Virol J[JO]|J Viral Hepat[JO])
+(J Med Virol[JO]|Vaccines (Basel)[JO]|Viruses[JO]|Vaccine[JO]|PLoS Pathog[JO]|Emerg Microbes Infect[JO]|J Clin Virol[JO]|J Virol[JO]|Hum Vaccin Immunother[JO]|Rev Med Virol[JO]|Transbound Emerg Dis[JO]|NPJ Vaccines[JO]|Virol J[JO]|Virus Res[JO]|Antiviral Res[JO]|Expert Rev Vaccines[JO]|J Gen Virol[JO]|Curr Opin Virol[JO]|Virus Evol[JO]|Arch Virol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Virology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Journal of Medical Virology",
-    "PLOS Pathogens",
-    "Vaccine",
-    "Journal of Virology",
+    "Vaccines",
     "Viruses",
+    "Vaccine",
+    "PLOS Pathogens",
     "Emerging Microbes & Infections",
-    "Antiviral Research",
-    "Journal of clinical virology : the official publication of the Pan American Society for Clinical Virology",
+    "Journal of Clinical Virology",
+    "Journal of Virology",
     "Human Vaccines & Immunotherapeutics",
+    "Reviews in Medical Virology",
     "Transboundary and Emerging Diseases",
-    "Current Opinion in Virology",
-    "Virus Research",
-    "The Journal of general virology",
-    "Virology",
-    "Archives of Virology",
-    "Expert Review of Vaccines",
-    "Current opinion in HIV and AIDS",
-    "Annual Review of Virology",
+    "NPJ Vaccines",
     "Virology Journal",
-    "Journal of Viral Hepatitis"
+    "Virus Research",
+    "Antiviral Research",
+    "Expert Review of Vaccines",
+    "Journal of General Virology",
+    "Current Opinion in Virology",
+    "Virus Evolution",
+    "Archives of Virology"
   ]
 }

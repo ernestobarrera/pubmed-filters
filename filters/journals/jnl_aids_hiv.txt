@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_aids_hiv
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en AIDS & HIV según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Lancet HIV[JO]|AIDS[JO]|J Acquir Immune Defic Syndr (1988)[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|Curr Opin HIV AIDS[JO]|AIDS Care[JO]|HIV Med[JO]|Retrovirology[JO]|AIDS Patient Care STDS[JO]|Curr HIV/AIDS Rep[JO]|Int J STD AIDS[JO]|AIDS Res Hum Retroviruses[JO]|J Virus Erad[JO]|AIDS Res Ther[JO]|Antivir Ther[JO]|J Assoc Nurses AIDS Care[JO]|HIV AIDS (Auckl)[JO]|AIDS Educ Prev[JO]|J Int Assoc Provid AIDS Care[JO])
+(Lancet HIV[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|J Acquir Immune Defic Syndr[JO]|AIDS[JO]|Curr HIV/AIDS Rep[JO]|AIDS Patient Care STDS[JO]|HIV Med[JO]|AIDS Care[JO]|AIDS Res Ther[JO]|Curr Opin HIV AIDS[JO]|Int J STD AIDS[JO]|Retrovirology[JO]|HIV AIDS (Auckl)[JO]|AIDS Res Hum Retroviruses[JO]|J Int Assoc Provid AIDS Care[JO]|J Assoc Nurses AIDS Care[JO]|J Virus Erad[JO]|AIDS Educ Prev[JO]|Open AIDS J[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "AIDS & HIV",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "The Lancet. HIV",
-    "AIDS (London, England)",
-    "Journal of Acquired Immune Deficiency Syndromes",
-    "AIDS and behavior",
+    "The Lancet HIV",
+    "AIDS and Behavior",
     "Journal of the International AIDS Society",
-    "Current opinion in HIV and AIDS",
-    "AIDS Care",
-    "HIV Medicine",
-    "Retrovirology",
-    "AIDS Patient Care and STDs",
+    "Journal of Acquired Immune Deficiency Syndromes",
+    "AIDS",
     "Current HIV/AIDS Reports",
-    "International Journal of STD & AIDS",
-    "AIDS Research and Human Retroviruses",
-    "Journal of Virus Eradication",
+    "AIDS Patient Care and STDs",
+    "HIV Medicine",
+    "AIDS Care",
     "AIDS Research and Therapy",
-    "Antiviral Therapy",
-    "The Journal of the Association of Nurses in AIDS Care : JANAC",
-    "HIV/AIDS (Auckland, N.Z.)",
-    "AIDS education and prevention : official publication of the International Society for AIDS Education",
-    "Journal of the International Association of Providers of AIDS Care"
+    "Current Opinion in HIV and AIDS",
+    "International Journal of STD & AIDS",
+    "Retrovirology",
+    "HIV/AIDS-Research and Palliative Care",
+    "AIDS Research and Human Retroviruses",
+    "Journal of the International Association of Providers of AIDS Care",
+    "Journal of the Association of Nurses In AIDS Care",
+    "Journal of Virus Eradication",
+    "AIDS Education and Prevention",
+    "Open AIDS Journal"
   ]
 }

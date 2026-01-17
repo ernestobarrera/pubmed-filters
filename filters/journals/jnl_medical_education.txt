@@ -1,0 +1,38 @@
+# Filtro: journals/jnl_medical_education
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2026-01-16
+# Descripción: Top 20 revistas en Medical Education según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(BMC Med Educ[JO]|Med Educ[JO]|Eur J Investig Health Psychol Educ[JO]|J Educ Health Promot[JO]|JMIR Med Educ[JO]|Med Educ Online[JO]|Adv Health Sci Educ Theory Pract[JO]|Health Educ Behav[JO]|Sch Ment Health[JO]|J Sch Health[JO]|Adv Med Educ Pract[JO]|J Med Educ Curric Dev[JO]|Perspect Med Educ[JO]|J Grad Med Educ[JO]|Teach Learn Med[JO]|J Educ Eval Health Prof[JO]|GMS J Med Educ[JO]|Health Educ J[JO]|Can Med Educ J[JO]|Acad Med[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Medical Education",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
+  "journals": [
+    "BMC Medical Education",
+    "Medical Education",
+    "European Journal of Investigation in Health, Psychology and Education",
+    "Journal of Education and Health Promotion",
+    "JMIR Medical Education",
+    "Medical Education Online",
+    "Advances in Health Sciences Education",
+    "Health Education & Behavior",
+    "School Mental Health",
+    "Journal of School Health",
+    "Advances in Medical Education and Practice",
+    "Journal of Medical Education and Curricular Development",
+    "Perspectives on Medical Education",
+    "Journal of Graduate Medical Education",
+    "Teaching and Learning in Medicine",
+    "Journal of Educational Evaluation for Health Professions",
+    "GMS Journal for Medical Education",
+    "Health Education Journal",
+    "Canadian Medical Education Journal",
+    "Academic Medicine"
+  ]
+}

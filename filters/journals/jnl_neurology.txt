@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_neurology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Neurology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Neuron[JO]|Nat Neurosci[JO]|Lancet Neurol[JO]|Neuroimage[JO]|Nat Rev Neurosci[JO]|Neurology[JO]|Neurosci Biobehav Rev[JO]|Brain[JO]|J Neurosci[JO]|Nat Rev Neurol[JO]|JAMA Neurol[JO]|Acta Neuropathol[JO]|Ann Neurol[JO]|Front Neurosci[JO]|Mov Disord[JO]|Cereb Cortex[JO]|J Alzheimers Dis[JO]|J Neurol Neurosurg Psychiatry[JO]|Mol Neurobiol[JO]|Front Hum Neurosci[JO])
+(Nat Neurosci[JO]|Neuron[JO]|Lancet Neurol[JO]|Brain[JO]|Neurology[JO]|JAMA Neurol[JO]|Neuroimage[JO]|Front Neurosci[JO]|Neurosci Biobehav Rev[JO]|Nat Rev Neurosci[JO]|J Neuroinflammation[JO]|Nat Rev Neurol[JO]|Front Neurol[JO]|Ann Neurol[JO]|J Neurol[JO]|Brain Sci[JO]|Trends Neurosci[JO]|J Neurosci[JO]|Mov Disord[JO]|Front Aging Neurosci[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Neurology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Neuron",
     "Nature Neuroscience",
-    "The Lancet. Neurology",
-    "NeuroImage",
-    "Nature reviews. Neuroscience",
+    "Neuron",
+    "The Lancet Neurology",
+    "Brain",
     "Neurology",
-    "Neuroscience and biobehavioral reviews",
-    "Brain : a journal of neurology",
-    "The Journal of neuroscience : the official journal of the Society for Neuroscience",
-    "Nature Reviews. Neurology",
     "JAMA Neurology",
-    "Acta Neuropathologica",
-    "Annals of Neurology",
+    "NeuroImage",
     "Frontiers in Neuroscience",
-    "Movement disorders : official journal of the Movement Disorder Society",
-    "Cerebral cortex (New York, N.Y. : 1991)",
-    "Journal of Alzheimer's disease : JAD",
-    "Journal of neurology, neurosurgery, and psychiatry",
-    "Molecular Neurobiology",
-    "Frontiers in Human Neuroscience"
+    "Neuroscience & Biobehavioral Reviews",
+    "Nature Reviews Neuroscience",
+    "Journal of Neuroinflammation",
+    "Nature Reviews Neurology",
+    "Frontiers in Neurology",
+    "Annals of Neurology",
+    "Journal of Neurology",
+    "Brain Sciences",
+    "Trends in Neurosciences",
+    "Journal of Neuroscience",
+    "Movement Disorders",
+    "Frontiers in Aging Neuroscience"
   ]
 }

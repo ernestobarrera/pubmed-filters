@@ -1,0 +1,38 @@
+# Filtro: journals/jnl_nuclear_med_radiotherapy_mol_imaging
+# Autor: Generado automáticamente desde Google Scholar h5-index
+# Fecha: 2026-01-16
+# Descripción: Top 20 revistas en Nuclear Medicine, Radiotherapy & Molecular Imaging según índice h5 de Google Scholar
+# Fuente: Google Scholar Metrics - Top Publications
+
+(Diagnostics (Basel)[JO]|Eur J Nucl Med Mol Imaging[JO]|J Nucl Med[JO]|Radiother Oncol[JO]|Int J Radiat Oncol Biol Phys[JO]|Med Phys[JO]|Phys Med Biol[JO]|Phys Med[JO]|Radiat Oncol[JO]|NMR Biomed[JO]|Semin Nucl Med[JO]|J Nucl Cardiol[JO]|Jpn J Radiol[JO]|IEEE Trans Radiat Plasma Med Sci[JO]|J Appl Clin Med Phys[JO]|Phys Eng Sci Med[JO]|Cancer Imaging[JO]|Int J Radiat Biol[JO]|EJNMMI Phys[JO]|Clin Oncol (R Coll Radiol)[JO])
+
+@@@FILTER_METADATA@@@
+{
+  "type": "journals",
+  "specialty": "Nuclear Medicine, Radiotherapy & Molecular Imaging",
+  "journalCount": 20,
+  "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
+  "journals": [
+    "Diagnostics",
+    "European Journal of Nuclear Medicine and Molecular Imaging",
+    "Journal of Nuclear Medicine",
+    "Radiotherapy and Oncology",
+    "International Journal of Radiation Oncology Biology Physics",
+    "Medical Physics",
+    "Physics in Medicine & Biology",
+    "Physica Medica",
+    "Radiation Oncology",
+    "NMR in Biomedicine",
+    "Seminars in Nuclear Medicine",
+    "Journal of Nuclear Cardiology",
+    "Japanese Journal of Radiology",
+    "IEEE Transactions on Radiation and Plasma Medical Sciences",
+    "Journal of Applied Clinical Medical Physics",
+    "Physical and Engineering Sciences in Medicine",
+    "Cancer Imaging",
+    "International Journal of Radiation Biology",
+    "EJNMMI Physics",
+    "Clinical Oncology"
+  ]
+}

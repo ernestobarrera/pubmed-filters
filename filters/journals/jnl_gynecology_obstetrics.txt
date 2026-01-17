@@ -1,36 +1,38 @@
 # Filtro: journals/jnl_gynecology_obstetrics
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 19 revistas en Gynecology & Obstetrics según índice h5 de Google Scholar
+# Fecha: 2026-01-16
+# Descripción: Top 20 revistas en Gynecology & Obstetrics según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Obstet Gynecol Surv[JO]|Am J Obstet Gynecol[JO]|Obstet Gynecol[JO]|BJOG[JO]|Hum Reprod Update[JO]|Ultrasound Obstet Gynecol[JO]|Gynecol Oncol[JO]|Best Pract Res Clin Obstet Gynaecol[JO]|J Matern Fetal Neonatal Med[JO]|Acta Obstet Gynecol Scand[JO]|Int J Gynaecol Obstet[JO]|Arch Gynecol Obstet[JO]|Eur J Obstet Gynecol Reprod Biol[JO]|Placenta[JO]|Contraception[JO]|Semin Fetal Neonatal Med[JO]|J Minim Invasive Gynecol[JO]|Semin Perinatol[JO]|Int Urogynecol J[JO])
+(Obstet Gynecol Surv[JO]|Am J Obstet Gynecol[JO]|Obstet Gynecol[JO]|BJOG[JO]|Ultrasound Obstet Gynecol[JO]|Hum Reprod Update[JO]|Int J Gynaecol Obstet[JO]|Gynecol Oncol[JO]|J Matern Fetal Neonatal Med[JO]|Eur J Obstet Gynecol Reprod Biol[JO]|Int J Gynecol Cancer[JO]|Acta Obstet Gynecol Scand[JO]|Reprod Sci[JO]|Best Pract Res Clin Obstet Gynaecol[JO]|Am J Obstet Gynecol MFM[JO]|Arch Gynecol Obstet[JO]|J Minim Invasive Gynecol[JO]|Am J Perinatol[JO]|Placenta[JO]|Menopause[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
   "specialty": "Gynecology & Obstetrics",
-  "journalCount": 19,
+  "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Obstetrical & Gynecological Survey",
-    "American journal of obstetrics and gynecology",
-    "Obstetrics and gynecology",
-    "BJOG : an international journal of obstetrics and gynaecology",
+    "American Journal of Obstetrics & Gynecology",
+    "Obstetrics & Gynecology",
+    "BJOG",
+    "Ultrasound in Obstetrics & Gynecology",
     "Human Reproduction Update",
-    "Ultrasound in obstetrics & gynecology : the official journal of the International Society of Ultrasound in Obstetrics and Gynecology",
+    "International Journal of Gynaecology and Obstetrics",
     "Gynecologic Oncology",
-    "Best practice & research. Clinical obstetrics & gynaecology",
-    "The journal of maternal-fetal & neonatal medicine : the official journal of the European Association of Perinatal Medicine, the Federation of Asia and Oceania Perinatal Societies, the International Society of Perinatal Obstetricians",
+    "The Journal of Maternal-Fetal & Neonatal Medicine",
+    "European Journal of Obstetrics & Gynecology and Reproductive Biology",
+    "International Journal of Gynecological Cancer",
     "Acta Obstetricia et Gynecologica Scandinavica",
-    "International journal of gynaecology and obstetrics: the official organ of the International Federation of Gynaecology and Obstetrics",
+    "Reproductive Sciences",
+    "Best Practice & Research Clinical Obstetrics & Gynaecology",
+    "American Journal of Obstetrics & Gynecology MFM",
     "Archives of Gynecology and Obstetrics",
-    "European journal of obstetrics, gynecology, and reproductive biology",
-    "Placenta",
-    "Contraception",
-    "Seminars in fetal & neonatal medicine",
     "Journal of Minimally Invasive Gynecology",
-    "Seminars in Perinatology",
-    "International Urogynecology Journal"
+    "American Journal of Perinatology",
+    "Placenta",
+    "Menopause"
   ]
 }

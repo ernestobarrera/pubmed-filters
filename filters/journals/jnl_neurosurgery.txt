@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_neurosurgery
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Neurosurgery según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Neurosurg[JO]|Neurosurgery[JO]|World Neurosurg[JO]|J Neurosurg Spine[JO]|Neurosurg Focus[JO]|Acta Neurochir (Wien)[JO]|J Neurosurg[JO]|Neurosurg Rev[JO]|Neurosurg Clin N Am[JO]|Br J Neurosurg[JO]|Surg Neurol Int[JO]|Neurol Med Chir (Tokyo)[JO]|Oper Neurosurg (Hagerstown)[JO]|J Korean Neurosurg Soc[JO]|J Neurol Surg B Skull Base[JO]|Stereotact Funct Neurosurg[JO]|J Neurosurg Sci[JO]|Acta Neurochir Suppl[JO]|Neurospine[JO]|Asian J Neurosurg[JO])
+(World Neurosurg[JO]|Neurosurgery[JO]|J Neurosurg[JO]|Acta Neurochir (Wien)[JO]|Neurosurg Rev[JO]|Neurosurg Focus[JO]|J Neurosurg Spine[JO]|Oper Neurosurg (Hagerstown)[JO]|J Neurosurg Pediatr[JO]|Surg Neurol Int[JO]|Br J Neurosurg[JO]|Neurosurg Clin N Am[JO]|J Neurol Surg B Skull Base[JO]|Neurol Med Chir (Tokyo)[JO]|Neurochirurgie[JO]|J Korean Neurosurg Soc[JO]|Stereotact Funct Neurosurg[JO]|J Neurosurg Sci[JO]|Clin Neurol Neurosurg[JO]|Asian J Neurosurg[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Neurosurgery",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Journal of Neurosurgery",
-    "Neurosurgery",
     "World Neurosurgery",
-    "Journal of Neurosurgery. Spine",
-    "Neurosurgical Focus",
+    "Neurosurgery",
+    "Journal of Neurosurgery",
     "Acta Neurochirurgica",
-    "Journal of neurosurgery",
     "Neurosurgical Review",
-    "Neurosurgery clinics of North America",
-    "British Journal of Neurosurgery",
+    "Neurosurgical Focus",
+    "Journal of Neurosurgery: Spine",
+    "Operative Neurosurgery",
+    "Journal of Neurosurgery: Pediatrics",
     "Surgical Neurology International",
+    "British Journal of Neurosurgery",
+    "Neurosurgery Clinics",
+    "Journal of Neurological Surgery Part B: Skull Base",
     "Neurologia Medico-chirurgica",
-    "Operative neurosurgery (Hagerstown, Md.)",
+    "Neurochirurgie",
     "Journal of Korean Neurosurgical Society",
-    "Journal of neurological surgery. Part B, Skull base",
     "Stereotactic and Functional Neurosurgery",
     "Journal of Neurosurgical Sciences",
-    "Acta neurochirurgica. Supplement",
-    "Neurospine",
+    "Clinical Neurology and Neurosurgery",
     "Asian Journal of Neurosurgery"
   ]
 }

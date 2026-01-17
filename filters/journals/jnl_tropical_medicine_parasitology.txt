@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_tropical_medicine_parasitology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Tropical Medicine & Parasitology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(PLoS Negl Trop Dis[JO]|Parasit Vectors[JO]|BMJ Glob Health[JO]|Trends Parasitol[JO]|Am J Trop Med Hyg[JO]|Malar J[JO]|Travel Med Infect Dis[JO]|Acta Trop[JO]|J Travel Med[JO]|Infect Dis Poverty[JO]|Parasitol Res[JO]|Parasitology[JO]|Trop Med Int Health[JO]|Ticks Tick Borne Dis[JO]|Vet Parasitol[JO]|Int J Parasitol[JO]|J Med Entomol[JO]|Mem Inst Oswaldo Cruz[JO]|Adv Parasitol[JO]|Vector Borne Zoonotic Dis[JO])
+(BMJ Glob Health[JO]|Travel Med Infect Dis[JO]|PLoS Negl Trop Dis[JO]|Am J Trop Med Hyg[JO]|J Travel Med[JO]|Infect Dis Poverty[JO]|Parasit Vectors[JO]|Trends Parasitol[JO]|Malar J[JO]|One Health[JO]|Acta Trop[JO]|Trop Med Infect Dis[JO]|Trop Med Health[JO]|Ticks Tick Borne Dis[JO]|Parasitol Res[JO]|Int J Parasitol[JO]|Vet Parasitol[JO]|Trop Med Int Health[JO]|Parasitology[JO]|J Med Entomol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Tropical Medicine & Parasitology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "PLOS Neglected Tropical Diseases",
-    "Parasites & Vectors",
     "BMJ Global Health",
-    "Trends in Parasitology",
-    "The American journal of tropical medicine and hygiene",
-    "Malaria Journal",
     "Travel Medicine and Infectious Disease",
-    "Acta Tropica",
+    "PLOS Neglected Tropical Diseases",
+    "The American Journal of Tropical Medicine and Hygiene",
     "Journal of Travel Medicine",
     "Infectious Diseases of Poverty",
-    "Parasitology Research",
-    "Parasitology",
-    "Tropical medicine & international health : TM & IH",
+    "Parasites & Vectors",
+    "Trends in Parasitology",
+    "Malaria Journal",
+    "One Health",
+    "Acta Tropica",
+    "Tropical Medicine and Infectious Disease",
+    "Tropical Medicine and Health",
     "Ticks and Tick-borne Diseases",
-    "Veterinary Parasitology",
+    "Parasitology Research",
     "International Journal for Parasitology",
-    "Journal of Medical Entomology",
-    "Memorias do Instituto Oswaldo Cruz",
-    "Advances in Parasitology",
-    "Vector borne and zoonotic diseases (Larchmont, N.Y.)"
+    "Veterinary Parasitology",
+    "Tropical Medicine & International Health",
+    "Parasitology",
+    "Journal of Medical Entomology"
   ]
 }

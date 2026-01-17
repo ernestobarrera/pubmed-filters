@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_immunology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Immunology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Immunity[JO]|Nat Rev Immunol[JO]|Front Immunol[JO]|Nat Immunol[JO]|J Allergy Clin Immunol[JO]|J Exp Med[JO]|J Immunol[JO]|Immunol Rev[JO]|Allergy[JO]|Trends Immunol[JO]|Autoimmun Rev[JO]|Sci Immunol[JO]|J Allergy Clin Immunol Pract[JO]|Mucosal Immunol[JO]|Eur J Immunol[JO]|Mediators Inflamm[JO]|Cell Mol Immunol[JO]|J Autoimmun[JO]|Annu Rev Immunol[JO]|Curr Opin Immunol[JO])
+(Front Immunol[JO]|Nat Rev Immunol[JO]|Immunity[JO]|Nat Immunol[JO]|J Allergy Clin Immunol[JO]|Sci Immunol[JO]|Cell Mol Immunol[JO]|J Exp Med[JO]|Allergy[JO]|J Allergy Clin Immunol Pract[JO]|Int Immunopharmacol[JO]|Autoimmun Rev[JO]|J Immunol[JO]|Trends Immunol[JO]|J Autoimmun[JO]|Fish Shellfish Immunol[JO]|Annu Rev Immunol[JO]|Cancer Immunol Immunother[JO]|Immunol Rev[JO]|Eur J Immunol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Immunology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Immunity",
-    "Nature reviews. Immunology",
     "Frontiers in Immunology",
+    "Nature Reviews Immunology",
+    "Immunity",
     "Nature Immunology",
-    "The Journal of allergy and clinical immunology",
-    "The Journal of experimental medicine",
-    "Journal of immunology (Baltimore, Md. : 1950)",
-    "Immunological Reviews",
-    "Allergy",
-    "Trends in Immunology",
-    "Autoimmunity Reviews",
+    "Journal of Allergy and Clinical Immunology",
     "Science Immunology",
-    "The journal of allergy and clinical immunology. In practice",
-    "Mucosal Immunology",
-    "European Journal of Immunology",
-    "Mediators of Inflammation",
     "Cellular & Molecular Immunology",
+    "Journal of Experimental Medicine",
+    "Allergy",
+    "Journal of Allergy and Clinical Immunology: In Practice",
+    "International Immunopharmacology",
+    "Autoimmunity Reviews",
+    "The Journal of Immunology",
+    "Trends in Immunology",
     "Journal of Autoimmunity",
+    "Fish & Shellfish Immunology",
     "Annual Review of Immunology",
-    "Current Opinion in Immunology"
+    "Cancer Immunology Immunotherapy",
+    "Immunological Reviews",
+    "European Journal of Immunology"
   ]
 }

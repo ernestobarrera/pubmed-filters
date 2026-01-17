@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_developmental_disabilities
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Developmental Disabilities según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Autism Dev Disord[JO]|Autism[JO]|Autism Res[JO]|Res Dev Disabil[JO]|Mol Autism[JO]|J Learn Disabil[JO]|Res Autism Spectr Disord[JO]|J Appl Res Intellect Disabil[JO]|J Intellect Disabil Res[JO]|J Neurodev Disord[JO]|J Posit Behav Interv[JO]|Focus Autism Other Dev Disabl[JO]|Learn Disabil Q[JO]|Res Pract Persons Severe Disabl[JO]|Augment Altern Commun[JO]|Rev J Autism Dev Disord[JO]|Am J Intellect Dev Disabil[JO]|Intellect Dev Disabil[JO]|J Dev Phys Disabil[JO]|Educ Train Autism Dev Disabil[JO])
+(J Autism Dev Disord[JO]|Autism[JO]|Autism Res[JO]|Res Dev Disabil[JO]|Mol Autism[JO]|Autism Adulthood[JO]|Res Autism Spectr Disord[JO]|J Appl Res Intellect Disabil[JO]|Rev J Autism Dev Disord[JO]|J Learn Disabil[JO]|Int J Disabil Dev Educ[JO]|J Neurodev Disord[JO]|J Intellect Disabil Res[JO]|Int J Dev Disabil[JO]|J Posit Behav Interv[JO]|J Dev Phys Disabil[JO]|J Intellect Disabil[JO]|Learn Disabil Q[JO]|Res Pract Pers Sev Disabil[JO]|Dyslexia[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Developmental Disabilities",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
     "Journal of Autism and Developmental Disorders",
-    "Autism : the international journal of research and practice",
-    "Autism research : official journal of the International Society for Autism Research",
+    "Autism",
+    "Autism Research",
     "Research in Developmental Disabilities",
     "Molecular Autism",
-    "Journal of Learning Disabilities",
+    "Autism in Adulthood",
     "Research in Autism Spectrum Disorders",
-    "Journal of applied research in intellectual disabilities : JARID",
-    "Journal of intellectual disability research : JIDR",
-    "Journal of Neurodevelopmental Disorders",
-    "Journal of Positive Behavior Interventions",
-    "Focus on Autism and Other Developmental Disabilities",
-    "Learning disability quarterly : journal of the Division for Children with Learning Disabilities",
-    "Research and practice for persons with severe disabilities : the journal of TASH",
-    "Augmentative and alternative communication (Baltimore, Md. : 1985)",
+    "Journal of Applied Research in Intellectual Disabilities",
     "Review Journal of Autism and Developmental Disorders",
-    "American Journal on Intellectual and Developmental Disabilities",
-    "Intellectual and Developmental Disabilities",
+    "Journal of Learning Disabilities",
+    "International Journal of Disability, Development and Education",
+    "Journal of Neurodevelopmental Disorders",
+    "Journal of Intellectual Disability Research",
+    "International Journal of Developmental Disabilities",
+    "Journal of Positive Behavior Interventions",
     "Journal of Developmental and Physical Disabilities",
-    "Education and Training in Autism and Developmental Disabilities"
+    "Journal of Intellectual Disabilities",
+    "Learning Disability Quarterly",
+    "Research and Practice for Persons with Severe Disabilities",
+    "Dyslexia"
   ]
 }

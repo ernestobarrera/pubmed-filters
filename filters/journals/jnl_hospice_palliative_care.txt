@@ -1,36 +1,38 @@
 # Filtro: journals/jnl_hospice_palliative_care
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 19 revistas en Hospice & Palliative Care según índice h5 de Google Scholar
+# Fecha: 2026-01-17
+# Descripción: Top 20 revistas en Hospice & Palliative Care según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|BMC Palliat Care[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|BMJ Support Palliat Care[JO]|Death Stud[JO]|Palliat Support Care[JO]|Curr Opin Support Palliat Care[JO]|Indian J Palliat Care[JO]|Ann Palliat Med[JO]|Omega (Westport)[JO]|Int J Palliat Nurs[JO]|J Hosp Palliat Nurs[JO]|J Pain Palliat Care Pharmacother[JO]|J Palliat Care[JO]|J Soc Work End Life Palliat Care[JO]|Prog Palliat Care[JO])
+(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|Death Stud[JO]|BMC Palliat Care[JO]|Ann Palliat Med[JO]|BMJ Support Palliat Care[JO]|Omega (Westport)[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|Palliat Support Care[JO]|J Hosp Palliat Nurs[JO]|Palliat Care Soc Pract[JO]|J Palliat Care[JO]|Indian J Palliat Care[JO]|Curr Opin Support Palliat Care[JO]|J Health Care Chaplain[JO]|Illn Crises Loss[JO]|Int J Palliat Nurs[JO]|Prog Palliat Care[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
   "specialty": "Hospice & Palliative Care",
-  "journalCount": 19,
+  "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
-    "Supportive care in cancer : official journal of the Multinational Association of Supportive Care in Cancer",
+    "Supportive Care in Cancer",
     "Journal of Pain and Symptom Management",
     "Palliative Medicine",
-    "BMC Palliative Care",
-    "Journal of Palliative Medicine",
-    "The American journal of hospice & palliative care",
-    "BMJ Supportive & Palliative Care",
     "Death Studies",
-    "Palliative & Supportive Care",
-    "Current Opinion in Supportive and Palliative Care",
-    "Indian Journal of Palliative Care",
+    "BMC Palliative Care",
     "Annals of Palliative Medicine",
-    "Omega",
-    "International Journal of Palliative Nursing",
-    "Journal of hospice and palliative nursing : JHPN : the official journal of the Hospice and Palliative Nurses Association",
-    "Journal of Pain & Palliative Care Pharmacotherapy",
+    "BMJ Supportive & Palliative Care",
+    "OMEGA-Journal of Death and Dying",
+    "Journal of Palliative Medicine",
+    "American Journal of Hospice and Palliative Medicine",
+    "Palliative & Supportive Care",
+    "Journal of Hospice & Palliative Nursing",
+    "Palliative Care and Social Practice",
     "Journal of Palliative Care",
-    "Journal of Social Work in End-of-Life & Palliative Care",
+    "Indian Journal of Palliative Care",
+    "Current Opinion in Supportive and Palliative Care",
+    "Journal of Health Care Chaplaincy",
+    "Illness, Crisis & Loss",
+    "International Journal of Palliative Nursing",
     "Progress in Palliative Care"
   ]
 }

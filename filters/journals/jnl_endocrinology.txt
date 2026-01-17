@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_endocrinology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Endocrinology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|J Pineal Res[JO]|Front Endocrinol (Lausanne)[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|Osteoporos Int[JO]|Endocr Rev[JO]|Psychoneuroendocrinology[JO]|Eur J Endocrinol[JO]|Maturitas[JO]|Thyroid[JO]|J Steroid Biochem Mol Biol[JO]|Endocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrine[JO]|Endocr Relat Cancer[JO]|J Endocrinol Invest[JO]|J Endocrinol[JO]|Horm Behav[JO])
+(Front Endocrinol (Lausanne)[JO]|Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|Endocr Rev[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|J Endocrinol Invest[JO]|Thyroid[JO]|Rev Endocr Metab Disord[JO]|Bone Res[JO]|Eur J Endocrinol[JO]|Osteoporos Int[JO]|Psychoneuroendocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrinology[JO]|Endocrine[JO]|Maturitas[JO]|J Pineal Res[JO]|Best Pract Res Clin Endocrinol Metab[JO]|Calcif Tissue Int[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Endocrinology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Nature Reviews. Endocrinology",
-    "The Journal of clinical endocrinology and metabolism",
-    "Journal of Pineal Research",
     "Frontiers in Endocrinology",
-    "Trends in endocrinology and metabolism: TEM",
-    "Journal of bone and mineral research : the official journal of the American Society for Bone and Mineral Research",
-    "Osteoporosis international : a journal established as result of cooperation between the European Foundation for Osteoporosis and the National Osteoporosis Foundation of the USA",
+    "Nature Reviews Endocrinology",
+    "The Journal of Clinical Endocrinology & Metabolism",
     "Endocrine Reviews",
-    "Psychoneuroendocrinology",
-    "European Journal of Endocrinology",
-    "Maturitas",
-    "Thyroid : official journal of the American Thyroid Association",
-    "The Journal of Steroid Biochemistry and Molecular Biology",
-    "Endocrinology",
-    "Molecular and Cellular Endocrinology",
-    "Endocrine",
-    "Endocrine-Related Cancer",
+    "Trends in Endocrinology & Metabolism",
+    "Journal of Bone and Mineral Research",
     "Journal of Endocrinological Investigation",
-    "The Journal of endocrinology",
-    "Hormones and Behavior"
+    "Thyroid",
+    "Reviews in Endocrine and Metabolic Disorders",
+    "Bone Research",
+    "European Journal of Endocrinology",
+    "Osteoporosis International",
+    "Psychoneuroendocrinology",
+    "Molecular and Cellular Endocrinology",
+    "Endocrinology",
+    "Endocrine",
+    "Maturitas",
+    "Journal of Pineal Research",
+    "Best Practice & Research Clinical Endocrinology & Metabolism",
+    "Calcified Tissue International"
   ]
 }

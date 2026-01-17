@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_gerontology_geriatric_medicine
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Gerontology & Geriatric Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Alzheimers Dement[JO]|Mov Disord[JO]|J Alzheimers Dis[JO]|Ageing Res Rev[JO]|J Am Geriatr Soc[JO]|Aging Cell[JO]|Front Aging Neurosci[JO]|J Gerontol A Biol Sci Med Sci[JO]|Aging[JO]|Gerontologist[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|Neurobiol Aging[JO]|Parkinsonism Relat Disord[JO]|Clin Interv Aging[JO]|BMC Geriatr[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Alzheimers Res Ther[JO]|Aging Ment Health[JO]|Exp Gerontol[JO])
+(Ageing Res Rev[JO]|Alzheimers Dement[JO]|Aging (Albany NY)[JO]|Mov Disord[JO]|Front Aging Neurosci[JO]|Aging Cell[JO]|BMC Geriatr[JO]|Nat Aging[JO]|J Am Geriatr Soc[JO]|Alzheimers Res Ther[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|J Gerontol A Biol Sci Med Sci[JO]|J Alzheimers Dis[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Gerontologist[JO]|Lancet Healthy Longev[JO]|Aging Clin Exp Res[JO]|Aging Dis[JO]|Aging Ment Health[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Gerontology & Geriatric Medicine",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Alzheimer's & dementia : the journal of the Alzheimer's Association",
-    "Movement disorders : official journal of the Movement Disorder Society",
-    "Journal of Alzheimer's disease : JAD",
     "Ageing Research Reviews",
-    "Journal of the American Geriatrics Society",
-    "Aging Cell",
-    "Frontiers in Aging Neuroscience",
-    "The journals of gerontology. Series A, Biological sciences and medical sciences",
+    "Alzheimer's & Dementia",
     "Aging",
-    "The Gerontologist",
+    "Movement Disorders",
+    "Frontiers in Aging Neuroscience",
+    "Aging Cell",
+    "BMC Geriatrics",
+    "Nature Aging",
+    "Journal of the American Geriatrics Society",
+    "Alzheimer's Research & Therapy",
     "Molecular Neurodegeneration",
     "Age and Ageing",
-    "Neurobiology of Aging",
-    "Parkinsonism & Related Disorders",
-    "Clinical Interventions in Aging",
-    "BMC Geriatrics",
-    "The journals of gerontology. Series B, Psychological sciences and social sciences",
-    "Alzheimer's Research & Therapy",
-    "Aging & Mental Health",
-    "Experimental Gerontology"
+    "The Journals of Gerontology: Series A",
+    "Journal of Alzheimer's Disease",
+    "The Journals of Gerontology: Series B",
+    "Gerontologist",
+    "The Lancet Healthy Longevity",
+    "Aging Clinical and Experimental Research",
+    "Aging & Disease",
+    "Aging & Mental Health"
   ]
 }

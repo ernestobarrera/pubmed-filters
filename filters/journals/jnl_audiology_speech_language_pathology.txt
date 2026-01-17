@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_audiology_speech_language_pathology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Audiology, Speech & Language Pathology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ear Hear[JO]|J Voice[JO]|J Speech Lang Hear Res[JO]|Int J Audiol[JO]|Trends Hear[JO]|Am J Speech Lang Pathol[JO]|Int J Lang Commun Disord[JO]|Aphasiology[JO]|Lang Speech Hear Serv Sch[JO]|J Commun Disord[JO]|J Am Acad Audiol[JO]|Int J Speech Lang Pathol[JO]|J Neurolinguistics[JO]|J Fluency Disord[JO]|Am J Audiol[JO]|Clin Linguist Phon[JO]|Cochlear Implants Int[JO]|J Hear Sci[JO]|Commun Disord Q[JO]|Semin Hear[JO])
+(Am J Speech Lang Pathol[JO]|J Voice[JO]|J Speech Lang Hear Res[JO]|Ear Hear[JO]|Int J Audiol[JO]|Lang Speech Hear Serv Sch[JO]|Aphasiology[JO]|Int J Lang Commun Disord[JO]|J Commun Disord[JO]|Trends Hear[JO]|Perspect ASHA Spec Interest Groups[JO]|Am J Audiol[JO]|Int J Speech Lang Pathol[JO]|Autism Dev Lang Impair[JO]|J Neurolinguistics[JO]|J Fluency Disord[JO]|J Am Acad Audiol[JO]|Clin Linguist Phon[JO]|Folia Phoniatr Logop[JO]|Audiol Res[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Audiology, Speech & Language Pathology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
-    "Ear and Hearing",
-    "Journal of voice : official journal of the Voice Foundation",
-    "Journal of speech, language, and hearing research : JSLHR",
-    "International Journal of Audiology",
-    "Trends in Hearing",
     "American Journal of Speech-Language Pathology",
-    "International Journal of Language & Communication Disorders",
-    "Aphasiology",
+    "Journal of Voice",
+    "Journal of Speech, Language, and Hearing Research",
+    "Ear and Hearing",
+    "International Journal of Audiology",
     "Language, Speech, and Hearing Services in Schools",
+    "Aphasiology",
+    "International Journal of Language & Communication Disorders",
     "Journal of Communication Disorders",
-    "Journal of the American Academy of Audiology",
+    "Trends in Hearing",
+    "Perspectives of the ASHA Special Interest Groups",
+    "American Journal of Audiology",
     "International Journal of Speech-Language Pathology",
+    "Autism & Developmental Language Impairments",
     "Journal of Neurolinguistics",
     "Journal of Fluency Disorders",
-    "American Journal of Audiology",
+    "Journal of the American Academy of Audiology",
     "Clinical Linguistics & Phonetics",
-    "Cochlear Implants International",
-    "Journal of Hearing Science",
-    "Communication Disorders Quarterly",
-    "Seminars in Hearing"
+    "Folia Phoniatrica et Logopaedica",
+    "Audiology Research"
   ]
 }

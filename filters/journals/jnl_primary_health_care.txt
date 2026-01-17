@@ -1,10 +1,11 @@
 # Filtro: journals/jnl_primary_health_care
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Primary Health Care según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
+# Actualizado: Verificadas siglas vía API PubMed
 
-(J Gen Intern Med[JO]|Am Fam Physician[JO]|Br J Gen Pract[JO]|BMC Fam Pract[JO]|Ann Fam Med[JO]|Can Fam Physician[JO]|J Am Board Fam Med[JO]|Fam Pract[JO]|Prim Care[JO]|Aust Prescr[JO]|Aust J Gen Pract[JO]|Scand J Prim Health Care[JO]|J Am Assoc Nurse Pract[JO]|Afr J Prim Health Care Fam Med[JO]|Eur J Gen Pract[JO]|J Prim Care Community Health[JO]|J Nurse Pract[JO]|J Am Acad Physician Assist[JO]|Prim Health Care Res Dev[JO]|J Family Community Med[JO])
+(J Gen Intern Med[JO]|Am Fam Physician[JO]|J Prim Care Community Health[JO]|Br J Gen Pract[JO]|BMC Prim Care[JO]|Ann Fam Med[JO]|Fam Pract[JO]|J Am Board Fam Med[JO]|BJGP Open[JO]|Aust J Gen Pract[JO]|Can Fam Physician[JO]|Afr J Prim Health Care Fam Med[JO]|J Am Assoc Nurse Pract[JO]|Fam Med Community Health[JO]|Popul Health Manag[JO]|J Nurse Pract[JO]|Prim Health Care Res Dev[JO]|Fam Med[JO]|Prim Care[JO]|Scand J Prim Health Care[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +13,27 @@
   "specialty": "Primary Health Care",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Journal of General Internal Medicine",
     "American Family Physician",
-    "The British journal of general practice : the journal of the Royal College of General Practitioners",
-    "BMC Family Practice",
-    "Annals of family medicine",
-    "Canadian family physician Medecin de famille canadien",
-    "Journal of the American Board of Family Medicine : JABFM",
-    "Family Practice",
-    "Primary care",
-    "Australian Prescriber",
-    "Australian Journal of General Practice",
-    "Scandinavian Journal of Primary Health Care",
-    "Journal of the American Association of Nurse Practitioners",
-    "African journal of primary health care & family medicine",
-    "The European journal of general practice",
     "Journal of Primary Care & Community Health",
-    "The journal for nurse practitioners : JNP",
-    "Journal of the American Academy of Physician Assistants",
+    "British Journal of General Practice",
+    "BMC Primary Care",
+    "Annals of Family Medicine",
+    "Family Practice",
+    "Journal of the American Board of Family Medicine",
+    "BJGP Open",
+    "Australian Journal of General Practice",
+    "Canadian Family Physician",
+    "African Journal of Primary Health Care & Family Medicine",
+    "Journal of the American Association of Nurse Practitioners",
+    "Family Medicine and Community Health",
+    "Population Health Management",
+    "The Journal for Nurse Practitioners",
     "Primary Health Care Research & Development",
-    "Journal of family & community medicine"
+    "Family Medicine",
+    "Primary Care: Clinics in Office Practice",
+    "Scandinavian Journal of Primary Health Care"
   ]
 }

@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_otolaryngology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Otolaryngology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Head Neck[JO]|Laryngoscope[JO]|Otolaryngol Head Neck Surg[JO]|Hear Res[JO]|JAMA Otolaryngol Head Neck Surg[JO]|Int Forum Allergy Rhinol[JO]|Ear Hear[JO]|Eur Arch Otorhinolaryngol[JO]|Otol Neurotol[JO]|Int J Pediatr Otorhinolaryngol[JO]|Clin Otolaryngol[JO]|J Laryngol Otol[JO]|Rhinology[JO]|J Otolaryngol Head Neck Surg[JO]|Am J Rhinol Allergy[JO]|Otolaryngol Clin North Am[JO]|Auris Nasus Larynx[JO]|Braz J Otorhinolaryngol[JO]|Laryngoscope Investig Otolaryngol[JO]|Acta Otolaryngol[JO])
+(Otolaryngol Head Neck Surg[JO]|Laryngoscope[JO]|JAMA Otolaryngol Head Neck Surg[JO]|Eur Arch Otorhinolaryngol[JO]|Head Neck[JO]|Am J Otolaryngol[JO]|Ear Hear[JO]|Int Forum Allergy Rhinol[JO]|Hear Res[JO]|Otol Neurotol[JO]|Rhinology[JO]|Int J Pediatr Otorhinolaryngol[JO]|Ear Nose Throat J[JO]|Braz J Otorhinolaryngol[JO]|Am J Rhinol Allergy[JO]|Laryngoscope Investig Otolaryngol[JO]|Ann Otol Rhinol Laryngol[JO]|J Laryngol Otol[JO]|J Otolaryngol Head Neck Surg[JO]|Clin Otolaryngol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Otolaryngology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Head & Neck",
+    "Otolaryngology–Head and Neck Surgery",
     "The Laryngoscope",
-    "Otolaryngology--head and neck surgery : official journal of American Academy of Otolaryngology-Head and Neck Surgery",
-    "Hearing Research",
-    "JAMA otolaryngology-- head & neck surgery",
-    "International Forum of Allergy & Rhinology",
+    "JAMA Otolaryngology–Head & Neck Surgery",
+    "European Archives of Oto-Rhino-Laryngology",
+    "Head & Neck",
+    "American Journal of Otolaryngology",
     "Ear and Hearing",
-    "European archives of oto-rhino-laryngology : official journal of the European Federation of Oto-Rhino-Laryngological Societies (EUFOS) : affiliated with the German Society for Oto-Rhino-Laryngology - Head and Neck Surgery",
-    "Otology & neurotology : official publication of the American Otological Society, American Neurotology Society [and] European Academy of Otology and Neurotology",
-    "International Journal of Pediatric Otorhinolaryngology",
-    "Clinical otolaryngology : official journal of ENT-UK ; official journal of Netherlands Society for Oto-Rhino-Laryngology & Cervico-Facial Surgery",
-    "The Journal of laryngology and otology",
+    "International Forum of Allergy & Rhinology",
+    "Hearing Research",
+    "Otology & Neurotology",
     "Rhinology",
-    "Journal of otolaryngology - head & neck surgery = Le Journal d'oto-rhino-laryngologie et de chirurgie cervico-faciale",
-    "American Journal of Rhinology & Allergy",
-    "Otolaryngologic Clinics of North America",
-    "Auris, nasus, larynx",
+    "International Journal of Pediatric Otorhinolaryngology",
+    "Ear, Nose & Throat Journal",
     "Brazilian Journal of Otorhinolaryngology",
+    "American Journal of Rhinology & Allergy",
     "Laryngoscope Investigative Otolaryngology",
-    "Acta Oto-Laryngologica"
+    "Annals of Otology, Rhinology & Laryngology",
+    "The Journal of Laryngology & Otology",
+    "Journal of Otolaryngology-Head & Neck Surgery",
+    "Clinical Otolaryngology"
   ]
 }

@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_vascular_medicine
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Vascular Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Stroke[JO]|J Am Heart Assoc[JO]|Hypertension[JO]|J Vasc Surg[JO]|J Cereb Blood Flow Metab[JO]|Arterioscler Thromb Vasc Biol[JO]|Atherosclerosis[JO]|Cardiovasc Diabetol[JO]|J Neurointerv Surg[JO]|J Hypertens[JO]|Int J Stroke[JO]|Eur J Vasc Endovasc Surg[JO]|J Clin Lipidol[JO]|Nutr Metab Cardiovasc Dis[JO]|Curr Hypertens Rep[JO]|J Atheroscler Thromb[JO]|Transl Stroke Res[JO]|J Stroke Cerebrovasc Dis[JO]|J Vasc Surg Venous Lymphat Disord[JO]|Am J Hypertens[JO])
+(Stroke[JO]|J Am Heart Assoc[JO]|Cardiovasc Diabetol[JO]|Hypertension[JO]|Arterioscler Thromb Vasc Biol[JO]|J Vasc Surg[JO]|Atherosclerosis[JO]|J Cereb Blood Flow Metab[JO]|J Neurointerv Surg[JO]|Int J Stroke[JO]|Nutr Metab Cardiovasc Dis[JO]|J Hypertens[JO]|J Stroke Cerebrovasc Dis[JO]|Curr Atheroscler Rep[JO]|Transl Stroke Res[JO]|Hypertens Res[JO]|Eur J Vasc Endovasc Surg[JO]|Curr Hypertens Rep[JO]|J Clin Hypertens (Greenwich)[JO]|Neurocrit Care[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Vascular Medicine",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Stroke",
     "Journal of the American Heart Association",
-    "Hypertension (Dallas, Tex. : 1979)",
-    "Journal of Vascular Surgery",
-    "Journal of cerebral blood flow and metabolism : official journal of the International Society of Cerebral Blood Flow and Metabolism",
-    "Arteriosclerosis, Thrombosis, and Vascular Biology",
-    "Atherosclerosis",
     "Cardiovascular Diabetology",
+    "Hypertension",
+    "Arteriosclerosis, Thrombosis, and Vascular Biology",
+    "Journal of Vascular Surgery",
+    "Atherosclerosis",
+    "Journal of Cerebral Blood Flow and Metabolism",
     "Journal of NeuroInterventional Surgery",
+    "International Journal of Stroke",
+    "Nutrition, Metabolism and Cardiovascular Diseases",
     "Journal of Hypertension",
-    "International journal of stroke : official journal of the International Stroke Society",
-    "European journal of vascular and endovascular surgery : the official journal of the European Society for Vascular Surgery",
-    "Journal of Clinical Lipidology",
-    "Nutrition, metabolism, and cardiovascular diseases : NMCD",
-    "Current Hypertension Reports",
-    "Journal of Atherosclerosis and Thrombosis",
+    "Journal of Stroke and Cerebrovascular Diseases",
+    "Current Atherosclerosis Reports",
     "Translational Stroke Research",
-    "Journal of stroke and cerebrovascular diseases : the official journal of National Stroke Association",
-    "Journal of vascular surgery. Venous and lymphatic disorders",
-    "American Journal of Hypertension"
+    "Hypertension Research",
+    "European Journal of Vascular and Endovascular Surgery",
+    "Current Hypertension Reports",
+    "The Journal of Clinical Hypertension",
+    "Neurocritical Care"
   ]
 }

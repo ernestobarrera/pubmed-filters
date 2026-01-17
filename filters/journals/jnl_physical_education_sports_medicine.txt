@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_physical_education_sports_medicine
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Physical Education & Sports Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Br J Sports Med[JO]|Sports Med[JO]|Am J Sports Med[JO]|Med Sci Sports Exerc[JO]|Int J Behav Nutr Phys Act[JO]|J Strength Cond Res[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|J Sports Sci[JO]|J Sci Med Sport[JO]|Int J Sports Physiol Perform[JO]|Scand J Med Sci Sports[JO]|Psychol Sport Exerc[JO]|Arthroscopy[JO]|Gait Posture[JO]|Phys Ther[JO]|Eur J Appl Physiol[JO]|Orthop J Sports Med[JO]|Eur J Sport Sci[JO]|J Athl Train[JO]|J Sport Health Sci[JO])
+(Br J Sports Med[JO]|Sports Med[JO]|Int J Behav Nutr Phys Act[JO]|Am J Sports Med[JO]|J Strength Cond Res[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|J Sport Health Sci[JO]|Med Sci Sports Exerc[JO]|Sports Med Open[JO]|J Sports Sci[JO]|Psychol Sport Exerc[JO]|Phys Ther[JO]|Scand J Med Sci Sports[JO]|Arthroscopy[JO]|Eur J Sport Sci[JO]|Orthop J Sports Med[JO]|J Sci Med Sport[JO]|Eur J Appl Physiol[JO]|Int J Sports Physiol Perform[JO]|J Athl Train[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Physical Education & Sports Medicine",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "British Journal of Sports Medicine",
-    "Sports medicine (Auckland, N.Z.)",
+    "Sports Medicine",
+    "International Journal of Behavioral Nutrition and Physical Activity",
     "The American Journal of Sports Medicine",
-    "Medicine and science in sports and exercise",
-    "The international journal of behavioral nutrition and physical activity",
-    "Journal of strength and conditioning research",
-    "Knee surgery, sports traumatology, arthroscopy : official journal of the ESSKA",
+    "The Journal of Strength & Conditioning Research",
+    "Knee Surgery, Sports Traumatology, Arthroscopy",
+    "Journal of Sport and Health Science",
+    "Medicine & Science in Sports & Exercise",
+    "Sports Medicine-Open",
     "Journal of Sports Sciences",
-    "Journal of Science and Medicine in Sport",
-    "International Journal of Sports Physiology and Performance",
-    "Scandinavian Journal of Medicine & Science in Sports",
     "Psychology of Sport and Exercise",
-    "Arthroscopy : the journal of arthroscopic & related surgery : official publication of the Arthroscopy Association of North America and the International Arthroscopy Association",
-    "Gait & Posture",
     "Physical Therapy",
-    "European Journal of Applied Physiology",
+    "Scandinavian Journal of Medicine & Science in Sports",
+    "Arthroscopy",
+    "European Journal of Sports Science",
     "Orthopaedic Journal of Sports Medicine",
-    "European Journal of Sport Science",
-    "Journal of Athletic Training",
-    "Journal of Sport and Health Science"
+    "Journal of Science and Medicine in Sport",
+    "European Journal of Applied Physiology",
+    "International Journal of Sports Physiology and Performance",
+    "Journal of Athletic Training"
   ]
 }

@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_nursing
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Nursing según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Int J Nurs Stud[JO]|Nurse Educ Today[JO]|J Clin Nurs[JO]|J Adv Nurs[JO]|J Nurs Manag[JO]|Nurse Educ Pract[JO]|Rev Lat Am Enfermagem[JO]|Rev Bras Enferm[JO]|Appl Nurs Res[JO]|J Nurs Scholarsh[JO]|Nurs Ethics[JO]|BMC Nurs[JO]|Clin Simul Nurs[JO]|Eur J Cancer Care (Engl)[JO]|J Pediatr Nurs[JO]|Scand J Caring Sci[JO]|Rev Esc Enferm USP[JO]|Nurs Outlook[JO]|J Wound Care[JO]|Int J Ment Health Nurs[JO])
+(Int J Nurs Stud[JO]|J Clin Nurs[JO]|Nurse Educ Today[JO]|J Nurs Manag[JO]|J Adv Nurs[JO]|BMC Nurs[JO]|Nurs Open[JO]|Nurse Educ Pract[JO]|Int J Ment Health Nurs[JO]|Nurs Ethics[JO]|J Pediatr Nurs[JO]|Perspect Psychiatr Care[JO]|J Prof Nurs[JO]|Rev Bras Enferm[JO]|Int Nurs Rev[JO]|Rev Lat Am Enfermagem[JO]|Intensive Crit Care Nurs[JO]|J Nurs Scholarsh[JO]|Scand J Caring Sci[JO]|BMJ Support Palliat Care[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Nursing",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "International Journal of Nursing Studies",
-    "Nurse Education Today",
     "Journal of Clinical Nursing",
-    "Journal of Advanced Nursing",
+    "Nurse Education Today",
     "Journal of Nursing Management",
-    "Nurse Education in Practice",
-    "Revista Latino-Americana de Enfermagem",
-    "Revista Brasileira de Enfermagem",
-    "Applied nursing research : ANR",
-    "Journal of nursing scholarship : an official publication of Sigma Theta Tau International Honor Society of Nursing",
-    "Nursing Ethics",
+    "Journal of Advanced Nursing",
     "BMC Nursing",
-    "Clinical Simulation in Nursing",
-    "European Journal of Cancer Care",
+    "Nursing Open",
+    "Nurse Education in Practice",
+    "International Journal of Mental Health Nursing",
+    "Nursing Ethics",
     "Journal of Pediatric Nursing",
+    "Perspectives in Psychiatric Care",
+    "Journal of Professional Nursing",
+    "Revista Brasileira de Enfermagem",
+    "International Nursing Review",
+    "Revista Latino-Americana de Enfermagem",
+    "Intensive & Critical Care Nursing",
+    "Journal of Nursing Scholarship",
     "Scandinavian Journal of Caring Sciences",
-    "Revista da Escola de Enfermagem da U S P",
-    "Nursing Outlook",
-    "Journal of Wound Care",
-    "International Journal of Mental Health Nursing"
+    "BMJ Supportive & Palliative Care"
   ]
 }

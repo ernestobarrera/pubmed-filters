@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_rheumatology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Rheumatology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|Autoimmun Rev[JO]|Rheumatology[JO]|Arthritis Care Res (Hoboken)[JO]|Osteoarthritis Cartilage[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|J Rheumatol[JO]|Clin Exp Rheumatol[JO]|Clin Rheumatol[JO]|Curr Opin Rheumatol[JO]|Int J Rheum Dis[JO]|RMD Open[JO]|Curr Rheumatol Rep[JO]|Joint Bone Spine[JO]|Best Pract Res Clin Rheumatol[JO]|Rheumatol Int[JO]|Pediatr Rheumatol Online J[JO])
+(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|Rheumatology (Oxford)[JO]|Autoimmun Rev[JO]|Lancet Rheumatol[JO]|Osteoarthritis Cartilage[JO]|Clin Rheumatol[JO]|RMD Open[JO]|Arthritis Care Res (Hoboken)[JO]|Rheumatol Int[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|Clin Exp Rheumatol[JO]|J Rheumatol[JO]|Curr Opin Rheumatol[JO]|Curr Rheumatol Rep[JO]|Best Pract Res Clin Rheumatol[JO]|Joint Bone Spine[JO]|Ther Adv Musculoskelet Dis[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Rheumatology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Annals of the Rheumatic Diseases",
-    "Arthritis & rheumatology (Hoboken, N.J.)",
-    "Nature Reviews. Rheumatology",
-    "Autoimmunity Reviews",
+    "Arthritis & Rheumatology",
+    "Nature Reviews Rheumatology",
     "Rheumatology",
-    "Arthritis Care & Research",
+    "Autoimmunity Reviews",
+    "The Lancet Rheumatology",
     "Osteoarthritis and Cartilage",
+    "Clinical Rheumatology",
+    "RMD Open",
+    "Arthritis Care & Research",
+    "Rheumatology International",
     "Arthritis Research & Therapy",
     "Seminars in Arthritis and Rheumatism",
-    "The Journal of Rheumatology",
     "Clinical and Experimental Rheumatology",
-    "Clinical Rheumatology",
+    "The Journal of Rheumatology",
     "Current Opinion in Rheumatology",
-    "International Journal of Rheumatic Diseases",
-    "RMD Open",
     "Current Rheumatology Reports",
+    "Best Practice & Research Clinical Rheumatology",
     "Joint Bone Spine",
-    "Best practice & research. Clinical rheumatology",
-    "Rheumatology International",
-    "Pediatric rheumatology online journal"
+    "Therapeutic Advances in Musculoskeletal Disease"
   ]
 }

@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_urology_nephrology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Urology & Nephrology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Eur Urol[JO]|J Am Soc Nephrol[JO]|Kidney Int[JO]|Nat Rev Nephrol[JO]|J Urol[JO]|Am J Kidney Dis[JO]|Clin J Am Soc Nephrol[JO]|Nephrol Dial Transplant[JO]|BJU Int[JO]|Nat Rev Urol[JO]|BMC Nephrol[JO]|Am J Physiol Renal Physiol[JO]|World J Urol[JO]|Pediatr Nephrol[JO]|Neurourol Urodyn[JO]|Clin Kidney J[JO]|Andrology[JO]|Urology[JO]|J Nephrol[JO]|Am J Nephrol[JO])
+(Eur Urol[JO]|Nat Rev Nephrol[JO]|Kidney Int[JO]|J Am Soc Nephrol[JO]|Am J Kidney Dis[JO]|J Urol[JO]|Clin J Am Soc Nephrol[JO]|Nephrol Dial Transplant[JO]|Kidney Int Rep[JO]|Eur Urol Oncol[JO]|Nat Rev Urol[JO]|Eur Urol Focus[JO]|World J Urol[JO]|BJU Int[JO]|BMC Nephrol[JO]|Clin Kidney J[JO]|Pediatr Nephrol[JO]|Prostate Cancer Prostatic Dis[JO]|J Nephrol[JO]|Urology[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Urology & Nephrology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "European Urology",
-    "Journal of the American Society of Nephrology : JASN",
+    "Nature Reviews Nephrology",
     "Kidney International",
-    "Nature Reviews. Nephrology",
+    "Journal of the American Society of Nephrology",
+    "American Journal of Kidney Diseases",
     "The Journal of Urology",
-    "American journal of kidney diseases : the official journal of the National Kidney Foundation",
-    "Clinical journal of the American Society of Nephrology : CJASN",
-    "Nephrology, dialysis, transplantation : official publication of the European Dialysis and Transplant Association - European Renal Association",
-    "BJU International",
-    "Nature Reviews. Urology",
-    "BMC Nephrology",
-    "American journal of physiology. Renal physiology",
+    "Clinical Journal of the American Society of Nephrology",
+    "Nephrology Dialysis Transplantation",
+    "Kidney International Reports",
+    "European Urology Oncology",
+    "Nature Reviews Urology",
+    "European Urology Focus",
     "World Journal of Urology",
-    "Pediatric nephrology (Berlin, Germany)",
-    "Neurourology and Urodynamics",
+    "BJU International",
+    "BMC Nephrology",
     "Clinical Kidney Journal",
-    "Andrology",
-    "Urology",
+    "Pediatric Nephrology",
+    "Prostate Cancer and Prostatic Diseases",
     "Journal of Nephrology",
-    "American Journal of Nephrology"
+    "Urology"
   ]
 }

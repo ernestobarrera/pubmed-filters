@@ -1,35 +1,38 @@
 # Filtro: journals/jnl_anesthesiology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 18 revistas en Anesthesiology según índice h5 de Google Scholar
+# Fecha: 2026-01-16
+# Descripción: Top 20 revistas en Anesthesiology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Anesthesiology[JO]|Anesth Analg[JO]|Br J Anaesth[JO]|Anaesthesia[JO]|Reg Anesth Pain Med[JO]|J Clin Anesth[JO]|Can J Anaesth[JO]|J Cardiothorac Vasc Anesth[JO]|Eur J Anaesthesiol[JO]|Curr Opin Anaesthesiol[JO]|Paediatr Anaesth[JO]|Acta Anaesthesiol Scand[JO]|BMC Anesthesiol[JO]|Indian J Anaesth[JO]|J Clin Monit Comput[JO]|J Anesth[JO]|Anaesth Crit Care Pain Med[JO]|Best Pract Res Clin Anaesthesiol[JO])
+(Br J Anaesth[JO]|Anaesthesia[JO]|Anesthesiology[JO]|Anesth Analg[JO]|Reg Anesth Pain Med[JO]|J Cardiothorac Vasc Anesth[JO]|J Clin Anesth[JO]|Can J Anaesth[JO]|BMC Anesthesiol[JO]|Eur J Anaesthesiol[JO]|Anaesth Crit Care Pain Med[JO]|Best Pract Res Clin Anaesthesiol[JO]|Curr Opin Anaesthesiol[JO]|J Clin Monit Comput[JO]|J Anesth[JO]|Acta Anaesthesiol Scand[JO]|Korean J Anesthesiol[JO]|BJA Educ[JO]|Paediatr Anaesth[JO]|Int J Obstet Anesth[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
   "specialty": "Anesthesiology",
-  "journalCount": 18,
+  "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "Anesthesiology",
-    "Anesthesia and analgesia",
     "British Journal of Anaesthesia",
     "Anaesthesia",
-    "Regional Anesthesia and Pain Medicine",
-    "Journal of Clinical Anesthesia",
-    "Canadian journal of anaesthesia = Journal canadien d'anesthesie",
+    "Anesthesiology",
+    "Anesthesia and Analgesia",
+    "Regional Anesthesia & Pain Medicine",
     "Journal of Cardiothoracic and Vascular Anesthesia",
-    "European journal of anaesthesiology",
-    "Current opinion in anaesthesiology",
-    "Paediatric anaesthesia",
-    "Acta Anaesthesiologica Scandinavica",
+    "Journal of Clinical Anesthesia",
+    "Canadian Journal of Anesthesia",
     "BMC Anesthesiology",
-    "Indian Journal of Anaesthesia",
+    "European Journal of Anaesthesiology",
+    "Anaesthesia Critical Care & Pain Medicine",
+    "Best Practice & Research Clinical Anaesthesiology",
+    "Current Opinion in Anesthesiology",
     "Journal of Clinical Monitoring and Computing",
     "Journal of Anesthesia",
-    "Anaesthesia, critical care & pain medicine",
-    "Best practice & research. Clinical anaesthesiology"
+    "Acta Anaesthesiologica Scandinavica",
+    "Korean Journal of Anesthesiology",
+    "BJA Education",
+    "Pediatric Anesthesia",
+    "International Journal of Obstetric Anesthesia"
   ]
 }

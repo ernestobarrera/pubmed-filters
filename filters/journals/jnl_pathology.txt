@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pathology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pathology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Acta Neuropathol[JO]|Am J Surg Pathol[JO]|Mod Pathol[JO]|J Pathol[JO]|Arch Pathol Lab Med[JO]|Acta Neuropathol Commun[JO]|Am J Pathol[JO]|Annu Rev Pathol[JO]|Histopathology[JO]|Virchows Arch[JO]|Brain Pathol[JO]|Hum Pathol[JO]|Lab Invest[JO]|Neuropathol Appl Neurobiol[JO]|Expert Rev Mol Diagn[JO]|Cancer Cytopathol[JO]|J Neuropathol Exp Neurol[JO]|J Clin Pathol[JO]|Am J Clin Pathol[JO]|Pathology[JO])
+(Acta Neuropathol[JO]|Mod Pathol[JO]|Acta Neuropathol Commun[JO]|Annu Rev Pathol[JO]|J Pathol[JO]|Am J Pathol[JO]|Pathol Res Pract[JO]|Arch Pathol Lab Med[JO]|Histopathology[JO]|Am J Surg Pathol[JO]|Virchows Arch[JO]|Brain Pathol[JO]|Lab Invest[JO]|Am J Clin Pathol[JO]|J Clin Pathol[JO]|Cancer Cytopathol[JO]|Head Neck Pathol[JO]|Neuropathol Appl Neurobiol[JO]|Pathol Oncol Res[JO]|J Oral Pathol Med[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pathology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Acta Neuropathologica",
-    "The American Journal of Surgical Pathology",
-    "Modern pathology : an official journal of the United States and Canadian Academy of Pathology, Inc",
-    "The Journal of pathology",
-    "Archives of Pathology & Laboratory Medicine",
+    "Modern Pathology",
     "Acta Neuropathologica Communications",
+    "Annual Review of Pathology",
+    "Journal of Pathology",
     "The American Journal of Pathology",
-    "Annual review of pathology",
+    "Pathology Research and Practice",
+    "Archives of Pathology & Laboratory Medicine",
     "Histopathology",
-    "Virchows Archiv : an international journal of pathology",
-    "Brain pathology (Zurich, Switzerland)",
-    "Human Pathology",
-    "Laboratory Investigation; a Journal of Technical Methods and Pathology",
-    "Neuropathology and Applied Neurobiology",
-    "Expert Review of Molecular Diagnostics",
-    "Cancer Cytopathology",
-    "Journal of Neuropathology and Experimental Neurology",
-    "Journal of Clinical Pathology",
+    "The American Journal of Surgical Pathology",
+    "Virchows Archiv",
+    "Brain Pathology",
+    "Laboratory Investigation",
     "American Journal of Clinical Pathology",
-    "Pathology"
+    "Journal of Clinical Pathology",
+    "Cancer Cytopathology",
+    "Head and Neck Pathology",
+    "Neuropathology and Applied Neurobiology",
+    "Pathology & Oncology Research",
+    "Journal of Oral Pathology & Medicine"
   ]
 }

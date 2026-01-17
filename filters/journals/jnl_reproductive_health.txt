@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_reproductive_health
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Reproductive Health según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Fertil Steril[JO]|Hum Reprod[JO]|Hum Reprod Update[JO]|J Sex Med[JO]|Reprod Health[JO]|Reprod Biomed Online[JO]|J Assist Reprod Genet[JO]|Reproduction[JO]|Biol Reprod[JO]|Andrology[JO]|Contraception[JO]|Reprod Biol Endocrinol[JO]|Am J Reprod Immunol[JO]|Asian J Androl[JO]|J Reprod Immunol[JO]|Andrologia[JO]|Sex Med Rev[JO]|Mol Hum Reprod[JO]|Reprod Fertil Dev[JO]|Semin Reprod Med[JO])
+(Fertil Steril[JO]|Hum Reprod[JO]|Hum Reprod Update[JO]|Reprod Health[JO]|Andrology[JO]|Reprod Biomed Online[JO]|Reprod Biol Endocrinol[JO]|J Sex Med[JO]|J Assist Reprod Genet[JO]|Andrologia[JO]|Hum Reprod Open[JO]|Biol Reprod[JO]|World J Mens Health[JO]|Reproduction[JO]|Sex Med Rev[JO]|Am J Reprod Immunol[JO]|J Reprod Immunol[JO]|Contraception[JO]|Sex Med[JO]|Mol Hum Reprod[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Reproductive Health",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Fertility and Sterility",
-    "Human reproduction (Oxford, England)",
+    "Human Reproduction",
     "Human Reproduction Update",
-    "The journal of sexual medicine",
     "Reproductive Health",
-    "Reproductive BioMedicine Online",
-    "Journal of Assisted Reproduction and Genetics",
-    "Reproduction (Cambridge, England)",
-    "Biology of Reproduction",
     "Andrology",
-    "Contraception",
-    "Reproductive biology and endocrinology : RB&E",
-    "American journal of reproductive immunology (New York, N.Y. : 1989)",
-    "Asian Journal of Andrology",
-    "Journal of Reproductive Immunology",
+    "Reproductive BioMedicine Online",
+    "Reproductive Biology and Endocrinology",
+    "Journal of Sexual Medicine",
+    "Journal of Assisted Reproduction and Genetics",
     "Andrologia",
+    "Human Reproduction Open",
+    "Biology of Reproduction",
+    "The World Journal of Men's Health",
+    "Reproduction",
     "Sexual Medicine Reviews",
-    "Molecular Human Reproduction",
-    "Reproduction, fertility, and development",
-    "Seminars in Reproductive Medicine"
+    "American Journal of Reproductive Immunology",
+    "Journal of Reproductive Immunology",
+    "Contraception",
+    "Sexual Medicine",
+    "Molecular Human Reproduction"
   ]
 }

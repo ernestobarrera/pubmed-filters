@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_molecular_biology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Molecular Biology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Cell[JO]|Nucleic Acids Res[JO]|Nat Rev Mol Cell Biol[JO]|Mol Cell[JO]|Cell Rep[JO]|Nat Cell Biol[JO]|EMBO J[JO]|Oncogene[JO]|Dev Cell[JO]|Nat Struct Mol Biol[JO]|Genes Dev[JO]|Mol Biol Cell[JO]|PLoS Genet[JO]|Cold Spring Harb Perspect Biol[JO]|J Mol Biol[JO]|FEBS J[JO]|Annu Rev Biochem[JO]|Methods Mol Biol[JO]|EMBO Rep[JO]|Curr Opin Struct Biol[JO])
+(Cell[JO]|Nucleic Acids Res[JO]|Cell Rep[JO]|Mol Cell[JO]|Nat Rev Mol Cell Biol[JO]|Biomolecules[JO]|Nat Cell Biol[JO]|Dev Cell[JO]|EMBO J[JO]|Oncogene[JO]|J Biomol Struct Dyn[JO]|Front Mol Biosci[JO]|Nat Struct Mol Biol[JO]|FEBS J[JO]|J Mol Biol[JO]|EMBO Rep[JO]|Methods Mol Biol[JO]|PLoS Genet[JO]|Protein Sci[JO]|Cell Discov[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Molecular Biology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
     "Cell",
     "Nucleic Acids Research",
-    "Nature Reviews. Molecular Cell Biology",
-    "Molecular Cell",
     "Cell Reports",
+    "Molecular Cell",
+    "Nature Reviews Molecular Cell Biology",
+    "Biomolecules",
     "Nature Cell Biology",
+    "Developmental Cell",
     "The EMBO Journal",
     "Oncogene",
-    "Developmental Cell",
+    "Journal of Biomolecular Structure and Dynamics",
+    "Frontiers in Molecular Biosciences",
     "Nature Structural & Molecular Biology",
-    "Genes & Development",
-    "Molecular Biology of the Cell",
-    "PLOS Genetics",
-    "Cold Spring Harbor Perspectives in Biology",
+    "FEBS Journal",
     "Journal of Molecular Biology",
-    "The FEBS journal",
-    "Annual Review of Biochemistry",
-    "Methods in molecular biology (Clifton, N.J.)",
     "EMBO Reports",
-    "Current Opinion in Structural Biology"
+    "Methods in Molecular Biology",
+    "PLOS Genetics",
+    "Protein Science",
+    "Cell Discovery"
   ]
 }

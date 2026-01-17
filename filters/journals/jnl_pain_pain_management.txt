@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pain_pain_management
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pain & Pain Management según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Pain[JO]|J Pain[JO]|J Pain Symptom Manage[JO]|Cephalalgia[JO]|Headache[JO]|Eur J Pain[JO]|J Headache Pain[JO]|Pain Med[JO]|Pain Physician[JO]|J Pain Res[JO]|Clin J Pain[JO]|Pain Pract[JO]|Curr Pain Headache Rep[JO]|Pain Res Manag[JO]|Mol Pain[JO]|Pain Rep[JO]|Scand J Pain[JO]|Pain Ther[JO]|Pain Manag Nurs[JO]|Pain Manag[JO])
+(Pain[JO]|J Pain Symptom Manage[JO]|J Headache Pain[JO]|Pain Med[JO]|Cephalalgia[JO]|Headache[JO]|J Pain Res[JO]|Eur J Pain[JO]|J Pain[JO]|Pain Physician[JO]|Curr Pain Headache Rep[JO]|Pain Rep[JO]|Pain Ther[JO]|Pain Res Manag[JO]|Clin J Pain[JO]|Pain Pract[JO]|Pain Manag Nurs[JO]|Front Pain Res (Lausanne)[JO]|Anesth Pain Med[JO]|Mol Pain[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pain & Pain Management",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Pain",
-    "The journal of pain",
     "Journal of Pain and Symptom Management",
-    "Cephalalgia : an international journal of headache",
+    "Journal of Headache and Pain",
+    "Pain Medicine",
+    "Cephalalgia",
     "Headache",
-    "European journal of pain (London, England)",
-    "The journal of headache and pain",
-    "Pain medicine (Malden, Mass.)",
-    "Pain Physician",
     "Journal of Pain Research",
-    "The Clinical Journal of Pain",
-    "Pain practice : the official journal of World Institute of Pain",
+    "European Journal of Pain",
+    "The Journal of Pain",
+    "Pain Physician",
     "Current Pain and Headache Reports",
-    "Pain research & management",
-    "Molecular Pain",
     "PAIN Reports",
-    "Scandinavian Journal of Pain",
     "Pain and Therapy",
-    "Pain management nursing : official journal of the American Society of Pain Management Nurses",
-    "Pain Management"
+    "Pain Research & Management",
+    "The Clinical Journal of Pain",
+    "Pain Practice",
+    "Pain Management Nursing",
+    "Frontiers in Pain Research",
+    "Anesthesiology and Pain Medicine",
+    "Molecular Pain"
   ]
 }

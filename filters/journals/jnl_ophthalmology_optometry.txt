@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_ophthalmology_optometry
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Ophthalmology & Optometry según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ophthalmology[JO]|Invest Ophthalmol Vis Sci[JO]|Am J Ophthalmol[JO]|Prog Retin Eye Res[JO]|JAMA Ophthalmol[JO]|Br J Ophthalmol[JO]|Retina[JO]|Eye (Lond)[JO]|Surv Ophthalmol[JO]|Clin Ophthalmol[JO]|Acta Ophthalmol (Copenh)[JO]|Ocul Surf[JO]|Graefes Arch Clin Exp Ophthalmol[JO]|J Cataract Refract Surg[JO]|Exp Eye Res[JO]|Cornea[JO]|J Vis[JO]|Vision Res[JO]|J Glaucoma[JO]|BMC Ophthalmol[JO])
+(Ophthalmology[JO]|Prog Retin Eye Res[JO]|Eye (Lond)[JO]|JAMA Ophthalmol[JO]|Br J Ophthalmol[JO]|Invest Ophthalmol Vis Sci[JO]|Indian J Ophthalmol[JO]|Am J Ophthalmol[JO]|Ocul Surf[JO]|Surv Ophthalmol[JO]|Acta Ophthalmol[JO]|Exp Eye Res[JO]|Graefes Arch Clin Exp Ophthalmol[JO]|Transl Vis Sci Technol[JO]|Clin Ophthalmol[JO]|J Cataract Refract Surg[JO]|Ophthalmol Retina[JO]|Retina[JO]|Cornea[JO]|Ocul Immunol Inflamm[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Ophthalmology & Optometry",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Ophthalmology",
-    "Investigative Ophthalmology & Visual Science",
-    "American Journal of Ophthalmology",
     "Progress in Retinal and Eye Research",
+    "Eye",
     "JAMA Ophthalmology",
-    "The British journal of ophthalmology",
-    "Retina (Philadelphia, Pa.)",
-    "Eye (London, England)",
-    "Survey of Ophthalmology",
-    "Clinical ophthalmology (Auckland, N.Z.)",
-    "Acta Ophthalmologica",
+    "British Journal of Ophthalmology",
+    "Investigative Ophthalmology & Visual Science",
+    "Indian Journal of Ophthalmology",
+    "American Journal of Ophthalmology",
     "The Ocular Surface",
-    "Graefe's archive for clinical and experimental ophthalmology = Albrecht von Graefes Archiv fur klinische und experimentelle Ophthalmologie",
-    "Journal of cataract and refractive surgery",
+    "Survey of Ophthalmology",
+    "Acta Ophthalmologica",
     "Experimental Eye Research",
+    "Graefe's Archive for Clinical and Experimental Ophthalmology",
+    "Translational Vision Science & Technology",
+    "Clinical Ophthalmology",
+    "Journal of Cataract & Refractive Surgery",
+    "Ophthalmology Retina",
+    "Retina",
     "Cornea",
-    "Journal of Vision",
-    "Vision Research",
-    "Journal of Glaucoma",
-    "BMC Ophthalmology"
+    "Ocular Immunology and Inflammation"
   ]
 }

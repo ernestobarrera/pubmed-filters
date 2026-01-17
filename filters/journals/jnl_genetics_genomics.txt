@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_genetics_genomics
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Genetics & Genomics según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Oncogene[JO]|Am J Hum Genet[JO]|Genome Res[JO]|PLoS Genet[JO]|Genet Med[JO]|BMC Genomics[JO]|Hum Mol Genet[JO]|Genome Med[JO]|Trends Genet[JO]|Genetics[JO]|Front Genet[JO]|Genes (Basel)[JO]|Gene[JO]|Eur J Hum Genet[JO]|Curr Opin Genet Dev[JO]|Clin Epigenetics[JO]|Forensic Sci Int Genet[JO])
+(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Front Genet[JO]|Oncogene[JO]|Genes (Basel)[JO]|Genome Med[JO]|Am J Hum Genet[JO]|Genet Med[JO]|Genome Res[JO]|PLoS Genet[JO]|BMC Genomics[JO]|Trends Genet[JO]|Theor Appl Genet[JO]|Eur J Hum Genet[JO]|Clin Epigenetics[JO]|Genomics[JO]|Genetics[JO]|Hum Genet[JO]|Gene[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Genetics & Genomics",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Nature Genetics",
     "Genome Biology",
-    "Nature reviews. Genetics",
+    "Nature Reviews Genetics",
+    "Frontiers in Genetics",
     "Oncogene",
-    "American journal of human genetics",
+    "Genes",
+    "Genome Medicine",
+    "The American Journal of Human Genetics",
+    "Genetics in Medicine",
     "Genome Research",
     "PLOS Genetics",
-    "Genetics in medicine : official journal of the American College of Medical Genetics",
     "BMC Genomics",
-    "Human Molecular Genetics",
-    "Genome Medicine",
-    "Trends in genetics : TIG",
-    "Genetics",
-    "Frontiers in Genetics",
-    "Genes",
-    "Gene",
-    "European journal of human genetics : EJHG",
-    "Current Opinion in Genetics & Development",
+    "Trends in Genetics",
+    "Theoretical and Applied Genetics",
+    "European Journal of Human Genetics",
     "Clinical Epigenetics",
-    "Forensic science international. Genetics"
+    "Genomics",
+    "Genetics",
+    "Human Genetics",
+    "Gene"
   ]
 }

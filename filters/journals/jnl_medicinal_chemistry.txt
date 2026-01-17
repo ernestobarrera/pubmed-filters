@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_medicinal_chemistry
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Medicinal Chemistry según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Nat Prod Rep[JO]|Med Res Rev[JO]|Curr Med Chem[JO]|Bioorg Med Chem[JO]|Bioorg Med Chem Lett[JO]|J Enzyme Inhib Med Chem[JO]|Curr Top Med Chem[JO]|ACS Med Chem Lett[JO]|ChemMedChem[JO]|Expert Opin Drug Discov[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Medchemcomm[JO]|Mini Rev Med Chem[JO]|Chem Biol Drug Des[JO]|Anticancer Agents Med Chem[JO]|J Comput Aided Mol Des[JO])
+(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Med Res Rev[JO]|Nat Prod Rep[JO]|Curr Med Chem[JO]|J Enzyme Inhib Med Chem[JO]|Expert Opin Drug Discov[JO]|ACS Med Chem Lett[JO]|Bioorg Med Chem[JO]|ChemMedChem[JO]|Mol Divers[JO]|Mini Rev Med Chem[JO]|Bioorg Med Chem Lett[JO]|Arch Pharm (Weinheim)[JO]|Curr Top Med Chem[JO]|RSC Med Chem[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Anticancer Agents Med Chem[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Medicinal Chemistry",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
     "Journal of Medicinal Chemistry",
     "European Journal of Medicinal Chemistry",
     "Drug Discovery Today",
-    "Natural product reports",
     "Medicinal Research Reviews",
+    "Natural Products Reports",
     "Current Medicinal Chemistry",
-    "Bioorganic & Medicinal Chemistry",
-    "Bioorganic & Medicinal Chemistry Letters",
     "Journal of Enzyme Inhibition and Medicinal Chemistry",
-    "Current Topics in Medicinal Chemistry",
-    "ACS Medicinal Chemistry Letters",
-    "ChemMedChem",
     "Expert Opinion on Drug Discovery",
+    "ACS Medicinal Chemistry Letters",
+    "Bioorganic & Medicinal Chemistry",
+    "ChemMedChem",
+    "Molecular Diversity",
+    "Mini Reviews in Medicinal Chemistry",
+    "Bioorganic & Medicinal Chemistry Letters",
+    "Archiv der Pharmazie",
+    "Current Topics in Medicinal Chemistry",
+    "RSC Medicinal Chemistry",
     "Expert Opinion on Therapeutic Patents",
     "Future Medicinal Chemistry",
-    "MedChemComm",
-    "Mini Reviews in Medicinal Chemistry",
-    "Chemical Biology & Drug Design",
-    "Anti-Cancer Agents in Medicinal Chemistry",
-    "Journal of Computer-Aided Molecular Design"
+    "Anti-Cancer Agents in Medicinal Chemistry"
   ]
 }

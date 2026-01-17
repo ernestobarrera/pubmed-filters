@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_heart_thoracic_surgery
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-17
 # Descripción: Top 20 revistas en Heart & Thoracic Surgery según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ann Thorac Surg[JO]|J Thorac Cardiovasc Surg[JO]|Eur J Cardiothorac Surg[JO]|Ann Cardiothorac Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Perfusion[JO]|Gen Thorac Cardiovasc Surg[JO]|Thorac Cardiovasc Surg[JO]|Thorac Surg Clin[JO]|World J Pediatr Congenit Heart Surg[JO]|Innovations[JO]|Rev Bras Cir Cardiovasc[JO]|Scand Cardiovasc J[JO]|J Vis Surg[JO]|Ann Thorac Cardiovasc Surg[JO]|Semin Cardiothorac Vasc Anesth[JO]|J Extra Corpor Technol[JO])
+(J Thorac Cardiovasc Surg[JO]|Ann Thorac Surg[JO]|Eur J Cardiothorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Ann Cardiothorac Surg[JO]|Gen Thorac Cardiovasc Surg[JO]|JTCVS Tech[JO]|Perfusion[JO]|Thorac Cardiovasc Surg[JO]|Braz J Cardiovasc Surg[JO]|Indian J Thorac Cardiovasc Surg[JO]|JTCVS Open[JO]|Thorac Surg Clin[JO]|Interdiscip Cardiovasc Thorac Surg[JO]|Scand Cardiovasc J[JO]|World J Pediatr Congenit Heart Surg[JO]|J Cardiovasc Surg (Torino)[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Heart & Thoracic Surgery",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
-    "The Annals of Thoracic Surgery",
     "The Journal of Thoracic and Cardiovascular Surgery",
-    "European journal of cardio-thoracic surgery : official journal of the European Association for Cardio-thoracic Surgery",
-    "Annals of Cardiothoracic Surgery",
-    "Interactive CardioVascular and Thoracic Surgery",
+    "The Annals of Thoracic Surgery",
+    "European Journal of Cardio-Thoracic Surgery",
     "Journal of Cardiothoracic Surgery",
     "Journal of Cardiac Surgery",
+    "Interactive CardioVascular and Thoracic Surgery",
     "Seminars in Thoracic and Cardiovascular Surgery",
-    "Perfusion",
+    "Annals of Cardiothoracic Surgery",
     "General Thoracic and Cardiovascular Surgery",
+    "JTCVS Techniques",
+    "Perfusion",
     "The Thoracic and Cardiovascular Surgeon",
+    "Revista Brasileira de Cirurgia Cardiovascular",
+    "Indian Journal of Thoracic and Cardiovascular Surgery",
+    "JTCVS Open",
     "Thoracic Surgery Clinics",
-    "World journal for pediatric & congenital heart surgery",
-    "Innovations",
-    "Revista brasileira de cirurgia cardiovascular : orgao oficial da Sociedade Brasileira de Cirurgia Cardiovascular",
-    "Scandinavian cardiovascular journal : SCJ",
-    "Journal of Visualized Surgery",
-    "Annals of thoracic and cardiovascular surgery : official journal of the Association of Thoracic and Cardiovascular Surgeons of Asia",
-    "Seminars in Cardiothoracic and Vascular Anesthesia",
-    "The Journal of Extra-corporeal Technology"
+    "Interdisciplinary Cardiovascular and Thoracic Surgery",
+    "Scandinavian Cardiovascular Journal",
+    "World Journal for Pediatric and Congenital Heart Surgery",
+    "The Journal of Cardiovascular Surgery"
   ]
 }

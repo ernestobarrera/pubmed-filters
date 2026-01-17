@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_epidemiology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Epidemiology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(MMWR Morb Mortal Wkly Rep[JO]|Emerg Infect Dis[JO]|Euro Surveill[JO]|Int J Epidemiol[JO]|J Clin Epidemiol[JO]|Am J Epidemiol[JO]|Eur J Epidemiol[JO]|J Epidemiol Community Health (1978)[JO]|J Hosp Infect[JO]|Am J Infect Control[JO]|Environ Health[JO]|Infect Control Hosp Epidemiol[JO]|Int J Hyg Environ Health[JO]|Epidemiology[JO]|J Infect Public Health[JO]|Antimicrob Resist Infect Control[JO]|Epidemiol Infect[JO]|Ann Epidemiol[JO]|Curr Environ Health Rep[JO]|Clin Epidemiol[JO])
+(MMWR Morb Mortal Wkly Rep[JO]|Emerg Infect Dis[JO]|Euro Surveill[JO]|Int J Epidemiol[JO]|J Infect Public Health[JO]|J Clin Epidemiol[JO]|J Hosp Infect[JO]|SSM Popul Health[JO]|Eur J Epidemiol[JO]|Epidemiol Infect[JO]|J Epidemiol Community Health[JO]|Am J Infect Control[JO]|Am J Epidemiol[JO]|Infect Control Hosp Epidemiol[JO]|Antimicrob Resist Infect Control[JO]|Int J Hyg Environ Health[JO]|J Glob Antimicrob Resist[JO]|Air Qual Atmos Health[JO]|J Expo Sci Environ Epidemiol[JO]|Curr Environ Health Rep[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Epidemiology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
-    "MMWR. Morbidity and mortality weekly report",
+    "Morbidity and Mortality Weekly Report",
     "Emerging Infectious Diseases",
-    "Euro surveillance : bulletin Europeen sur les maladies transmissibles = European communicable disease bulletin",
+    "Euro Surveillance",
     "International Journal of Epidemiology",
-    "Journal of Clinical Epidemiology",
-    "American Journal of Epidemiology",
-    "European Journal of Epidemiology",
-    "Journal of Epidemiology and Community Health",
-    "The Journal of hospital infection",
-    "American Journal of Infection Control",
-    "Environmental health : a global access science source",
-    "Infection control and hospital epidemiology",
-    "International Journal of Hygiene and Environmental Health",
-    "Epidemiology (Cambridge, Mass.)",
     "Journal of Infection and Public Health",
-    "Antimicrobial resistance and infection control",
-    "Epidemiology and infection",
-    "Annals of Epidemiology",
-    "Current Environmental Health Reports",
-    "Clinical Epidemiology"
+    "Journal of Clinical Epidemiology",
+    "Journal of Hospital Infection",
+    "SSM-Population Health",
+    "European Journal of Epidemiology",
+    "Epidemiology & Infection",
+    "Journal of Epidemiology and Community Health",
+    "American Journal of Infection Control",
+    "American Journal of Epidemiology",
+    "Infection Control and Hospital Epidemiology",
+    "Antimicrobial Resistance & Infection Control",
+    "International Journal of Hygiene and Environmental Health",
+    "Journal of Global Antimicrobial Resistance",
+    "Air Quality, Atmosphere & Health",
+    "Journal of Exposure Science & Environmental Epidemiology",
+    "Current Environmental Health Reports"
   ]
 }

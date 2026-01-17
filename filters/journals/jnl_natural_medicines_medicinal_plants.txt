@@ -1,36 +1,38 @@
 # Filtro: journals/jnl_natural_medicines_medicinal_plants
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 19 revistas en Natural Medicines & Medicinal Plants según índice h5 de Google Scholar
+# Fecha: 2026-01-17
+# Descripción: Top 20 revistas en Natural Medicines & Medicinal Plants según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Mar Drugs[JO]|J Ethnopharmacol[JO]|Nat Prod Rep[JO]|Phytother Res[JO]|Phytomedicine[JO]|Pharm Biol[JO]|J Nat Prod[JO]|Asian Pac J Trop Biomed[JO]|Nat Prod Res[JO]|Planta Med[JO]|Fitoterapia[JO]|J Med Food[JO]|Avicenna J Phytomed[JO]|Chem Biodivers[JO]|Pharmacogn Mag[JO]|Chin J Nat Med[JO]|Rev Bras Farmacogn[JO]|J Diet Suppl[JO]|J Nat Med[JO])
+(Mar Drugs[JO]|J Ethnopharmacol[JO]|Phytother Res[JO]|Phytomedicine[JO]|Nat Prod Rep[JO]|Nat Prod Res[JO]|J Nat Prod[JO]|Pharm Biol[JO]|Fitoterapia[JO]|Chem Biodivers[JO]|Chin J Nat Med[JO]|Planta Med[JO]|J Med Food[JO]|Nat Prod Commun[JO]|Phytochem Anal[JO]|Chin Herb Med[JO]|J Diet Suppl[JO]|Pharmacogn J[JO]|Clin Phytosci[JO]|Nat Prod Bioprospect[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
   "specialty": "Natural Medicines & Medicinal Plants",
-  "journalCount": 19,
+  "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
     "Marine Drugs",
     "Journal of Ethnopharmacology",
-    "Natural product reports",
-    "Phytotherapy research : PTR",
-    "Phytomedicine : international journal of phytotherapy and phytopharmacology",
-    "Pharmaceutical Biology",
-    "Journal of Natural Products",
-    "Asian Pacific Journal of Tropical Biomedicine",
+    "Phytotherapy Research",
+    "Phytomedicine",
+    "Natural Products Reports",
     "Natural Product Research",
-    "Planta Medica",
+    "Journal of Natural Products",
+    "Pharmaceutical Biology",
     "Fitoterapia",
-    "Journal of Medicinal Food",
-    "Avicenna Journal of Phytomedicine",
     "Chemistry & Biodiversity",
-    "Pharmacognosy Magazine",
     "Chinese Journal of Natural Medicines",
-    "Revista brasileira de farmacognosia : orgao oficial da Sociedade Brasileira de Farmacognosia",
+    "Planta Medica",
+    "Journal of Medicinal Food",
+    "Natural Product Communications",
+    "Phytochemical Analysis",
+    "Chinese Herbal Medicines",
     "Journal of Dietary Supplements",
-    "Journal of Natural Medicines"
+    "Pharmacognosy Journal",
+    "Clinical Phytoscience",
+    "Natural Products and Bioprospecting"
   ]
 }

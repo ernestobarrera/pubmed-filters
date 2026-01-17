@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_radiology_medical_imaging
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Radiology & Medical Imaging según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Radiology[JO]|IEEE Trans Med Imaging[JO]|JACC Cardiovasc Imaging[JO]|Eur Radiol[JO]|Magn Reson Med[JO]|Med Image Comput Comput Assist Interv[JO]|Med Phys[JO]|Phys Med Biol[JO]|J Magn Reson Imaging[JO]|Eur Heart J Cardiovasc Imaging[JO]|Endoscopy[JO]|AJR Am J Roentgenol[JO]|AJNR Am J Neuroradiol[JO]|Radiographics[JO]|Circ Cardiovasc Imaging[JO]|Eur J Radiol[JO]|Proc IEEE Int Symp Biomed Imaging[JO]|J Am Coll Radiol[JO]|Invest Radiol[JO]|J Am Soc Echocardiogr[JO])
+(Radiology[JO]|IEEE Trans Med Imaging[JO]|Eur Radiol[JO]|Med Image Comput Comput Assist Interv[JO]|JACC Cardiovasc Imaging[JO]|Med Phys[JO]|J Magn Reson Imaging[JO]|Endoscopy[JO]|Eur Heart J Cardiovasc Imaging[JO]|Phys Med Biol[JO]|AJR Am J Roentgenol[JO]|Magn Reson Med[JO]|Acad Radiol[JO]|Radiographics[JO]|Eur J Radiol[JO]|AJNR Am J Neuroradiol[JO]|Insights Imaging[JO]|Radiol Med[JO]|Comput Med Imaging Graph[JO]|Invest Radiol[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Radiology & Medical Imaging",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Radiology",
     "IEEE Transactions on Medical Imaging",
-    "JACC. Cardiovascular imaging",
     "European Radiology",
-    "Magnetic Resonance in Medicine",
-    "Medical image computing and computer-assisted intervention : MICCAI ... International Conference on Medical Image Computing and Computer-Assisted Intervention",
+    "Medical Image Computing and Computer Assisted Intervention",
+    "JACC Cardiovascular Imaging",
     "Medical Physics",
-    "Physics in medicine and biology",
-    "Journal of magnetic resonance imaging : JMRI",
-    "European heart journal. Cardiovascular Imaging",
+    "Journal of Magnetic Resonance Imaging",
     "Endoscopy",
-    "AJR. American journal of roentgenology",
-    "AJNR. American journal of neuroradiology",
-    "Radiographics : a review publication of the Radiological Society of North America, Inc",
-    "Circulation. Cardiovascular imaging",
+    "European Heart Journal Cardiovascular Imaging",
+    "Physics in Medicine & Biology",
+    "American Journal of Roentgenology",
+    "Magnetic Resonance in Medicine",
+    "Academic Radiology",
+    "RadioGraphics",
     "European Journal of Radiology",
-    "Proceedings / IEEE International Symposium on Biomedical Imaging: from nano to macro",
-    "Journal of the American College of Radiology : JACR",
-    "Investigative Radiology",
-    "Journal of the American Society of Echocardiography : official publication of the American Society of Echocardiography"
+    "American Journal of Neuroradiology",
+    "Insights into Imaging",
+    "La Radiologia Medica",
+    "Computerized Medical Imaging and Graphics",
+    "Investigative Radiology"
   ]
 }

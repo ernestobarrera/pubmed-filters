@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_toxicology
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Toxicology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Environ Res[JO]|Environ Health Perspect[JO]|Ecotoxicol Environ Saf[JO]|Arch Toxicol[JO]|Toxins (Basel)[JO]|Food Chem Toxicol[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Biol Interact[JO]|Nanotoxicology[JO]|Aquat Toxicol[JO]|Toxicol Sci[JO]|Toxicol Appl Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Lett[JO]|Regul Toxicol Pharmacol[JO]|Part Fibre Toxicol[JO]|Chem Res Toxicol[JO]|Mutat Res[JO]|Carcinogenesis[JO]|Neurotoxicology[JO])
+(Environ Res[JO]|Ecotoxicol Environ Saf[JO]|Food Chem Toxicol[JO]|Toxins (Basel)[JO]|Environ Health Perspect[JO]|Arch Toxicol[JO]|Chem Biol Interact[JO]|Toxicol Rep[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Res Toxicol[JO]|Aquat Toxicol[JO]|J Expo Sci Environ Epidemiol[JO]|Toxicology[JO]|Part Fibre Toxicol[JO]|Regul Toxicol Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Appl Pharmacol[JO]|Bull Environ Contam Toxicol[JO]|Environ Toxicol[JO]|Neurotoxicology[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Toxicology",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "Environmental Research",
-    "Environmental Health Perspectives",
     "Ecotoxicology and Environmental Safety",
-    "Archives of Toxicology",
+    "Food and Chemical Toxicology",
     "Toxins",
-    "Food and chemical toxicology : an international journal published for the British Industrial Biological Research Association",
-    "Annual Review of Pharmacology and Toxicology",
+    "Environmental Health Perspectives",
+    "Archives of Toxicology",
     "Chemico-Biological Interactions",
-    "Nanotoxicology",
-    "Aquatic toxicology (Amsterdam, Netherlands)",
-    "Toxicological sciences : an official journal of the Society of Toxicology",
-    "Toxicology and Applied Pharmacology",
-    "Environmental Toxicology and Pharmacology",
-    "Toxicology Letters",
-    "Regulatory toxicology and pharmacology : RTP",
-    "Particle and Fibre Toxicology",
+    "Toxicology Reports",
+    "Annual Review of Pharmacology and Toxicology",
     "Chemical Research in Toxicology",
-    "Mutation Research",
-    "Carcinogenesis",
-    "NeuroToxicology"
+    "Aquatic Toxicology",
+    "Journal of Exposure Science & Environmental Epidemiology",
+    "Toxicology",
+    "Particle and Fibre Toxicology",
+    "Regulatory Toxicology and Pharmacology",
+    "Environmental Toxicology and Pharmacology",
+    "Toxicology and Applied Pharmacology",
+    "Bulletin of Environmental Contamination and Toxicology",
+    "Environmental Toxicology",
+    "Neurotoxicology"
   ]
 }

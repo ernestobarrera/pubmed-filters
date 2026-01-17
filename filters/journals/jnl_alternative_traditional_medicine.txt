@@ -1,35 +1,38 @@
 # Filtro: journals/jnl_alternative_traditional_medicine
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 18 revistas en Alternative & Traditional Medicine según índice h5 de Google Scholar
+# Fecha: 2026-01-17
+# Descripción: Top 20 revistas en Alternative & Traditional Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(BMC Complement Altern Med[JO]|Evid Based Complement Alternat Med[JO]|J Tradit Complement Med[JO]|Complement Ther Med[JO]|Complement Ther Clin Pract[JO]|BMC Complement Med Ther[JO]|J Altern Complement Med[JO]|J Ethnobiol Ethnomed[JO]|Medicines (Basel)[JO]|J Evid Based Complementary Altern Med[JO]|Am J Occup Ther[JO]|Am J Chin Med (Gard City N Y)[JO]|J Integr Med[JO]|Chin J Nat Med[JO]|Chin Med[JO]|J Ayurveda Integr Med[JO]|Integr Med Res[JO]|Acupunct Med[JO])
+(Evid Based Complement Alternat Med[JO]|BMC Complement Med Ther[JO]|Complement Ther Med[JO]|Chin Med[JO]|Complement Ther Clin Pract[JO]|J Ethnobiol Ethnomed[JO]|Am J Chin Med[JO]|Eur J Integr Med[JO]|J Tradit Complement Med[JO]|J Ayurveda Integr Med[JO]|J Altern Complement Med[JO]|Am J Occup Ther[JO]|J Integr Med[JO]|Chin J Nat Med[JO]|Scand J Occup Ther[JO]|Integr Med Res[JO]|Chin J Integr Med[JO]|Occup Ther Int[JO]|Can J Occup Ther[JO]|Aust Occup Ther J[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
   "specialty": "Alternative & Traditional Medicine",
-  "journalCount": 18,
+  "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
-    "BMC Complementary and Alternative Medicine",
-    "Evidence-based complementary and alternative medicine : eCAM",
-    "Journal of Traditional and Complementary Medicine",
-    "Complementary Therapies in Medicine",
-    "Complementary Therapies in Clinical Practice",
+    "Evidence-Based Complementary and Alternative Medicine",
     "BMC Complementary Medicine and Therapies",
-    "Journal of alternative and complementary medicine (New York, N.Y.)",
+    "Complementary Therapies in Medicine",
+    "Chinese Medicine",
+    "Complementary Therapies in Clinical Practice",
     "Journal of Ethnobiology and Ethnomedicine",
-    "Medicines (Basel, Switzerland)",
-    "Journal of Evidence-Based Complementary & Alternative Medicine",
-    "The American journal of occupational therapy : official publication of the American Occupational Therapy Association",
     "The American Journal of Chinese Medicine",
+    "European Journal of Integrative Medicine",
+    "Journal of Traditional and Complementary Medicine",
+    "Journal of Ayurveda and Integrative Medicine",
+    "The Journal of Alternative and Complementary Medicine",
+    "The American Journal of Occupational Therapy",
     "Journal of Integrative Medicine",
     "Chinese Journal of Natural Medicines",
-    "Chinese Medicine",
-    "Journal of Ayurveda and Integrative Medicine",
+    "Scandinavian Journal of Occupational Therapy",
     "Integrative Medicine Research",
-    "Acupuncture in medicine : journal of the British Medical Acupuncture Society"
+    "Chinese Journal of Integrative Medicine",
+    "Occupational Therapy International",
+    "Canadian Journal of Occupational Therapy",
+    "Australian Occupational Therapy Journal"
   ]
 }

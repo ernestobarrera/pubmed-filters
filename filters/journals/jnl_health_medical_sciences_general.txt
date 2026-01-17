@@ -1,37 +1,38 @@
 # Filtro: journals/jnl_health_medical_sciences_general
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
-# Descripción: Top 20 revistas en Health & Medical Sciences (general) según índice h5 de Google Scholar
+# Fecha: 2026-01-17
+# Descripción: Top 20 revistas en Health & Medical Sciences (General) según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(N Engl J Med[JO]|Lancet[JO]|JAMA[JO]|Proc Natl Acad Sci U S A[JO]|Nat Med[JO]|PLoS One[JO]|BMJ[JO]|Cochrane Database Syst Rev[JO]|Int J Mol Sci[JO]|Cell Metab[JO]|J Clin Invest[JO]|Sci Transl Med[JO]|Ann Intern Med[JO]|JAMA Intern Med[JO]|Cell Host Microbe[JO]|Nat Microbiol[JO]|Nat Rev Dis Primers[JO]|PLoS Med[JO]|BMJ Open[JO]|Lancet Glob Health[JO])
+(N Engl J Med[JO]|Lancet[JO]|Cell[JO]|JAMA[JO]|Nat Med[JO]|Int J Mol Sci[JO]|Proc Natl Acad Sci U S A[JO]|Int J Environ Res Public Health[JO]|PLoS One[JO]|BMJ[JO]|Front Immunol[JO]|J Clin Oncol[JO]|Signal Transduct Target Ther[JO]|Nutrients[JO]|Circulation[JO]|Front Psychol[JO]|MMWR Morb Mortal Wkly Rep[JO]|Lancet Oncol[JO]|JAMA Netw Open[JO]|Lancet Infect Dis[JO])
 
 @@@FILTER_METADATA@@@
 {
   "type": "journals",
-  "specialty": "Health & Medical Sciences (general)",
+  "specialty": "Health & Medical Sciences (General)",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-17",
   "journals": [
     "The New England Journal of Medicine",
-    "Lancet (London, England)",
+    "The Lancet",
+    "Cell",
     "JAMA",
-    "Proceedings of the National Academy of Sciences of the United States of America",
     "Nature Medicine",
-    "PLoS ONE",
-    "BMJ (Clinical research ed.)",
-    "The Cochrane Database of Systematic Reviews",
     "International Journal of Molecular Sciences",
-    "Cell Metabolism",
-    "The Journal of Clinical Investigation",
-    "Science Translational Medicine",
-    "Annals of Internal Medicine",
-    "JAMA Internal Medicine",
-    "Cell Host & Microbe",
-    "Nature Microbiology",
-    "Nature reviews. Disease primers",
-    "PLOS Medicine",
-    "BMJ open",
-    "The Lancet. Global health"
+    "Proceedings of the National Academy of Sciences",
+    "International Journal of Environmental Research and Public Health",
+    "PLOS ONE",
+    "BMJ",
+    "Frontiers in Immunology",
+    "Journal of Clinical Oncology",
+    "Signal Transduction and Targeted Therapy",
+    "Nutrients",
+    "Circulation",
+    "Frontiers in Psychology",
+    "Morbidity and Mortality Weekly Report",
+    "The Lancet Oncology",
+    "JAMA Network Open",
+    "The Lancet Infectious Diseases"
   ]
 }

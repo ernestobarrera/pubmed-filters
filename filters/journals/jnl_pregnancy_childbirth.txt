@@ -1,10 +1,10 @@
 # Filtro: journals/jnl_pregnancy_childbirth
 # Autor: Generado automáticamente desde Google Scholar h5-index
-# Fecha: 2025-12-13
+# Fecha: 2026-01-16
 # Descripción: Top 20 revistas en Pregnancy & Childbirth según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(BMC Pregnancy Childbirth[JO]|J Matern Fetal Neonatal Med[JO]|Matern Child Nutr[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Matern Child Health J[JO]|J Perinatol[JO]|Semin Fetal Neonatal Med[JO]|Midwifery[JO]|Women Birth[JO]|Semin Perinatol[JO]|Am J Perinatol[JO]|Int Breastfeed J[JO]|Clin Perinatol[JO]|J Hum Lact[JO]|Breastfeed Med[JO]|Birth Defects Res[JO]|J Midwifery Womens Health[JO]|Paediatr Perinat Epidemiol[JO]|J Obstet Gynecol Neonatal Nurs[JO]|Birth[JO])
+(BMC Pregnancy Childbirth[JO]|J Matern Fetal Neonatal Med[JO]|Women Birth[JO]|Matern Child Nutr[JO]|J Perinatol[JO]|Midwifery[JO]|Am J Perinatol[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Int Breastfeed J[JO]|Matern Child Health J[JO]|Breastfeed Med[JO]|Semin Perinatol[JO]|J Reprod Infant Psychol[JO]|J Perinat Med[JO]|Semin Fetal Neonatal Med[JO]|Birth[JO]|J Midwifery Womens Health[JO]|J Hum Lact[JO]|Birth Defects Res[JO]|Pregnancy Hypertens[JO])
 
 @@@FILTER_METADATA@@@
 {
@@ -12,26 +12,27 @@
   "specialty": "Pregnancy & Childbirth",
   "journalCount": 20,
   "source": "Google Scholar h5-index",
+  "lastUpdated": "2026-01-16",
   "journals": [
     "BMC Pregnancy and Childbirth",
-    "The journal of maternal-fetal & neonatal medicine : the official journal of the European Association of Perinatal Medicine, the Federation of Asia and Oceania Perinatal Societies, the International Society of Perinatal Obstetricians",
+    "The Journal of Maternal-Fetal & Neonatal Medicine",
+    "Women and Birth",
     "Maternal & Child Nutrition",
-    "Archives of disease in childhood. Fetal and neonatal edition",
-    "Maternal and Child Health Journal",
-    "Journal of perinatology : official journal of the California Perinatal Association",
-    "Seminars in fetal & neonatal medicine",
+    "Journal of Perinatology",
     "Midwifery",
-    "Women and birth : journal of the Australian College of Midwives",
-    "Seminars in Perinatology",
     "American Journal of Perinatology",
+    "Archives of Disease in Childhood-Fetal and Neonatal Edition",
     "International Breastfeeding Journal",
-    "Clinics in Perinatology",
-    "Journal of human lactation : official journal of International Lactation Consultant Association",
-    "Breastfeeding medicine : the official journal of the Academy of Breastfeeding Medicine",
-    "Birth Defects Research",
+    "Maternal and Child Health Journal",
+    "Breastfeeding Medicine",
+    "Seminars in Perinatology",
+    "Journal of Reproductive and Infant Psychology",
+    "Journal of Perinatal Medicine",
+    "Seminars in Fetal and Neonatal Medicine",
+    "Birth",
     "Journal of Midwifery & Women's Health",
-    "Paediatric and Perinatal Epidemiology",
-    "Journal of obstetric, gynecologic, and neonatal nursing : JOGNN",
-    "Birth (Berkeley, Calif.)"
+    "Journal of Human Lactation",
+    "Birth Defects Research",
+    "Pregnancy Hypertension"
   ]
 }
