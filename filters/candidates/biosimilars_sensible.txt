@@ -1,0 +1,54 @@
+# Filtro: Biosimilares — candidato sensible (NO VALIDADO)
+# Autor revisión: @ernestobarrera
+# Fecha: 03-08-2026
+# Descripción: Candidato de alta sensibilidad para recuperar literatura sobre biosimilares y denominaciones históricas o regionales relacionadas.
+# Estado: Pendiente de validación; no integrar todavía en buscar-pubmed ni en MedCheck.
+# MeSH: "Biosimilar Pharmaceuticals" verificado en NLM MeSH.
+# Origen: Estrategia aportada por Ernesto Barrera el 03-08-2026 y revisión técnica inicial con PubMed E-utilities.
+#
+# Comprobación técnica del 03-08-2026:
+# - Estrategia original: 7.480 resultados.
+# - Esta versión compacta: 7.480 resultados.
+# - PubMed normaliza las variantes con guion y sin guion de las frases incluidas.
+# - "follow-on biopharmaceutical*" devolvió 0 resultados y aviso de frase no encontrada; se conserva como término a vigilar, no en la consulta ejecutable.
+# - biogeneric* aporta cobertura histórica, pero una muestra detectó falsos positivos odontológicos y usos que pueden no corresponder a biosimilares regulatoriamente autorizados.
+# - Los recuentos verifican sintaxis y solapamiento, no sensibilidad, especificidad ni precisión.
+#
+# Pendiente antes de publicar:
+# - Validar contra un conjunto de referencia estratificado por años, productos y marcos regulatorios.
+# - Revisar especialmente biogeneric* y decidir si se mantiene, se contextualiza o se ofrece solo en una versión de máxima sensibilidad.
+# - Documentar pérdidas y falsos positivos frente a una versión nuclear MeSH + biosimilar*[tiab].
+# - Definir el uso interoperable: lente opcional de contexto, nunca clasificador regulatorio de un medicamento.
+
+(
+    "Biosimilar Pharmaceuticals"[Mesh]
+    OR biosimilar*[tiab]
+    OR "follow on biologic*"[tiab]
+    OR "follow on biological*"[tiab]
+    OR "follow on protein product*"[tiab]
+    OR "similar biotherapeutic product*"[tiab]
+    OR "similar biological medicinal product*"[tiab]
+    OR "subsequent entry biologic*"[tiab]
+    OR biogeneric*[tiab]
+)
+
+@@@FILTER_METADATA@@@
+{
+  "status": "candidate_pending_validation",
+  "validation": {
+    "reference": "Pendiente de validación frente a un conjunto de referencia",
+    "technical_check": {
+      "date": "2026-08-03",
+      "source": "PubMed E-utilities",
+      "submitted_query_results": 7480,
+      "compact_query_results": 7480,
+      "mesh_plus_biosimilar_results": 7349,
+      "mesh_plus_biosimilar_and_core_synonyms_results": 7399,
+      "notes": [
+        "Las variantes con guion y sin guion fueron equivalentes en PubMed en la fecha de comprobación.",
+        "El término follow-on biopharmaceutical no recuperó registros.",
+        "El término biogeneric requiere validación específica de precisión."
+      ]
+    }
+  }
+}
