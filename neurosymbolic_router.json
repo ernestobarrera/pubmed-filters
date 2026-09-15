@@ -1,0 +1,401 @@
+{
+  "schema_version": "1.1",
+  "metadata": {
+    "id": "pubmed-neurosymbolic-router",
+    "name": "Neurosymbolic Search Composition Router",
+    "architecture_role": "scientific_retrieval_harness",
+    "version": "1.1.0",
+    "language": "en",
+    "repository": "ernestobarrera/pubmed-filters",
+    "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
+  },
+  "principles": [
+    {
+      "id": "high_delegation_low_human_effort",
+      "statement": "Infer, compose, search, screen and prioritize autonomously whenever the user's intent is sufficiently clear."
+    },
+    {
+      "id": "landscape_before_drilldown",
+      "statement": "Map the overall evidence landscape before privileging or deeply interpreting an individual study."
+    },
+    {
+      "id": "avoid_single_study_anchoring",
+      "statement": "Never infer the state of the science from an isolated study when broader evidence can reasonably be retrieved."
+    },
+    {
+      "id": "retrieve_to_information_saturation",
+      "statement": "Continue complementary retrieval passes until additional searches provide little or no clinically meaningful new information, rather than stopping after the first relevant result."
+    },
+    {
+      "id": "breadth_before_depth",
+      "statement": "Use broad complementary passes to identify the structure of the evidence, then drill down selectively into studies most likely to change interpretation or practice."
+    },
+    {
+      "id": "diversify_before_intensify",
+      "statement": "Before repeatedly narrowing one query, explore complementary evidence lanes such as syntheses, primary studies, specialty journals, primary care journals, top general journals, safety signals or trending attention when relevant."
+    },
+    {
+      "id": "adaptive_precision_recall",
+      "statement": "Balance sensitivity and specificity dynamically. Prefer validated filters, but relax or split constraints when filter stacking risks losing important evidence."
+    },
+    {
+      "id": "validated_filters_as_symbolic_truth",
+      "statement": "Use curated repository filters as the symbolic source of truth whenever an appropriate validated filter exists; do not reconstruct them from memory."
+    },
+    {
+      "id": "abstract_minimum_evidence_read",
+      "statement": "Do not surface a paper as an evidentiary finding without reading at least its abstract or an equivalent primary source."
+    },
+    {
+      "id": "triangulate_evidence_types",
+      "statement": "Interpret findings in the context of the relevant evidence hierarchy and evidence ecosystem rather than relying mechanically on a single study design."
+    },
+    {
+      "id": "clinical_relevance_over_statistical_novelty",
+      "statement": "Prioritize magnitude, uncertainty, patient-important outcomes, external validity and clinically relevant thresholds over statistical significance or novelty alone."
+    },
+    {
+      "id": "recency_without_historical_amnesia",
+      "statement": "Prefer current evidence when appropriate, while widening the time horizon for seminal, sparse, rare or historically defining evidence."
+    },
+    {
+      "id": "provenance_first",
+      "statement": "Never claim a search, filter, abstract review or source retrieval that was not actually performed."
+    },
+    {
+      "id": "no_silent_substitution",
+      "statement": "Do not silently replace literal PubMed retrieval with semantic web search, another academic index or model memory."
+    },
+    {
+      "id": "language_separation",
+      "statement": "Normalize biomedical retrieval concepts to canonical English terminology and MeSH when useful, while responding to the user in the language of the ongoing conversation."
+    }
+  ],
+  "defaults": {
+    "time": {
+      "current_evidence_years": 5,
+      "trending_has_no_date_filter_by_default": true,
+      "widen_sequence": [
+        "5y",
+        "10y",
+        "no_date_limit"
+      ],
+      "widen_when": [
+        "sparse_evidence",
+        "seminal_evidence_needed",
+        "rare_condition",
+        "historical_standard"
+      ]
+    },
+    "reading": {
+      "surface_only_after_abstract_or_full_text_read": true,
+      "title_only_selection_forbidden": true,
+      "if_no_abstract": "Do not use as a main evidentiary finding unless full text or an equivalent primary source has been read."
+    },
+    "search": {
+      "prefer_existing_validated_filter": true,
+      "preserve_exact_filter_syntax": true,
+      "allow_parallel_passes": true,
+      "avoid_unnecessary_filter_stacking": true
+    }
+  },
+  "evidence_landscape_policy": {
+    "default_sequence": [
+      "landscape_scan",
+      "identify_evidence_clusters",
+      "detect_conflicts_and_gaps",
+      "prioritize_high_value_signals",
+      "targeted_drilldown",
+      "saturation_check"
+    ],
+    "landscape_scan_should_consider_when_relevant": [
+      "systematic_reviews_and_meta_analyses",
+      "guidelines_or_consensus",
+      "pivotal_primary_studies",
+      "recent_primary_studies",
+      "specialty_journal_pass",
+      "primary_care_journal_pass",
+      "top_general_journal_pass",
+      "safety_or_regulatory_sources",
+      "trending_attention_signal"
+    ],
+    "do_not_require_all_lanes": true
+  },
+  "filter_registry": {
+    "methodology": {
+      "evidence_synthesis": "filters/methodology/metaanalysis.txt",
+      "guidelines": "filters/methodology/gpc.txt",
+      "qualitative": "filters/methodology/qualitative.txt",
+      "clinical_prediction_rules_primary_care": "filters/methodology/clinical_rules_ap.txt",
+      "clinical_prediction_rules_sensitive": "filters/methodology/clinical_rules_sensible.txt",
+      "clinical_prediction_rules_specific": "filters/methodology/clinical_rules_especifico.txt",
+      "indirect_comparison": "filters/methodology/indirect_comparison.txt",
+      "horizon_scanning": "filters/methodology/horizon.txt"
+    },
+    "clinical": {
+      "treatment_sensitive": "filters/clinical/treatment_sensible.txt",
+      "treatment_specific": "filters/clinical/treatment_especifico.txt",
+      "diagnosis_sensitive": "filters/clinical/diagnosis_sensible.txt",
+      "diagnosis_specific": "filters/clinical/diagnosis_especifico.txt",
+      "prognosis_sensitive": "filters/clinical/prognosis_sensible.txt",
+      "prognosis_specific": "filters/clinical/prognosis_especifico.txt",
+      "etiology_sensitive": "filters/clinical/etiology_sensible.txt",
+      "etiology_specific": "filters/clinical/etiology_especifico.txt",
+      "predictors_sensitive": "filters/clinical/predictors_sensible.txt",
+      "predictors_specific": "filters/clinical/predictors_especifico.txt",
+      "drug_adverse_events": "filters/clinical/drugs_ae.txt",
+      "device_adverse_events": "filters/clinical/devices_ae.txt",
+      "mortality": "filters/clinical/mortality.txt",
+      "nnt_nnh": "filters/clinical/NNT_NNH.txt"
+    },
+    "scope": {
+      "primary_care_sensitive": "filters/scope/primary_sensible.txt",
+      "primary_care_specific": "filters/scope/primary_especifico.txt",
+      "safety_sensitive": "filters/scope/safety_sensible.txt",
+      "safety_specific": "filters/scope/safety_especifico.txt",
+      "geriatrics_sensitive": "filters/scope/geriatrics_sensible.txt",
+      "geriatrics_specific": "filters/scope/geriatrics_especifico.txt",
+      "pediatrics": "filters/scope/pediatrics.txt",
+      "humans": "filters/scope/humans.txt",
+      "adults": "filters/scope/adults.txt"
+    }
+  },
+  "composition": {
+    "within_same_concept": "OR",
+    "between_distinct_concepts": "AND",
+    "topic_plus_methodology_filter": "AND",
+    "topic_plus_scope_filter": "AND only when scope is genuinely part of the question",
+    "journal_filters_default_role": "parallel editorial enrichment passes, not mandatory restriction of the core search",
+    "same_family_filters": "Do not AND sensitive and specific versions of the same filter; choose one or run separate passes.",
+    "overconstraint_rule": "If stacking filters threatens sensitivity, split into parallel searches and merge later.",
+    "topic_building": "Use MeSH and title/abstract synonyms when useful without forcing every PICO component into the query."
+  },
+  "routing": {
+    "background": {
+      "first_passes": [
+        "methodology.evidence_synthesis",
+        "methodology.guidelines"
+      ],
+      "then": "Add primary studies when syntheses are old, incomplete, conflicting or insufficient.",
+      "date_policy": "5y_then_widen",
+      "journals": "optional_editorial_enrichment"
+    },
+    "treatment": {
+      "precision_first": "clinical.treatment_specific",
+      "recall_fallback": "clinical.treatment_sensitive",
+      "parallel_background": "methodology.evidence_synthesis",
+      "rct_lane": "Use a dedicated validated RCT filter when available and direct randomized evidence is required."
+    },
+    "diagnosis": {
+      "precision_first": "clinical.diagnosis_specific",
+      "recall_fallback": "clinical.diagnosis_sensitive"
+    },
+    "prognosis": {
+      "precision_first": "clinical.prognosis_specific",
+      "recall_fallback": "clinical.prognosis_sensitive"
+    },
+    "etiology_harm": {
+      "precision_first": "clinical.etiology_specific",
+      "recall_fallback": "clinical.etiology_sensitive"
+    },
+    "safety": {
+      "first_passes": [
+        "clinical.drug_adverse_events",
+        "scope.safety_specific"
+      ],
+      "fallback": [
+        "scope.safety_sensitive",
+        "clinical.etiology_sensitive"
+      ],
+      "external_sources": [
+        "AEMPS",
+        "EMA_PRAC"
+      ]
+    },
+    "prediction": {
+      "primary_care": "methodology.clinical_prediction_rules_primary_care",
+      "general_precision_first": "methodology.clinical_prediction_rules_specific",
+      "general_recall_fallback": "methodology.clinical_prediction_rules_sensitive"
+    },
+    "qualitative": {
+      "filter": "methodology.qualitative"
+    },
+    "radar": {
+      "core": "journal_and_date_passes",
+      "methodology_filter_default": "none",
+      "second_signal": "trending_without_date",
+      "read_abstracts_before_editorial_selection": true
+    },
+    "trending": {
+      "pubmed_subset": "trending[sb]",
+      "date_filter": "none_by_default",
+      "if_user_says_last_week": "Run two lanes: trending without a date restriction and publications from the requested recent window.",
+      "interpretation": "attention_signal_not_quality_signal"
+    }
+  },
+  "journal_routing": {
+    "registry": "journal_filters_data.js",
+    "infer_relevant_specialties_semantically": true,
+    "use_parallel_passes": true,
+    "do_not_replace_core_pubmed_search": true,
+    "example": {
+      "topic": "GLP-1 receptor agonists",
+      "journal_passes": [
+        "jnl_endocrinology",
+        "jnl_diabetes",
+        "jnl_primary_health_care",
+        "jnl_top_publications"
+      ]
+    }
+  },
+  "primary_care_policy": {
+    "user_context_is_not_a_search_constraint": true,
+    "rule": "Being a family physician does not by itself justify restricting all searches to primary care.",
+    "use_primary_scope_filter_when": "The setting, population, service model or question itself is specifically about primary care.",
+    "default_editorial_passes_for_clinical_topics": [
+      "jnl_primary_health_care",
+      "relevant_specialty_journal_id",
+      "jnl_top_publications"
+    ]
+  },
+  "reading_and_drilldown": {
+    "screen": "abstract_or_full_text",
+    "drill_down_when": [
+      "practice_change_possible",
+      "effect_size_clinically_relevant",
+      "pivotal_trial",
+      "important_meta_analysis",
+      "safety_signal",
+      "unexpected_result",
+      "methodological_uncertainty_changes_interpretation"
+    ],
+    "drill_down_sources": [
+      "PubMed_record",
+      "DOI",
+      "publisher",
+      "full_text",
+      "supplement",
+      "protocol"
+    ]
+  },
+  "saturation_policy": {
+    "goal": "conceptual_and_clinically_relevant_saturation_not_exhaustive_retrieval",
+    "continue_searching_when": [
+      "new_passes_reveal_new_evidence_classes",
+      "important_results_conflict",
+      "practice_changing_claims_rest_on_single_studies",
+      "important_populations_or_outcomes_remain_unrepresented",
+      "recent_evidence_may_change_older_syntheses",
+      "safety_signals_remain_uncertain"
+    ],
+    "saturation_reached_when": [
+      "successive_complementary_passes_add_no_materially_new_clinical_conclusions",
+      "major_evidence_types_relevant_to_the_question_are_represented",
+      "important_disagreements_have_been_identified",
+      "additional_retrieval_has_low_expected_information_gain"
+    ],
+    "never_use_fixed_article_count_as_saturation": true
+  },
+  "provenance": {
+    "record_per_pass": [
+      "purpose",
+      "exact_query",
+      "filter_paths_or_ids",
+      "date_policy",
+      "result_count",
+      "abstracts_read",
+      "source"
+    ],
+    "never_claim_unperformed_step": true,
+    "expose_on_request": true
+  },
+  "language_policy": {
+    "internal_schema_language": "en",
+    "biomedical_retrieval_language": "en_preferred_with_MeSH_and_required_synonyms",
+    "response_language": "match_conversation_language",
+    "preserve_user_terms_when_clinically_relevant": true
+  },
+  "filter_gap_detection": {
+    "enabled": true,
+    "propose_new_filter_when": [
+      "the same ad hoc search pattern recurs across multiple questions",
+      "an important question type lacks an adequate validated repository filter",
+      "existing filters repeatedly produce unacceptable precision or recall for a recurring use case",
+      "a high-quality validated external filter can materially improve retrieval"
+    ],
+    "proposal_requirements": [
+      "state the unmet retrieval need",
+      "prefer externally validated filters",
+      "include validation reference and metrics when available",
+      "test PubMed syntax before proposing repository inclusion",
+      "add as candidate before treating as symbolic source of truth"
+    ],
+    "never_auto_promote_candidate_to_validated": true
+  },
+  "candidate_extensions": {
+    "inactive_until_added_to_repo": true,
+    "filters": [
+      {
+        "id": "rct_cochrane_sensitive",
+        "suggested_path": "filters/methodology/rct_cochrane_sensitive.txt",
+        "purpose": "Identify randomized controlled trials using a high-sensitivity validated strategy."
+      },
+      {
+        "id": "rct_cochrane_balanced",
+        "suggested_path": "filters/methodology/rct_cochrane_balanced.txt",
+        "purpose": "Identify randomized controlled trials using a validated sensitivity/precision-balanced strategy."
+      }
+    ]
+  },
+  "sources": {
+    "filter_repo": {
+      "repository": "ernestobarrera/pubmed-filters",
+      "branch": "main",
+      "source_of_truth": true
+    },
+    "journal_registry": {
+      "path": "journal_filters_data.js",
+      "id_prefix": "jnl_",
+      "resolve_by_id": true,
+      "never_reconstruct_if_present": true
+    },
+    "directories": {
+      "methodology": "filters/methodology/",
+      "clinical": "filters/clinical/",
+      "scope": "filters/scope/",
+      "journals": "filters/journals/"
+    }
+  },
+  "degradation": {
+    "github_unavailable": "Stop claims about symbolic filters and request GitHub connection.",
+    "literal_pubmed_unavailable": "Do not silently substitute web or semantic search; request a tool capable of literal PubMed execution.",
+    "filter_missing": "Use an ad hoc query only if clearly labelled as such and consider proposing a new repository filter."
+  },
+  "adaptation": {
+    "if_too_many_results_to_read": [
+      "prefer_specific_over_sensitive_filter",
+      "apply_relevant_methodology_filter",
+      "use_current_5y_window_if_appropriate",
+      "use_scope_filter_only_if_scope_is_part_of_the_question"
+    ],
+    "if_too_few_results": [
+      "remove_journal_constraint",
+      "specific_to_sensitive_filter",
+      "widen_5y_to_10y",
+      "remove_date_limit",
+      "relax_methodology_filter",
+      "run_topic_only_pubmed_pass"
+    ],
+    "merge_policy": "Deduplicate by PMID and then prioritize relevance, quality, recency and applicability."
+  },
+  "tool_requirements": {
+    "filter_source": "GitHub",
+    "literal_pubmed_engine": "any_tool_capable_of_exact_pubmed_syntax",
+    "preferred_current_engine": "Sider Scholar",
+    "semantic_expansion_optional": [
+      "Consensus",
+      "SciSpace"
+    ],
+    "rule": "A semantic search must not silently substitute a literal PubMed query when reproducibility is required."
+  }
+}
