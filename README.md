@@ -26,6 +26,26 @@ filters/
     └── ...
 ```
 
+## 🤖 Uso por agentes
+
+`neurosymbolic_router.json` es la capa de orquestación del repositorio: traduce una intención clínica o científica en un plan de búsqueda componiendo los filtros de `filters/`, sin reconstruir sus booleanos. No es un filtro y no sustituye a ninguno.
+
+Servido en `https://ernestobarrera.github.io/pubmed-filters/neurosymbolic_router.json`.
+
+Reparto de responsabilidades, declarado en `layers` y `pipeline`:
+
+```
+INTENCIÓN → FILTRO SIMBÓLICO → BÚSQUEDA → ABSTRACTS/FUENTES → LECTURA CRÍTICA → ÚLTIMA MILLA
+\________________ router ________________/  \_________ superficie _________/
+```
+
+Cuatro bloques que conviene leer antes de consumirlo, porque evitan errores que no hacen ruido:
+
+- **`filter_file_contract`** — cómo se extrae la consulta de un `.txt`. Tomar solo la primera línea no comentada trunca los filtros multilínea y devuelve recuentos plausibles pero falsos.
+- **`composition.negation_filters`** — los filtros que empiezan por `NOT` (`humans`, `adults`, `ocde`) se añaden **sin** `AND`. Componerlos con `AND` invierte el filtro: PubMed traduce `AND (NOT X)` como `AND X` y devuelve justo lo que se quería excluir.
+- **`registry_validation`** — qué entradas son de elaboración propia y no están validadas, y por qué las listas de revistas no son filtros validados.
+- **`surface_profiles`** — qué secciones aplican según lo que la superficie sepa hacer realmente: ejecutar PubMed literal, leer abstracts, deduplicar por PMID, registrar procedencia. Lo que no pueda hacer se dice, no se simula.
+
 ## 🤝 Contribuciones
 
 Damos la bienvenida a contribuciones que mejoren la calidad y utilidad de los filtros.
