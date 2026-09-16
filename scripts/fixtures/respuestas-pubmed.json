@@ -1,0 +1,61 @@
+{
+  "mesh-inexistente": {
+    "_nota": "Encabezado MeSH plausible que NO existe. PubMed no da error: lo descarta y lo dice en warninglist.quotedphrasesnotfound. Capturado sin rettype=count, porque con rettype=count el aviso no viene.",
+    "term": "\"Atherosclerotic Cardiovascular Disease\"[Mesh]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "0",
+      "warninglist": {
+        "phrasesignored": [],
+        "quotedphrasesnotfound": [
+          "\"Atherosclerotic Cardiovascular Disease\"[Mesh]"
+        ],
+        "outputmessages": [
+          "No items found."
+        ]
+      },
+      "querytranslation": "\"Atherosclerotic Cardiovascular Disease\"[Mesh]"
+    }
+  },
+  "consulta-valida": {
+    "_nota": "El descriptor oficial al que resuelve el anterior. Sin avisos.",
+    "term": "\"Atherosclerosis\"[Mesh]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "67408",
+      "querytranslation": "\"Atherosclerosis\"[MeSH Terms]"
+    }
+  },
+  "cero-legitimo": {
+    "_nota": "Cero legitimo: consulta correcta, sin resultados. No debe confundirse con un cero roto.",
+    "term": "\"Atherosclerosis\"[Mesh] AND 1804[dp]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "0",
+      "warninglist": {
+        "phrasesignored": [],
+        "quotedphrasesnotfound": [],
+        "outputmessages": [
+          "No items found."
+        ]
+      },
+      "querytranslation": "\"Atherosclerosis\"[MeSH Terms] AND 1804/01/01:1804/12/31[Date - Publication]"
+    }
+  },
+  "aviso-perdido-por-rettype-count": {
+    "_nota": "La MISMA consulta rota pedida con rettype=count: el recuento es el mismo 0, pero el aviso desaparece. Pedir solo el recuento vuelve el fallo verdaderamente invisible.",
+    "term": "\"Atherosclerotic Cardiovascular Disease\"[Mesh]",
+    "_params": {
+      "rettype": "count"
+    },
+    "esearchresult": {
+      "count": "0"
+    }
+  }
+}

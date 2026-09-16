@@ -18,7 +18,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, MARKER }
+import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER }
   from './parse-filter.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -66,6 +66,27 @@ check('D1', hasEmbeddedDateLimit(parseFilter(fixture('fecha-embebida.txt'))),
   'se detecta el recorte temporal escondido dentro de la cadena del filtro');
 check('D2', !hasEmbeddedDateLimit(parseFilter(fixture('multilinea.txt'))),
   'no se marca recorte temporal donde no lo hay');
+
+// Juicio de una respuesta de PubMed, contra respuestas REALES capturadas de E-utilities.
+const respuestas = JSON.parse(readFileSync(join(FIXTURES, 'respuestas-pubmed.json'), 'utf8'));
+const juicio = (k) => inspectResponse(respuestas[k].esearchresult);
+
+const roto = juicio('mesh-inexistente');
+check('Q1', !roto.usable && roto.dropped.length === 1
+  && roto.problems.some((p) => p.startsWith('CERO_ROTO')),
+  'un encabezado MeSH inexistente se caza por quotedphrasesnotfound, aunque PubMed no dé error');
+
+check('Q2', juicio('consulta-valida').usable === true,
+  'una consulta válida con resultados se declara utilizable');
+
+const cero = juicio('cero-legitimo');
+check('Q3', cero.usable === true && cero.dropped.length === 0,
+  'un cero legítimo no se confunde con una consulta rota');
+
+const ciego = juicio('aviso-perdido-por-rettype-count');
+check('Q4', ciego.verifiable === false && !ciego.usable
+  && ciego.problems.some((p) => p.startsWith('NO_VERIFICABLE')),
+  'pedida con rettype=count, la misma consulta rota se declara NO VERIFICABLE en vez de limpia');
 
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
@@ -208,6 +229,21 @@ check('C1', unclassified.length === 0 && duplicatedClass.length === 0 && ghost.l
   `clasificación (${sections.length} secciones): ${unclassified.length === 0 && duplicatedClass.length === 0 && ghost.length === 0
     ? 'cada una con un único dueño'
     : `sin clase ${JSON.stringify(unclassified)} / repetidas ${JSON.stringify(duplicatedClass)} / inexistentes ${JSON.stringify(ghost)}`}`);
+
+const qec = router.query_execution_contract ?? {};
+check('C3', (qec.inspect_in_every_response ?? []).length >= 4
+  && (qec.inspect_in_every_response ?? []).some((f) => f.includes('quotedphrasesnotfound'))
+  && (qec.inspect_in_every_response ?? []).some((f) => f.includes('querytranslation')),
+  'el router obliga a inspeccionar los avisos que PubMed devuelve en cada consulta');
+
+const rec = router.provenance.record_per_pass ?? [];
+check('C4', ['result_count', 'records_retrieved', 'abstracts_read'].every((f) => rec.includes(f))
+  && typeof router.provenance.counts_are_not_interchangeable === 'string',
+  'la procedencia distingue resultados encontrados, descargados y leídos');
+
+check('C5', typeof router.composition.precision_hints?.rule === 'string'
+  && typeof router.evidence_landscape_policy.exact_applicability_pass?.rule === 'string',
+  'el fallback de sensibilidad suelta las pistas de precisión, y una pasada devuelve el PICO exacto');
 
 check('C2', typeof router.conformance?.contract_version === 'string'
   && existsSync(join(ROOT, router.conformance.reference_parser))

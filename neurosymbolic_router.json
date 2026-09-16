@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -15,6 +15,7 @@
     "mechanical_contract": [
       "filter_registry",
       "filter_file_contract",
+      "query_execution_contract",
       "registry_validation",
       "composition",
       "journal_routing",
@@ -43,7 +44,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.4",
+    "contract_version": "1.5",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
@@ -199,7 +200,13 @@
       "trending_attention_signal"
     ],
     "do_not_require_all_lanes": true,
-    "name": "surf_then_drilldown"
+    "name": "surf_then_drilldown",
+    "exact_applicability_pass": {
+      "rule": "If the landscape pass deliberately dropped a component of the question to protect sensitivity, at least one later pass must put it back before any conclusion is drawn.",
+      "why": "Dropping a component is legitimate and often right; never returning to it turns a broad answer into an answer to a different question.",
+      "measured": "2026-09-16: dropping 'metformin' was the right call for the landscape, but the exact question still had 44 records with metformin and 5 with an explicit second-line restriction. None of them were searched for.",
+      "declare": "State which component was dropped, in which passes, and what the pass that restored it found."
+    }
   },
   "filter_registry": {
     "methodology": {
@@ -257,6 +264,20 @@
     "false_zero_warning": "If the metadata block is swallowed into the query, PubMed returns count 0 with the error hidden in errorlist.phrasesnotfound and quotedphrasesnotfound empty.",
     "modified_filter_declaration": "Modifying a filter is legitimate but must be declared as {path, modified: true, reason, effective_query}, and it is the effective_query that provenance refers to."
   },
+  "query_execution_contract": {
+    "rule": "Every executed query is inspected before its result is used. PubMed already reports what it ignored; the failure is not reading it.",
+    "inspect_in_every_response": [
+      "esearchresult.errorlist.phrasesnotfound",
+      "esearchresult.warninglist.quotedphrasesnotfound",
+      "esearchresult.warninglist.phrasesignored",
+      "esearchresult.warninglist.outputmessages",
+      "esearchresult.querytranslation"
+    ],
+    "mesh_terms_are_not_exempt": "A MeSH heading invented by a model is medically plausible and syntactically valid, so it raises no error: PubMed simply drops it and reports it under quotedphrasesnotfound. Measured 2026-09-16: '\"Atherosclerotic Cardiovascular Disease\"[Mesh]' returns 0 records with no errorlist. Inside an OR block it cost nothing; as an AND block it would have returned zero for the whole search. The official descriptor is 'Atherosclerosis'.",
+    "rule_for_headings": "Any [Mesh] or [mh] heading must either be validated against db=mesh before use, or be confirmed absent from quotedphrasesnotfound after execution. A heading that was dropped is reported, never presented as if it had contributed.",
+    "zero_is_not_always_zero": "count 0 with a non-empty quotedphrasesnotfound is a broken query, not an empty field.",
+    "translation_check": "Read querytranslation to confirm PubMed parsed what was intended, particularly around NOT clauses, phrase matching and automatic term mapping."
+  },
   "registry_validation": {
     "rule": "validated_filters_as_symbolic_truth applies to filters carrying a published validation reference. The entries listed below are author-made and have none; cite them as such and never present them as validated.",
     "author_made_not_validated": [
@@ -304,6 +325,12 @@
         "filters/scope/pearls.txt": "Carries \"last 5 years\"[dp] inside the filter, in a position where deleting the date term alone inverts the filter. Restructure, do not delete.",
         "filters/scope/ai_especifico.txt": "Carries an explicit (\"2022/01/01\"[PDAT] : \"2090/12/31\"[PDAT]) window, deliberate for large language model literature. Legitimate, but it silently overrides any wider date policy: say so when the question is declared sparse or historical."
       }
+    },
+    "precision_hints": {
+      "what_they_are": "Terms added only to raise precision, not part of the question: versus, vs, comparative, head-to-head, active comparator, and similar.",
+      "rule": "They are marked as precision hints and REMOVED when falling back from a specific filter to a sensitive one. Swapping the methodological filter while keeping them does not widen the search; it only looks like it did.",
+      "measured": "2026-09-16, a real GLP-1 vs SGLT2 question: topic alone 334 records; topic with precision hints 115; with Therapy/Narrow 10; with Therapy/Broad keeping the hints 95; with Therapy/Broad after dropping them 237. The fallback recovered 95 of the 237 it could have reached.",
+      "distinguish_from": "core_concept terms, which belong to the question and are never dropped."
     }
   },
   "routing": {
@@ -430,15 +457,23 @@
       "purpose",
       "exact_query",
       "filter_paths_or_ids",
+      "filter_hash_if_available",
       "date_policy",
       "result_count",
+      "records_retrieved",
+      "titles_screened",
       "abstracts_read",
-      "source"
+      "full_texts_read",
+      "source",
+      "executed_at"
     ],
     "never_claim_unperformed_step": true,
     "expose_on_request": true,
     "grounding_rule": "Never invent a retrieval.",
-    "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so."
+    "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so.",
+    "counts_are_not_interchangeable": "result_count is what PubMed reports; records_retrieved is what was actually downloaded; abstracts_read is what was actually read. Reporting the first as if it were the third overstates the screening by orders of magnitude. If only the first 30 of 256 were retrieved, say so.",
+    "exact_query_means_literal": "The recorded query is the string that was sent, with the filter expanded inline. A placeholder such as '(topic) AND (<contents of filters/...>)' documents the intent but is not provenance and cannot be re-executed.",
+    "record_at_execution_time": "Counters are written when each action happens. Provenance reconstructed from memory at the end of the work is not provenance."
   },
   "language_policy": {
     "internal_schema_language": "en",

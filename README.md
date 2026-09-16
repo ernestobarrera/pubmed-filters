@@ -63,7 +63,11 @@ node scripts/validate-router.mjs
   filtro. Puede reimplementarse en cualquier lenguaje; lo que cuenta es pasar la misma suite.
 - `scripts/fixtures/` son casos adversariales: filtros multilínea, el marcador citado dentro de un
   comentario, una cláusula que empieza por `NOT`, un recorte temporal escondido en la propia cadena
-  y un fichero con saltos CRLF.
+  y un fichero con saltos CRLF. Y `respuestas-pubmed.json`, con respuestas **reales** de
+  E-utilities: un encabezado MeSH inexistente que PubMed descarta sin dar error, un cero legítimo
+  y la misma consulta rota pedida con `rettype=count`, donde el aviso ya no viene.
+- `inspectResponse()` juzga una respuesta de ESearch antes de usar su recuento, y distingue tres
+  estados que no son lo mismo: utilizable, rota y **no verificable**.
 - La suite incluye una autoprueba: **rechaza** los tres parsers equivocados conocidos y acepta el de
   referencia. Una suite que no sabe rechazar una implementación mala no prueba nada.
 - Lo que la suite **no** prueba, dicho para que nadie confíe de más: no comprueba que una superficie
