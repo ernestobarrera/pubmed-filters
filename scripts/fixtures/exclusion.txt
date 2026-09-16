@@ -1,0 +1,11 @@
+# Filtro: cláusula de exclusión
+# Descripción: empieza por NOT. Componer con AND lo invierte.
+
+NOT (animals[mh] NOT humans[mh])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Fixture, no es un filtro real"
+  }
+}

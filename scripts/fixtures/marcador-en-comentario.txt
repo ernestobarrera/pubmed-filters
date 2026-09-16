@@ -1,0 +1,12 @@
+# Filtro: el marcador aparece dentro de un comentario
+# Nota: mantener una línea en blanco antes y después de @@@FILTER_METADATA@@@ al
+#       escribir un filtro nuevo. Cortar por subcadena trunca justo aquí.
+
+(consulta[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Fixture, no es un filtro real"
+  }
+}

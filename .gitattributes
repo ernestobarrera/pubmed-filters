@@ -1,0 +1,3 @@
+# El fixture de saltos CRLF debe llegar a cualquier clon y a la CI EXACTAMENTE como está.
+# Si git lo normaliza a LF, la prueba P4 sigue pasando pero deja de probar lo que dice probar.
+scripts/fixtures/crlf.txt -text

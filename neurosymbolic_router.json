@@ -1,19 +1,74 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
   },
+  "rule_classification": {
+    "purpose": "Every section below belongs to exactly one class. A surface may harden a rule; it must never silently redefine one.",
+    "dependency_direction": "router -> adapters. A surface that cannot resolve the contract version it requires degrades explicitly instead of improvising.",
+    "mechanical_contract": [
+      "filter_registry",
+      "filter_file_contract",
+      "registry_validation",
+      "composition",
+      "journal_routing",
+      "sources",
+      "candidate_extensions",
+      "filter_gap_detection"
+    ],
+    "retrieval_policy": [
+      "principles",
+      "defaults",
+      "evidence_landscape_policy",
+      "routing",
+      "primary_care_policy",
+      "saturation_policy",
+      "adaptation",
+      "reading_and_drilldown",
+      "provenance",
+      "degradation",
+      "tool_requirements"
+    ],
+    "boundary": [
+      "layers",
+      "pipeline",
+      "surface_profiles",
+      "language_policy"
+    ]
+  },
+  "conformance": {
+    "contract_version": "1.3",
+    "reference_parser": "scripts/parse-filter.mjs",
+    "test_suite": "scripts/validate-router.mjs",
+    "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
+    "reimplementation_allowed": "Yes, in any language. Passing the suite is what counts, not sharing code.",
+    "hardening_allowed": "A surface may be stricter than this contract.",
+    "silent_redefinition_forbidden": "A surface must not loosen or reinterpret a rule without saying so.",
+    "what_the_suite_does_not_prove": "It checks contradictions between what is declared and what the repository contains, plus the parser against adversarial fixtures. It does not prove that a surface composes a good search, reads evidence well, or applies the principles."
+  },
+  "surface_policy_not_owned_here": {
+    "rule": "These belong to the invoking surface. They are named here so their absence reads as a decision, not an oversight.",
+    "items": [
+      "delegation level and how much the user is asked to do",
+      "critical appraisal: effect size, confidence intervals, NNT/NNH, bias, heterogeneity, clinically relevant threshold",
+      "how retrieved data, interpretation and hypothesis are kept apart in the answer",
+      "which findings deserve a drill-down",
+      "the last mile: what any of it changes in practice tomorrow",
+      "response language, register, voice or written output, and visual output"
+    ],
+    "removed_in_this_version": [
+      "high_delegation_low_human_effort",
+      "triangulate_evidence_types",
+      "clinical_relevance_over_statistical_novelty"
+    ]
+  },
   "principles": [
-    {
-      "id": "high_delegation_low_human_effort",
-      "statement": "Infer, compose, search, screen and prioritize autonomously whenever the user's intent is sufficiently clear."
-    },
     {
       "id": "landscape_before_drilldown",
       "statement": "Map the overall evidence landscape before privileging or deeply interpreting an individual study."
@@ -45,14 +100,6 @@
     {
       "id": "abstract_minimum_evidence_read",
       "statement": "Do not surface a paper as an evidentiary finding without reading at least its abstract or an equivalent primary source."
-    },
-    {
-      "id": "triangulate_evidence_types",
-      "statement": "Interpret findings in the context of the relevant evidence hierarchy and evidence ecosystem rather than relying mechanically on a single study design."
-    },
-    {
-      "id": "clinical_relevance_over_statistical_novelty",
-      "statement": "Prioritize magnitude, uncertainty, patient-important outcomes, external validity and clinically relevant thresholds over statistical significance or novelty alone."
     },
     {
       "id": "recency_without_historical_amnesia",
@@ -341,15 +388,6 @@
   },
   "reading_and_drilldown": {
     "screen": "abstract_or_full_text",
-    "drill_down_when": [
-      "practice_change_possible",
-      "effect_size_clinically_relevant",
-      "pivotal_trial",
-      "important_meta_analysis",
-      "safety_signal",
-      "unexpected_result",
-      "methodological_uncertainty_changes_interpretation"
-    ],
     "drill_down_sources": [
       "PubMed_record",
       "DOI",
@@ -357,7 +395,8 @@
       "full_text",
       "supplement",
       "protocol"
-    ]
+    ],
+    "drill_down_decision_owner": "The invoking surface decides which findings deserve a drill-down. This router only states how to reach the sources and that an abstract is the minimum before surfacing a paper."
   },
   "saturation_policy": {
     "goal": "conceptual_and_clinically_relevant_saturation_not_exhaustive_retrieval",
@@ -390,14 +429,7 @@
     "never_claim_unperformed_step": true,
     "expose_on_request": true,
     "grounding_rule": "Never invent a retrieval.",
-    "claim_types": {
-      "sequence": [
-        "retrieved_datum",
-        "interpretation",
-        "hypothesis"
-      ],
-      "rule": "Keep the three distinct in the answer. Do not complete from memory a concrete datum that should have come from the source."
-    }
+    "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so."
   },
   "language_policy": {
     "internal_schema_language": "en",

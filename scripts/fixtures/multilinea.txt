@@ -1,0 +1,14 @@
+# Filtro: multilínea
+# Descripción: la consulta ocupa tres líneas. Tomar solo la primera la trunca
+#              y devuelve un número plausible.
+
+(primera[tiab]
+OR segunda[tiab]
+OR tercera[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Fixture, no es un filtro real"
+  }
+}

@@ -46,6 +46,30 @@ Cuatro bloques que conviene leer antes de consumirlo, porque evitan errores que 
 - **`registry_validation`** — qué entradas son de elaboración propia y no están validadas, y por qué las listas de revistas no son filtros validados.
 - **`surface_profiles`** — qué secciones aplican según lo que la superficie sepa hacer realmente: ejecutar PubMed literal, leer abstracts, deduplicar por PMID, registrar procedencia. Lo que no pueda hacer se dice, no se simula.
 
+Cada sección del router tiene un único dueño declarado en `rule_classification`: contrato mecánico
+(propiedad de este repositorio), política de recuperación (propiedad del router) o frontera. Lo que
+pertenece a la superficie que invoca —lectura crítica, umbral clínico, última milla, idioma de la
+respuesta— está nombrado en `surface_policy_not_owned_here` para que su ausencia se lea como una
+decisión y no como un olvido. La dependencia va en una sola dirección: una superficie puede endurecer
+una regla, nunca redefinirla en silencio.
+
+### Conformidad
+
+```
+node scripts/validate-router.mjs
+```
+
+- `scripts/parse-filter.mjs` es la **implementación de referencia** del contrato de lectura de un
+  filtro. Puede reimplementarse en cualquier lenguaje; lo que cuenta es pasar la misma suite.
+- `scripts/fixtures/` son casos adversariales: filtros multilínea, el marcador citado dentro de un
+  comentario, una cláusula que empieza por `NOT`, un recorte temporal escondido en la propia cadena
+  y un fichero con saltos CRLF.
+- La suite incluye una autoprueba: **rechaza** los tres parsers equivocados conocidos y acepta el de
+  referencia. Una suite que no sabe rechazar una implementación mala no prueba nada.
+- Lo que la suite **no** prueba, dicho para que nadie confíe de más: no comprueba que una superficie
+  componga una buena búsqueda, ni que lea bien la evidencia, ni que aplique los principios. Detecta
+  contradicciones entre lo declarado y lo que el repositorio contiene, que es un subconjunto.
+
 ## 🤝 Contribuciones
 
 Damos la bienvenida a contribuciones que mejoren la calidad y utilidad de los filtros.
