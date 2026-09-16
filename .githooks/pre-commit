@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+# Corre la suite de conformidad antes de cada commit.
+# Instalar una vez por clon:  git config core.hooksPath .githooks
+# Saltar puntualmente:        git commit --no-verify
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: no hay node; la suite no se ha podido correr. Commit permitido."
+  exit 0
+fi
+
+echo "pre-commit: suite de conformidad..."
+if ! node scripts/validate-router.mjs; then
+  echo ""
+  echo "La suite ha fallado. El commit se detiene aquí."
+  echo "Si has anadido o cambiado un filtro, mira que dice el fallo:"
+  echo "  R3/R11  una clausula que empieza por NOT sin declarar"
+  echo "  R4/R12  un recorte temporal escondido dentro del filtro"
+  echo "  R1      una ruta del registry que ya no existe"
+  echo "  R7      un filtro que ha cambiado de estado de validacion"
+  echo "  R13     una lista de revistas que ya no coincide con journal_filters_data.js"
+  echo ""
+  echo "Y para ver que hay en el repositorio que el router aun no conoce:"
+  echo "  node scripts/validate-router.mjs --inventory"
+  exit 1
+fi

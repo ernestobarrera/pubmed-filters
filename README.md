@@ -70,6 +70,26 @@ node scripts/validate-router.mjs
   componga una buena búsqueda, ni que lea bien la evidencia, ni que aplique los principios. Detecta
   contradicciones entre lo declarado y lo que el repositorio contiene, que es un subconjunto.
 
+### Si añades o cambias un filtro
+
+Instala el gancho una vez por clon y la suite correrá sola antes de cada commit:
+
+```
+git config core.hooksPath .githooks
+```
+
+La suite **falla** si una cláusula que empieza por `NOT` o un recorte temporal embebido entran sin
+declararse, si una ruta del registry deja de existir, si un filtro cambia de estado de validación o
+si una lista de revistas deja de coincidir con `journal_filters_data.js`. Es deliberado: son los
+cambios que producen consultas plausibles y falsas.
+
+La suite **no** puede decidir si un filtro nuevo merece entrar en el registry del router, porque eso
+es una decisión editorial. Para ver qué hay en el repositorio que el router todavía no conoce:
+
+```
+node scripts/validate-router.mjs --inventory
+```
+
 ## 🤝 Contribuciones
 
 Damos la bienvenida a contribuciones que mejoren la calidad y utilidad de los filtros.
@@ -108,12 +128,14 @@ Los filtros se integran automáticamente en el [Buscador PubMed Avanzado](https:
 
 ## 📊 Validación
 
-Cada filtro incluye:
+Cada filtro documenta en su propia cabecera, cuando procede, su estrategia, su referencia de origen,
+su validación y sus métricas de rendimiento.
 
-- Términos MeSH validados
-- Operadores booleanos optimizados
-- Pruebas de rendimiento
-- Referencias cuando aplica
+**No todos los filtros del repositorio son filtros metodológicos validados.** Algunos son de
+elaboración propia y lo dicen en su cabecera; las listas de `journals/` no son filtros validados,
+sino agrupaciones de revistas por especialidad derivadas del índice h5. El router marca esa
+diferencia de forma explícita en `registry_validation`, y la suite comprueba que lo declarado
+coincide con lo que los ficheros dicen de sí mismos.
 
 ## 🌟 Recursos
 

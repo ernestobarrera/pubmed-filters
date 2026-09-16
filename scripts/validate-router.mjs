@@ -106,7 +106,14 @@ check('R4', dated.length === 0,
 
 const js = read('journal_filters_data.js');
 const journals = JSON.parse(js.slice(js.indexOf('{'), js.indexOf('\n};') + 2));
-const usedIds = [...new Set(JSON.stringify(router).match(/jnl_[a-z0-9_]+/g) ?? [])];
+const knownMismatch = router.sources.journal_registry.known_mismatches ?? {};
+const declaredMismatch = new Set([
+  ...(knownMismatch.txt_disagrees_with_js ?? []),
+  ...(knownMismatch.txt_without_js_entry ?? []),
+]);
+// Los ids que el router USA para enrutar, no los que solo nombra para declarar una divergencia.
+const usedIds = [...new Set(JSON.stringify(router).match(/jnl_[a-z0-9_]+/g) ?? [])]
+  .filter((id) => !declaredMismatch.has(id));
 const badJournals = usedIds.filter((id) => !(id in journals) || !existsSync(join(ROOT, `filters/journals/${id}.txt`)));
 check('R5', badJournals.length === 0,
   `ids de revistas usados (${usedIds.length}): ${badJournals.length === 0 ? 'existen en el .js y como .txt' : JSON.stringify(badJournals)}`);
@@ -145,6 +152,47 @@ const have = new Set(router.principles.map((p) => p.id));
 const missingPrinciples = required.filter((r) => !have.has(r));
 check('R10', missingPrinciples.length === 0,
   `principios exigidos: ${missingPrinciples.length === 0 ? 'los 11 presentes' : JSON.stringify(missingPrinciples)}`);
+
+// ---------------------------------------------------------------------------------------------
+// Lo que protege al repositorio de SUS PROPIOS cambios futuros: un filtro nuevo peligroso no
+// puede entrar sin declararse, esté o no en el registry. El registry cubre 31 de 48 filtros;
+// estas tres comprobaciones miran los 48 y las 73 listas de revistas.
+// ---------------------------------------------------------------------------------------------
+
+const allFilters = ['methodology', 'clinical', 'scope', 'candidates'].flatMap((dir) => {
+  const d = join(ROOT, 'filters', dir);
+  return existsSync(d) ? readdirSync(d).filter((f) => f.endsWith('.txt')).map((f) => `filters/${dir}/${f}`) : [];
+});
+
+const declaredNegations = new Set([
+  ...(router.composition.negation_filters?.affected_registry_entries ?? []).map((k) => paths[k]),
+  ...(router.composition.negation_filters?.also_in_repository_outside_registry ?? []),
+]);
+const undeclaredNegations = allFilters.filter((f) => isNegation(query(f)) && !declaredNegations.has(f));
+check('R11', undeclaredNegations.length === 0,
+  `cláusulas de exclusión sin declarar en TODO el repositorio (${allFilters.length} filtros): ${
+    undeclaredNegations.length === 0 ? 'ninguna' : JSON.stringify(undeclaredNegations)}`);
+
+const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
+const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
+check('R12', undeclaredDates.length === 0,
+  `recortes temporales embebidos sin declarar en todo el repositorio: ${
+    undeclaredDates.length === 0 ? 'ninguno' : JSON.stringify(undeclaredDates)}`);
+
+const flat = (s) => String(s).replace(/\s+/g, '');
+const allJournalTxt = readdirSync(join(ROOT, 'filters', 'journals'))
+  .filter((f) => f.endsWith('.txt')).map((f) => f.slice(0, -4));
+const newMismatch = Object.keys(journals)
+  .filter((id) => allJournalTxt.includes(id)
+    && flat(query(`filters/journals/${id}.txt`)) !== flat(journals[id].query ?? '')
+    && !(knownMismatch.txt_disagrees_with_js ?? []).includes(id));
+const newOrphans = allJournalTxt
+  .filter((id) => !(id in journals) && !(knownMismatch.txt_without_js_entry ?? []).includes(id));
+check('R13', newMismatch.length === 0 && newOrphans.length === 0,
+  `espejo .txt/.js de las ${allJournalTxt.length} listas: ${
+    newMismatch.length === 0 && newOrphans.length === 0
+      ? `sin divergencias nuevas (${(knownMismatch.txt_disagrees_with_js ?? []).length + (knownMismatch.txt_without_js_entry ?? []).length} conocidas y declaradas)`
+      : `nuevas divergencias ${JSON.stringify(newMismatch)} / nuevos huérfanos ${JSON.stringify(newOrphans)}`}`);
 
 // Clasificación: toda sección de primer nivel tiene exactamente un dueño declarado.
 const cls = router.rule_classification ?? {};
@@ -194,6 +242,28 @@ check('A2', Object.entries(expected).every(([file, want]) => parseFilter(fixture
   'y acepta la implementación de referencia');
 
 // ---------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------
+// Inventario: qué hay en el repositorio que el router todavía no conoce. No es un fallo —el
+// registry es un subconjunto por diseño— pero es lo que ninguna comprobación puede decidir por ti.
+// ---------------------------------------------------------------------------------------------
+
+if (process.argv.includes('--inventory')) {
+  const inRegistry = new Set(Object.values(paths));
+  const outside = allFilters.filter((f) => !inRegistry.has(f) && !f.startsWith('filters/candidates/'));
+  console.log(`\nFiltros del repositorio fuera del registry del router: ${outside.length} de ${allFilters.length}`);
+  for (const f of outside) {
+    const q = query(f);
+    const flags = [
+      isNegation(q) ? 'EXCLUSIÓN (se compone sin AND)' : null,
+      hasEmbeddedDateLimit(q) ? 'FECHA EMBEBIDA' : null,
+      /propia/i.test(read(f)) ? 'sin validación publicada' : null,
+    ].filter(Boolean);
+    console.log(`  ${f}${flags.length ? '   <- ' + flags.join(' · ') : ''}`);
+  }
+  console.log('\nAñadir uno al registry es una decisión editorial, no un arreglo automático:');
+  console.log('declara su clave semántica en filter_registry y vuelve a pasar la suite.');
+}
 
 for (const line of pass) console.log(`  pass  ${line}`);
 for (const line of fail) console.log(`  FAIL  ${line}`);

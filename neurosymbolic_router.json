@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -43,7 +43,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.3",
+    "contract_version": "1.4",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
@@ -289,12 +289,21 @@
         "filters/scope/ocde.txt"
       ],
       "measured": "2026-09-15, E-utilities: `(metformin[tiab])` = 36016; `(metformin[tiab]) AND (scope.humans)` = 5852, animal studies only, with NOT dropped in querytranslation; `(metformin[tiab]) NOT (scope.humans)` = 30164. The wrong count is plausible and is not detectable by inspection.",
-      "detect_before_composing": "Read the filter query first; if it starts with NOT, use NOT composition."
+      "detect_before_composing": "Read the filter query first; if it starts with NOT, use NOT composition.",
+      "completeness_rule": "Every filter in the repository whose query starts with NOT must appear either in affected_registry_entries or here. The suite fails otherwise, so a new exclusion filter cannot be added unnoticed."
     },
     "embedded_date_limits": {
       "rule": "Before applying a filter, check whether its own query embeds a date restriction; if it does, it silently overrides the date policy of this router.",
-      "known_case": "filters/scope/pearls.txt contains \"last 5 years\"[dp] inside the filter itself.",
-      "removal_is_restructuring": "Deleting only the date term can leave `AND ( NOT Y)`, which is the inversion described in negation_filters. Restructure instead, and declare the modified query."
+      "removal_is_restructuring": "Deleting only the date term can leave `AND ( NOT Y)`, which is the inversion described in negation_filters. Restructure instead, and declare the modified query.",
+      "known_cases": [
+        "filters/scope/pearls.txt",
+        "filters/scope/ai_especifico.txt"
+      ],
+      "completeness_rule": "Every filter in the repository that embeds a date restriction must be listed here. The suite fails otherwise.",
+      "why_each_one": {
+        "filters/scope/pearls.txt": "Carries \"last 5 years\"[dp] inside the filter, in a position where deleting the date term alone inverts the filter. Restructure, do not delete.",
+        "filters/scope/ai_especifico.txt": "Carries an explicit (\"2022/01/01\"[PDAT] : \"2090/12/31\"[PDAT]) window, deliberate for large language model literature. Legitimate, but it silently overrides any wider date policy: say so when the question is declared sparse or historical."
+      }
     }
   },
   "routing": {
@@ -495,7 +504,17 @@
       "never_reconstruct_if_present": true,
       "path_note": "journal_filters_data.js is the source of truth and is JavaScript, not JSON. filters/journals/{id}.txt mirrors the same query in plain text for surfaces without a JS parser; if the two ever disagree, the .js wins and the mismatch is reported.",
       "source_of_truth": "journal_filters_data.js",
-      "plain_text_mirror": "filters/journals/{id}.txt"
+      "plain_text_mirror": "filters/journals/{id}.txt",
+      "known_mismatches": {
+        "rule": "Declared so that a NEW divergence fails the suite instead of hiding among the old ones. These are to be resolved, not extended.",
+        "txt_disagrees_with_js": [
+          "jnl_nuclear_medicine_radiotherapy_molecular_imaging"
+        ],
+        "txt_without_js_entry": [
+          "jnl_nuclear_med_radiotherapy_mol_imaging"
+        ],
+        "measured": "2026-09-15: 71 of 72 ids match. The divergent one lists 19 journals in the .txt and 18 in the .js, with 6 present only in one and 7 only in the other."
+      }
     },
     "directories": {
       "methodology": "filters/methodology/",
