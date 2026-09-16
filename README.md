@@ -68,6 +68,17 @@ node scripts/validate-router.mjs
   y la misma consulta rota pedida con `rettype=count`, donde el aviso ya no viene.
 - `inspectResponse()` juzga una respuesta de ESearch antes de usar su recuento, y distingue tres
   estados que no son lo mismo: utilizable, rota y **no verificable**.
+
+Y una comprobación que necesita red, y por eso no está en la CI:
+
+```
+node scripts/sweep-filters.mjs
+```
+
+Pasa cada filtro del repositorio por PubMed y enseña qué términos descarta el motor. Un filtro
+curado es fuente de intención metodológica, **no autoridad sobre la sintaxis actual de PubMed**.
+Barrido del 16/09/2026: 45 de 49 limpios, 4 con términos descartados, con impacto medido entre cero
+y 28 registros. Están declarados en `registry_validation.terms_pubmed_drops`.
 - La suite incluye una autoprueba: **rechaza** los tres parsers equivocados conocidos y acepta el de
   referencia. Una suite que no sabe rechazar una implementación mala no prueba nada.
 - Lo que la suite **no** prueba, dicho para que nadie confíe de más: no comprueba que una superficie

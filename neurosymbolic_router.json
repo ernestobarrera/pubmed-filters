@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -44,7 +44,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.5",
+    "contract_version": "1.6",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
@@ -288,7 +288,42 @@
     "journal_lists_are_not_validated_filters": true,
     "journal_lists_bias": "Journal lists are derived from h5-index rankings; restricting by them narrows by prestige, not by method.",
     "sensitive_specific_pair_not_always_available": "Only 12 repository filters have both versions. clinical.drug_adverse_events has no specific variant; do not improvise one.",
-    "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository. Absence from the registry does not mean no filter exists; read the repository index before concluding there is none."
+    "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository. Absence from the registry does not mean no filter exists; read the repository index before concluding there is none.",
+    "terms_pubmed_drops": {
+      "rule": "Curated filters are the source of methodological intent, not an authority on today's PubMed syntax. A term inside a validated filter can still be dropped by the engine.",
+      "swept": "49 retrieval filters executed against E-utilities on 2026-09-16: 45 clean, 4 with terms PubMed reports as not found.",
+      "benign": {
+        "what": "A quoted free-text phrase that simply does not occur in the literature. The syntax is fine and the filter works; PubMed only says the phrase matched nothing.",
+        "cases": {
+          "filters/methodology/clinical_rules_ap.txt": [
+            "\"AUDIT rule\"[tiab]",
+            "\"two question screener\"[tiab]"
+          ]
+        }
+      },
+      "dead_field_tags": {
+        "what": "A term addressed to a field where it does not exist. It contributes nothing and looks as if it did.",
+        "cases": {
+          "filters/methodology/indirect_comparison.txt": {
+            "term": "\"network meta-analysis\"[mh]",
+            "problem": "Not a MeSH descriptor. It exists as a publication type and as free text.",
+            "measured_impact": "+28 records out of 155,311 (+0.02%) if changed to [pt]."
+          },
+          "filters/methodology/gpc.txt": {
+            "term": "\"Consensus development conferences as topic\"[MESH] and \"consensus development conference\"[pt]",
+            "problem": "Both return zero and are reported as not found.",
+            "measured_impact": "0 records. Other terms in the same OR block already cover them."
+          },
+          "filters/scope/pearls.txt": {
+            "term": "same two consensus terms as gpc.txt",
+            "problem": "Same.",
+            "measured_impact": "Not separately quantified; same OR structure."
+          }
+        },
+        "why_not_fixed_here": "The measured impact is between zero and 0.02%, and editing a published, referenced filter is a methodological decision with its own provenance, not a cleanup. Declared so it is visible and can be decided on."
+      },
+      "how_this_was_found": "By applying the router's own query_execution_contract to the repository's own filters. The rule written for a model's invented MeSH heading found four cases inside curated filters."
+    }
   },
   "composition": {
     "within_same_concept": "OR",
