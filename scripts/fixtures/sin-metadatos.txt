@@ -1,0 +1,4 @@
+# Filtro: sin bloque de validación
+# Descripción: el fichero no trae marcador.
+
+(solo[tiab] OR consulta[tiab])

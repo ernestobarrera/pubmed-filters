@@ -1,0 +1,595 @@
+{
+  "schema_version": "1.3",
+  "metadata": {
+    "id": "pubmed-neurosymbolic-router",
+    "name": "Neurosymbolic Search Composition Router",
+    "architecture_role": "scientific_retrieval_harness",
+    "version": "1.3.0",
+    "language": "en",
+    "repository": "ernestobarrera/pubmed-filters",
+    "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
+  },
+  "rule_classification": {
+    "purpose": "Every section below belongs to exactly one class. A surface may harden a rule; it must never silently redefine one.",
+    "dependency_direction": "router -> adapters. A surface that cannot resolve the contract version it requires degrades explicitly instead of improvising.",
+    "mechanical_contract": [
+      "filter_registry",
+      "filter_file_contract",
+      "registry_validation",
+      "composition",
+      "journal_routing",
+      "sources",
+      "candidate_extensions",
+      "filter_gap_detection"
+    ],
+    "retrieval_policy": [
+      "principles",
+      "defaults",
+      "evidence_landscape_policy",
+      "routing",
+      "primary_care_policy",
+      "saturation_policy",
+      "adaptation",
+      "reading_and_drilldown",
+      "provenance",
+      "degradation",
+      "tool_requirements"
+    ],
+    "boundary": [
+      "layers",
+      "pipeline",
+      "surface_profiles",
+      "language_policy"
+    ]
+  },
+  "conformance": {
+    "contract_version": "1.3",
+    "reference_parser": "scripts/parse-filter.mjs",
+    "test_suite": "scripts/validate-router.mjs",
+    "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
+    "reimplementation_allowed": "Yes, in any language. Passing the suite is what counts, not sharing code.",
+    "hardening_allowed": "A surface may be stricter than this contract.",
+    "silent_redefinition_forbidden": "A surface must not loosen or reinterpret a rule without saying so.",
+    "what_the_suite_does_not_prove": "It checks contradictions between what is declared and what the repository contains, plus the parser against adversarial fixtures. It does not prove that a surface composes a good search, reads evidence well, or applies the principles."
+  },
+  "surface_policy_not_owned_here": {
+    "rule": "These belong to the invoking surface. They are named here so their absence reads as a decision, not an oversight.",
+    "items": [
+      "delegation level and how much the user is asked to do",
+      "critical appraisal: effect size, confidence intervals, NNT/NNH, bias, heterogeneity, clinically relevant threshold",
+      "how retrieved data, interpretation and hypothesis are kept apart in the answer",
+      "which findings deserve a drill-down",
+      "the last mile: what any of it changes in practice tomorrow",
+      "response language, register, voice or written output, and visual output"
+    ],
+    "removed_in_this_version": [
+      "high_delegation_low_human_effort",
+      "triangulate_evidence_types",
+      "clinical_relevance_over_statistical_novelty"
+    ]
+  },
+  "principles": [
+    {
+      "id": "landscape_before_drilldown",
+      "statement": "Map the overall evidence landscape before privileging or deeply interpreting an individual study."
+    },
+    {
+      "id": "avoid_single_study_anchoring",
+      "statement": "Never infer the state of the science from an isolated study when broader evidence can reasonably be retrieved."
+    },
+    {
+      "id": "retrieve_to_information_saturation",
+      "statement": "Continue complementary retrieval passes until additional searches provide little or no clinically meaningful new information, rather than stopping after the first relevant result."
+    },
+    {
+      "id": "breadth_before_depth",
+      "statement": "Use broad complementary passes to identify the structure of the evidence, then drill down selectively into studies most likely to change interpretation or practice."
+    },
+    {
+      "id": "diversify_before_intensify",
+      "statement": "Before repeatedly narrowing one query, explore complementary evidence lanes such as syntheses, primary studies, specialty journals, primary care journals, top general journals, safety signals or trending attention when relevant."
+    },
+    {
+      "id": "adaptive_precision_recall",
+      "statement": "Balance sensitivity and specificity dynamically. Prefer validated filters, but relax or split constraints when filter stacking risks losing important evidence."
+    },
+    {
+      "id": "validated_filters_as_symbolic_truth",
+      "statement": "Use curated repository filters as the symbolic source of truth whenever an appropriate validated filter exists; do not reconstruct them from memory."
+    },
+    {
+      "id": "abstract_minimum_evidence_read",
+      "statement": "Do not surface a paper as an evidentiary finding without reading at least its abstract or an equivalent primary source."
+    },
+    {
+      "id": "recency_without_historical_amnesia",
+      "statement": "Prefer current evidence when appropriate, while widening the time horizon for seminal, sparse, rare or historically defining evidence."
+    },
+    {
+      "id": "provenance_first",
+      "statement": "Never claim a search, filter, abstract review or source retrieval that was not actually performed."
+    },
+    {
+      "id": "no_silent_substitution",
+      "statement": "Do not silently replace literal PubMed retrieval with semantic web search, another academic index or model memory."
+    },
+    {
+      "id": "language_separation",
+      "statement": "Normalize biomedical retrieval concepts to canonical English terminology and MeSH when useful, while responding to the user in the language of the ongoing conversation."
+    }
+  ],
+  "layers": {
+    "neural": {
+      "owns": "Intent, context, synonyms, MeSH when useful, population, intervention or exposure, outcomes, evidence type, specialty and time frame.",
+      "rule": "Interprets; never reconstructs a curated filter from memory."
+    },
+    "symbolic": {
+      "owns": "filter_registry, filter_file_contract, composition, journal_routing.",
+      "rule": "Curated repository filters are the symbolic truth. Retrieve them literally or say you did not."
+    },
+    "boundary": "The router orients; it does not restrict mechanically. If a combination threatens sensitivity, run parallel passes and merge."
+  },
+  "pipeline": {
+    "sequence": [
+      "intent",
+      "symbolic_filter",
+      "search",
+      "abstracts_and_sources",
+      "critical_appraisal",
+      "last_mile"
+    ],
+    "router_owns": [
+      "intent",
+      "symbolic_filter",
+      "search",
+      "abstracts_and_sources"
+    ],
+    "surface_owns": [
+      "critical_appraisal",
+      "last_mile"
+    ],
+    "boundary_rule": "Critical appraisal and the last mile belong to the invoking surface. This router does not duplicate them: it delivers retrieval that is real, reproducible and traceable enough for them to stand on."
+  },
+  "defaults": {
+    "time": {
+      "current_evidence_years": 5,
+      "trending_has_no_date_filter_by_default": true,
+      "widen_sequence": [
+        "5y",
+        "10y",
+        "no_date_limit"
+      ],
+      "widen_when": [
+        "sparse_evidence",
+        "seminal_evidence_needed",
+        "rare_condition",
+        "historical_standard"
+      ]
+    },
+    "reading": {
+      "surface_only_after_abstract_or_full_text_read": true,
+      "title_only_selection_forbidden": true,
+      "if_no_abstract": "Do not use as a main evidentiary finding unless full text or an equivalent primary source has been read."
+    },
+    "search": {
+      "prefer_existing_validated_filter": true,
+      "preserve_exact_filter_syntax": true,
+      "allow_parallel_passes": true,
+      "avoid_unnecessary_filter_stacking": true
+    }
+  },
+  "evidence_landscape_policy": {
+    "default_sequence": [
+      "landscape_scan",
+      "identify_evidence_clusters",
+      "detect_conflicts_and_gaps",
+      "prioritize_high_value_signals",
+      "targeted_drilldown",
+      "saturation_check"
+    ],
+    "landscape_scan_should_consider_when_relevant": [
+      "systematic_reviews_and_meta_analyses",
+      "guidelines_or_consensus",
+      "pivotal_primary_studies",
+      "recent_primary_studies",
+      "specialty_journal_pass",
+      "primary_care_journal_pass",
+      "top_general_journal_pass",
+      "safety_or_regulatory_sources",
+      "trending_attention_signal"
+    ],
+    "do_not_require_all_lanes": true,
+    "name": "surf_then_drilldown"
+  },
+  "filter_registry": {
+    "methodology": {
+      "evidence_synthesis": "filters/methodology/metaanalysis.txt",
+      "guidelines": "filters/methodology/gpc.txt",
+      "qualitative": "filters/methodology/qualitative.txt",
+      "clinical_prediction_rules_primary_care": "filters/methodology/clinical_rules_ap.txt",
+      "clinical_prediction_rules_sensitive": "filters/methodology/clinical_rules_sensible.txt",
+      "clinical_prediction_rules_specific": "filters/methodology/clinical_rules_especifico.txt",
+      "indirect_comparison": "filters/methodology/indirect_comparison.txt",
+      "horizon_scanning": "filters/methodology/horizon.txt"
+    },
+    "clinical": {
+      "treatment_sensitive": "filters/clinical/treatment_sensible.txt",
+      "treatment_specific": "filters/clinical/treatment_especifico.txt",
+      "diagnosis_sensitive": "filters/clinical/diagnosis_sensible.txt",
+      "diagnosis_specific": "filters/clinical/diagnosis_especifico.txt",
+      "prognosis_sensitive": "filters/clinical/prognosis_sensible.txt",
+      "prognosis_specific": "filters/clinical/prognosis_especifico.txt",
+      "etiology_sensitive": "filters/clinical/etiology_sensible.txt",
+      "etiology_specific": "filters/clinical/etiology_especifico.txt",
+      "predictors_sensitive": "filters/clinical/predictors_sensible.txt",
+      "predictors_specific": "filters/clinical/predictors_especifico.txt",
+      "drug_adverse_events": "filters/clinical/drugs_ae.txt",
+      "device_adverse_events": "filters/clinical/devices_ae.txt",
+      "mortality": "filters/clinical/mortality.txt",
+      "nnt_nnh": "filters/clinical/NNT_NNH.txt"
+    },
+    "scope": {
+      "primary_care_sensitive": "filters/scope/primary_sensible.txt",
+      "primary_care_specific": "filters/scope/primary_especifico.txt",
+      "safety_sensitive": "filters/scope/safety_sensible.txt",
+      "safety_specific": "filters/scope/safety_especifico.txt",
+      "geriatrics_sensitive": "filters/scope/geriatrics_sensible.txt",
+      "geriatrics_specific": "filters/scope/geriatrics_especifico.txt",
+      "pediatrics": "filters/scope/pediatrics.txt",
+      "humans": "filters/scope/humans.txt",
+      "adults": "filters/scope/adults.txt"
+    }
+  },
+  "filter_file_contract": {
+    "structure": "Header lines starting with #, then the query (one or more lines), then a line exactly equal to @@@FILTER_METADATA@@@, then a JSON validation block.",
+    "extraction": [
+      "Split the file at the first line exactly equal to @@@FILTER_METADATA@@@.",
+      "Discard everything after it.",
+      "In the part before, drop empty lines and lines starting with #.",
+      "Join ALL remaining lines with a single space, preserving parentheses and operators.",
+      "Never take only the first non-comment line: multi-line filters would be truncated into a plausible but wrong query."
+    ],
+    "invalidate_execution_when": [
+      "esearchresult.ERROR is present",
+      "errorlist is not empty",
+      "warninglist.outputmessages contains a semantic warning"
+    ],
+    "false_zero_warning": "If the metadata block is swallowed into the query, PubMed returns count 0 with the error hidden in errorlist.phrasesnotfound and quotedphrasesnotfound empty.",
+    "modified_filter_declaration": "Modifying a filter is legitimate but must be declared as {path, modified: true, reason, effective_query}, and it is the effective_query that provenance refers to."
+  },
+  "registry_validation": {
+    "rule": "validated_filters_as_symbolic_truth applies to filters carrying a published validation reference. The entries listed below are author-made and have none; cite them as such and never present them as validated.",
+    "author_made_not_validated": [
+      "clinical.mortality",
+      "clinical.nnt_nnh",
+      "scope.humans"
+    ],
+    "journal_lists_are_not_validated_filters": true,
+    "journal_lists_bias": "Journal lists are derived from h5-index rankings; restricting by them narrows by prestige, not by method.",
+    "sensitive_specific_pair_not_always_available": "Only 12 repository filters have both versions. clinical.drug_adverse_events has no specific variant; do not improvise one.",
+    "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository. Absence from the registry does not mean no filter exists; read the repository index before concluding there is none."
+  },
+  "composition": {
+    "within_same_concept": "OR",
+    "between_distinct_concepts": "AND",
+    "topic_plus_methodology_filter": "AND",
+    "topic_plus_scope_filter": "AND only when scope is genuinely part of the question",
+    "journal_filters_default_role": "parallel editorial enrichment passes, not mandatory restriction of the core search",
+    "same_family_filters": "Do not AND sensitive and specific versions of the same filter; choose one or run separate passes.",
+    "overconstraint_rule": "If stacking filters threatens sensitivity, split into parallel searches and merge later.",
+    "topic_building": "Use MeSH and title/abstract synonyms when useful without forcing every PICO component into the query.",
+    "negation_filters": {
+      "rule": "A filter whose query starts with NOT is an exclusion clause and must be appended WITHOUT AND: write `(topic) NOT (...)`, never `(topic) AND (NOT ...)`.",
+      "why": "PubMed parses `AND (NOT X)` as `AND X`, silently inverting the filter and returning exactly what it was meant to exclude.",
+      "affected_registry_entries": [
+        "scope.humans",
+        "scope.adults"
+      ],
+      "also_in_repository_outside_registry": [
+        "filters/scope/ocde.txt"
+      ],
+      "measured": "2026-09-15, E-utilities: `(metformin[tiab])` = 36016; `(metformin[tiab]) AND (scope.humans)` = 5852, animal studies only, with NOT dropped in querytranslation; `(metformin[tiab]) NOT (scope.humans)` = 30164. The wrong count is plausible and is not detectable by inspection.",
+      "detect_before_composing": "Read the filter query first; if it starts with NOT, use NOT composition."
+    },
+    "embedded_date_limits": {
+      "rule": "Before applying a filter, check whether its own query embeds a date restriction; if it does, it silently overrides the date policy of this router.",
+      "known_case": "filters/scope/pearls.txt contains \"last 5 years\"[dp] inside the filter itself.",
+      "removal_is_restructuring": "Deleting only the date term can leave `AND ( NOT Y)`, which is the inversion described in negation_filters. Restructure instead, and declare the modified query."
+    }
+  },
+  "routing": {
+    "background": {
+      "first_passes": [
+        "methodology.evidence_synthesis",
+        "methodology.guidelines"
+      ],
+      "then": "Add primary studies when syntheses are old, incomplete, conflicting or insufficient.",
+      "date_policy": "5y_then_widen",
+      "journals": "optional_editorial_enrichment"
+    },
+    "treatment": {
+      "precision_first": "clinical.treatment_specific",
+      "recall_fallback": "clinical.treatment_sensitive",
+      "parallel_background": "methodology.evidence_synthesis",
+      "rct_lane": "Use a dedicated validated RCT filter when available and direct randomized evidence is required."
+    },
+    "diagnosis": {
+      "precision_first": "clinical.diagnosis_specific",
+      "recall_fallback": "clinical.diagnosis_sensitive"
+    },
+    "prognosis": {
+      "precision_first": "clinical.prognosis_specific",
+      "recall_fallback": "clinical.prognosis_sensitive"
+    },
+    "etiology_harm": {
+      "precision_first": "clinical.etiology_specific",
+      "recall_fallback": "clinical.etiology_sensitive"
+    },
+    "safety": {
+      "first_passes": [
+        "clinical.drug_adverse_events",
+        "scope.safety_specific"
+      ],
+      "fallback": [
+        "scope.safety_sensitive",
+        "clinical.etiology_sensitive"
+      ],
+      "external_sources": [
+        "AEMPS",
+        "EMA_PRAC"
+      ]
+    },
+    "prediction": {
+      "primary_care": "methodology.clinical_prediction_rules_primary_care",
+      "general_precision_first": "methodology.clinical_prediction_rules_specific",
+      "general_recall_fallback": "methodology.clinical_prediction_rules_sensitive"
+    },
+    "qualitative": {
+      "filter": "methodology.qualitative"
+    },
+    "radar": {
+      "core": "journal_and_date_passes",
+      "methodology_filter_default": "none",
+      "second_signal": "trending_without_date",
+      "read_abstracts_before_editorial_selection": true
+    },
+    "trending": {
+      "pubmed_subset": "trending[sb]",
+      "date_filter": "none_by_default",
+      "if_user_says_last_week": "Run two lanes: trending without a date restriction and publications from the requested recent window.",
+      "interpretation": "attention_signal_not_quality_signal"
+    }
+  },
+  "journal_routing": {
+    "registry": "journal_filters_data.js",
+    "infer_relevant_specialties_semantically": true,
+    "use_parallel_passes": true,
+    "do_not_replace_core_pubmed_search": true,
+    "example": {
+      "topic": "GLP-1 receptor agonists",
+      "journal_passes": [
+        "jnl_endocrinology",
+        "jnl_diabetes",
+        "jnl_primary_health_care",
+        "jnl_top_publications"
+      ]
+    }
+  },
+  "primary_care_policy": {
+    "user_context_is_not_a_search_constraint": true,
+    "rule": "The specialty or setting of the person asking is not by itself a search constraint: it does not justify restricting every search to that setting.",
+    "use_primary_scope_filter_when": "The setting, population, service model or question itself is specifically about primary care.",
+    "default_editorial_passes_for_clinical_topics": [
+      "jnl_primary_health_care",
+      "relevant_specialty_journal_id",
+      "jnl_top_publications"
+    ],
+    "journal_name_is_not_scope": "Do not equate relevance to primary care with journals carrying 'primary care' in their title."
+  },
+  "reading_and_drilldown": {
+    "screen": "abstract_or_full_text",
+    "drill_down_sources": [
+      "PubMed_record",
+      "DOI",
+      "publisher",
+      "full_text",
+      "supplement",
+      "protocol"
+    ],
+    "drill_down_decision_owner": "The invoking surface decides which findings deserve a drill-down. This router only states how to reach the sources and that an abstract is the minimum before surfacing a paper."
+  },
+  "saturation_policy": {
+    "goal": "conceptual_and_clinically_relevant_saturation_not_exhaustive_retrieval",
+    "continue_searching_when": [
+      "new_passes_reveal_new_evidence_classes",
+      "important_results_conflict",
+      "practice_changing_claims_rest_on_single_studies",
+      "important_populations_or_outcomes_remain_unrepresented",
+      "recent_evidence_may_change_older_syntheses",
+      "safety_signals_remain_uncertain"
+    ],
+    "saturation_reached_when": [
+      "successive_complementary_passes_add_no_materially_new_clinical_conclusions",
+      "major_evidence_types_relevant_to_the_question_are_represented",
+      "important_disagreements_have_been_identified",
+      "additional_retrieval_has_low_expected_information_gain"
+    ],
+    "never_use_fixed_article_count_as_saturation": true
+  },
+  "provenance": {
+    "record_per_pass": [
+      "purpose",
+      "exact_query",
+      "filter_paths_or_ids",
+      "date_policy",
+      "result_count",
+      "abstracts_read",
+      "source"
+    ],
+    "never_claim_unperformed_step": true,
+    "expose_on_request": true,
+    "grounding_rule": "Never invent a retrieval.",
+    "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so."
+  },
+  "language_policy": {
+    "internal_schema_language": "en",
+    "biomedical_retrieval_language": "en_preferred_with_MeSH_and_required_synonyms",
+    "response_language": "match_conversation_language",
+    "preserve_user_terms_when_clinically_relevant": true
+  },
+  "filter_gap_detection": {
+    "enabled": true,
+    "propose_new_filter_when": [
+      "the same ad hoc search pattern recurs across multiple questions",
+      "an important question type lacks an adequate validated repository filter",
+      "existing filters repeatedly produce unacceptable precision or recall for a recurring use case",
+      "a high-quality validated external filter can materially improve retrieval"
+    ],
+    "proposal_requirements": [
+      "state the unmet retrieval need",
+      "prefer externally validated filters",
+      "include validation reference and metrics when available",
+      "test PubMed syntax before proposing repository inclusion",
+      "add as candidate before treating as symbolic source of truth"
+    ],
+    "never_auto_promote_candidate_to_validated": true
+  },
+  "candidate_extensions": {
+    "inactive_until_added_to_repo": true,
+    "filters": [
+      {
+        "id": "rct_cochrane_sensitive",
+        "suggested_path": "filters/candidates/rct_cochrane_sensitive.txt",
+        "purpose": "Identify randomized controlled trials using a high-sensitivity validated strategy."
+      },
+      {
+        "id": "rct_cochrane_balanced",
+        "suggested_path": "filters/candidates/rct_cochrane_balanced.txt",
+        "purpose": "Identify randomized controlled trials using a validated sensitivity/precision-balanced strategy."
+      }
+    ],
+    "repository_convention": {
+      "candidates_live_in": "filters/candidates/",
+      "promotion": "Move the file to its thematic folder (clinical/, methodology/, scope/, journals/) and replace `# Estado:` with the validation that backs it. While it sits in candidates/, it is not validated.",
+      "hard_rule": "A candidate must not be used in any search surface, product or flow that produces a clinical recommendation."
+    }
+  },
+  "sources": {
+    "filter_repo": {
+      "repository": "ernestobarrera/pubmed-filters",
+      "source_of_truth": true,
+      "default_ref": "main",
+      "pages_base_url": "https://ernestobarrera.github.io/pubmed-filters/",
+      "raw_base_url": "https://raw.githubusercontent.com/ernestobarrera/pubmed-filters/{ref}/",
+      "resolution_order": [
+        "local repository checkout",
+        "pages_base_url",
+        "raw_base_url with explicit ref"
+      ],
+      "development_note": "GitHub Pages only serves the default branch. A work branch is not reachable through pages_base_url; during development resolve through raw_base_url with an explicit ref, or through a local checkout."
+    },
+    "journal_registry": {
+      "path": "journal_filters_data.js",
+      "id_prefix": "jnl_",
+      "resolve_by_id": true,
+      "never_reconstruct_if_present": true,
+      "path_note": "journal_filters_data.js is the source of truth and is JavaScript, not JSON. filters/journals/{id}.txt mirrors the same query in plain text for surfaces without a JS parser; if the two ever disagree, the .js wins and the mismatch is reported.",
+      "source_of_truth": "journal_filters_data.js",
+      "plain_text_mirror": "filters/journals/{id}.txt"
+    },
+    "directories": {
+      "methodology": "filters/methodology/",
+      "clinical": "filters/clinical/",
+      "scope": "filters/scope/",
+      "journals": "filters/journals/",
+      "candidates": "filters/candidates/"
+    }
+  },
+  "degradation": {
+    "github_unavailable": "Stop claims about symbolic filters and request GitHub connection.",
+    "literal_pubmed_unavailable": "Do not silently substitute web or semantic search; request a tool capable of literal PubMed execution.",
+    "filter_missing": "No suitable curated filter: use ad_hoc_routing, label it as such, and consider proposing a new repository filter.",
+    "router_unavailable": "If this router cannot be read but a valid repository filter can, use the filter and declare ad_hoc_routing."
+  },
+  "adaptation": {
+    "if_too_many_results_to_read": [
+      "prefer_specific_over_sensitive_filter",
+      "apply_relevant_methodology_filter",
+      "use_current_5y_window_if_appropriate",
+      "use_scope_filter_only_if_scope_is_part_of_the_question"
+    ],
+    "if_too_few_results": [
+      "remove_journal_constraint",
+      "specific_to_sensitive_filter",
+      "widen_5y_to_10y",
+      "remove_date_limit",
+      "relax_methodology_filter",
+      "run_topic_only_pubmed_pass"
+    ],
+    "merge_policy": "Deduplicate by PMID and then prioritize relevance, quality, recency and applicability."
+  },
+  "tool_requirements": {
+    "filter_source": "GitHub",
+    "literal_pubmed_engine": "any_tool_capable_of_exact_pubmed_syntax",
+    "rule": "A semantic search must not silently substitute a literal PubMed query when reproducibility is required.",
+    "engine_selection": "The concrete engine is surface configuration, not a property of this repository. Declare in provenance which engine actually ran each pass.",
+    "semantic_expansion": "Optional and always additional; a semantic index may widen the concept space but never replaces a literal PubMed pass when reproducibility is required."
+  },
+  "surface_profiles": {
+    "rule": "A section requiring a capability the surface does not have is skipped explicitly and said out loud, never simulated.",
+    "capabilities": [
+      "file_read_from_repo",
+      "literal_pubmed_execution",
+      "abstract_reading",
+      "parallel_passes",
+      "pmid_deduplication",
+      "provenance_logging"
+    ],
+    "profiles": {
+      "query_builder_surface": {
+        "description": "A surface that composes and hands over a query; it does not execute, read or merge.",
+        "has": [
+          "file_read_from_repo"
+        ],
+        "applies": [
+          "filter_registry",
+          "filter_file_contract",
+          "registry_validation",
+          "composition",
+          "journal_routing"
+        ],
+        "not_applicable": [
+          "reading_and_drilldown",
+          "saturation_policy",
+          "provenance",
+          "adaptation.merge_policy",
+          "evidence_landscape_policy"
+        ]
+      },
+      "conversational_surface_with_literal_pubmed": {
+        "description": "A surface able to execute exact PubMed syntax and read abstracts.",
+        "has": [
+          "file_read_from_repo",
+          "literal_pubmed_execution",
+          "abstract_reading",
+          "parallel_passes",
+          "pmid_deduplication",
+          "provenance_logging"
+        ],
+        "applies": "all"
+      },
+      "conversational_surface_without_literal_pubmed": {
+        "description": "A conversational surface with web access but no exact PubMed execution.",
+        "has": [
+          "file_read_from_repo"
+        ],
+        "must_apply": "degradation.literal_pubmed_unavailable",
+        "forbidden": [
+          "claiming retrieval counts",
+          "claiming abstracts were read",
+          "presenting semantic search output as a PubMed pass"
+        ]
+      }
+    }
+  }
+}

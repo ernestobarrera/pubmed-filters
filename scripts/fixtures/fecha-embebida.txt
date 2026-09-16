@@ -1,0 +1,11 @@
+# Filtro: recorte temporal dentro de la propia cadena
+# Descripción: anula en silencio cualquier política de fechas externa.
+
+(tema[tiab] AND ("last 5 years"[dp] NOT excluido[tiab]) NOT otro[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Fixture, no es un filtro real"
+  }
+}

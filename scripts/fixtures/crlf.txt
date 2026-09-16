@@ -1,0 +1,12 @@
+# Filtro: saltos CRLF
+# Descripcion: el fichero usa CRLF.
+
+(alfa[tiab]
+OR beta[tiab])
+
+@@@FILTER_METADATA@@@
+{
+  "validation": {
+    "reference": "Fixture, no es un filtro real"
+  }
+}
