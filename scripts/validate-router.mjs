@@ -88,6 +88,10 @@ check('Q4', ciego.verifiable === false && !ciego.usable
   && ciego.problems.some((p) => p.startsWith('NO_VERIFICABLE')),
   'pedida con rettype=count, la misma consulta rota se declara NO VERIFICABLE en vez de limpia');
 
+const fatal = inspectResponse({ count: '0', querytranslation: 'cancer', ERROR: 'Invalid database name' });
+check('Q5', fatal.usable === false && fatal.problems.some((p) => p.startsWith('ERROR_FATAL')),
+  'esearchresult.ERROR invalida la respuesta aunque haya count y querytranslation');
+
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
 // ---------------------------------------------------------------------------------------------
@@ -238,8 +242,12 @@ check('C3', (qec.inspect_in_every_response ?? []).length >= 4
 
 const rec = router.provenance.record_per_pass ?? [];
 check('C4', ['result_count', 'records_retrieved', 'abstracts_read'].every((f) => rec.includes(f))
+  && ['querytranslation', 'warninglist', 'errorlist', 'raw_response_or_sha256', 'pmid_list_or_sha256']
+    .every((f) => rec.includes(f))
+  && ['contract_version', 'repository_commit', 'repository_dirty', 'router_sha256']
+    .every((f) => (router.provenance.record_per_run ?? []).includes(f))
   && typeof router.provenance.counts_are_not_interchangeable === 'string',
-  'la procedencia distingue resultados encontrados, descargados y leídos');
+  'la procedencia fija contrato/commit y distingue consulta, respuesta, PMIDs y lectura');
 
 check('C5', typeof router.composition.precision_hints?.rule === 'string'
   && typeof router.evidence_landscape_policy.exact_applicability_pass?.rule === 'string',
@@ -249,6 +257,22 @@ check('C2', typeof router.conformance?.contract_version === 'string'
   && existsSync(join(ROOT, router.conformance.reference_parser))
   && existsSync(join(ROOT, router.conformance.test_suite)),
   'el router declara versión de contrato, parser de referencia y suite, y ambos ficheros existen');
+
+check('C6', ['query_integrity', 'coverage', 'reading_depth']
+  .every((d) => (router.provenance.operational_status?.dimensions ?? []).includes(d))
+  && ['verified', 'planned', 'unsupported']
+    .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)),
+  'el estado operativo es semántico y separa integridad, cobertura y profundidad de lectura');
+
+check('C7', typeof qec.rule_for_headings === 'string'
+  && qec.rule_for_headings.includes('db=pubmed')
+  && qec.rule_for_headings.includes('db=mesh')
+  && qec.inspect_in_every_response.includes('esearchresult.ERROR'),
+  'MeSH usa db=mesh solo para descubrir y valida el encabezado exacto en db=pubmed');
+
+check('C8', (router.conformance.adapter_conformance?.required_declaration ?? []).length >= 5
+  && (router.conformance.adapter_conformance?.minimum_query_vectors ?? []).includes('esearchresult.ERROR'),
+  'la conformidad externa exige declaración y pruebas del adaptador, no solo la suite del repositorio');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.

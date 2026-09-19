@@ -53,6 +53,19 @@ respuesta— está nombrado en `surface_policy_not_owned_here` para que su ausen
 decisión y no como un olvido. La dependencia va en una sola dirección: una superficie puede endurecer
 una regla, nunca redefinirla en silencio.
 
+### Inicio rápido reproducible
+
+Con Node.js 18 o posterior, este ejemplo carga el filtro real de tratamiento específico, lo compone
+con un tema, ejecuta ESearch con `retmax=0` y rechaza la respuesta si PubMed omite o descarta algo:
+
+```
+node scripts/quickstart.mjs
+```
+
+La salida conserva la consulta literal, el recuento y el juicio de integridad. Para una ejecución
+auditable añade el commit del repositorio y conserva la respuesta o su SHA-256 según
+`provenance` en `neurosymbolic_router.json`.
+
 ### Conformidad
 
 ```
@@ -60,7 +73,9 @@ node scripts/validate-router.mjs
 ```
 
 - `scripts/parse-filter.mjs` es la **implementación de referencia** del contrato de lectura de un
-  filtro. Puede reimplementarse en cualquier lenguaje; lo que cuenta es pasar la misma suite.
+  filtro. Puede reimplementarse en cualquier lenguaje. Esta suite certifica esa implementación y
+  la coherencia del repositorio; un adaptador externo debe declarar qué secciones implementa y
+  ejecutar los vectores publicados contra su propio código antes de afirmar conformidad.
 - `scripts/fixtures/` son casos adversariales: filtros multilínea, el marcador citado dentro de un
   comentario, una cláusula que empieza por `NOT`, un recorte temporal escondido en la propia cadena
   y un fichero con saltos CRLF. Y `respuestas-pubmed.json`, con respuestas **reales** de

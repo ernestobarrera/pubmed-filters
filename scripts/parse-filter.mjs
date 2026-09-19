@@ -84,6 +84,11 @@ export function inspectResponse(esearchresult) {
   const warn = r.warninglist;
   const err = r.errorlist ?? {};
   const problems = [];
+  const fatal = r.ERROR;
+
+  if (fatal !== undefined && String(fatal).trim() !== '') {
+    problems.push(`ERROR_FATAL: ${String(fatal).trim()}`);
+  }
 
   const dropped = [
     ...(err.phrasesnotfound ?? []),
@@ -106,7 +111,10 @@ export function inspectResponse(esearchresult) {
     problems.push(`TERMINOS_DESCARTADOS: PubMed ignoró ${JSON.stringify(dropped)}. `
       + 'No presentes en la búsqueda que de verdad se ejecutó.');
   }
-  if (Object.keys(err).some((k) => Array.isArray(err[k]) && err[k].length > 0)) {
+  const hasErrorList = Object.values(err).some((value) => Array.isArray(value)
+    ? value.length > 0
+    : value !== null && value !== undefined && String(value).trim() !== '');
+  if (hasErrorList) {
     problems.push(`ERRORLIST: ${JSON.stringify(err)}`);
   }
   const messages = (warn?.outputmessages ?? []).filter((m) => !/^No items found\.?$/i.test(m));

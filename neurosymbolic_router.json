@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.6",
+  "schema_version": "1.7",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -44,14 +44,32 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.6",
+    "contract_version": "1.7",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
-    "how_a_surface_declares_support": "State the contract_version implemented and pass the published suite. A surface that cannot run the suite says so and does not claim conformance.",
+    "how_a_surface_declares_support": "State the contract_version implemented, the sections implemented, the repository commit tested and the adapter's own test result. Running this repository suite validates the reference implementation only; it does not certify a third-party adapter.",
     "reimplementation_allowed": "Yes, in any language. Passing the suite is what counts, not sharing code.",
     "hardening_allowed": "A surface may be stricter than this contract.",
     "silent_redefinition_forbidden": "A surface must not loosen or reinterpret a rule without saying so.",
-    "what_the_suite_does_not_prove": "It checks contradictions between what is declared and what the repository contains, plus the parser against adversarial fixtures. It does not prove that a surface composes a good search, reads evidence well, or applies the principles."
+    "what_the_suite_does_not_prove": "It checks contradictions between what is declared and what the repository contains, plus the reference parser against adversarial fixtures. It does not execute or certify code in an external adapter, nor prove that a surface composes a good search, reads evidence well, or applies the principles.",
+    "adapter_conformance": {
+      "required_declaration": [
+        "contract_version",
+        "implemented_sections",
+        "repository_ref_or_commit",
+        "adapter_test_command",
+        "adapter_test_result"
+      ],
+      "minimum_query_vectors": [
+        "valid_nonzero_response",
+        "legitimate_zero_with_querytranslation",
+        "missing_querytranslation",
+        "warninglist.quotedphrasesnotfound",
+        "warninglist.phrasesignored",
+        "nonempty_errorlist",
+        "esearchresult.ERROR"
+      ]
+    }
   },
   "surface_policy_not_owned_here": {
     "rule": "These belong to the invoking surface. They are named here so their absence reads as a decision, not an oversight.",
@@ -267,6 +285,7 @@
   "query_execution_contract": {
     "rule": "Every executed query is inspected before its result is used. PubMed already reports what it ignored; the failure is not reading it.",
     "inspect_in_every_response": [
+      "esearchresult.ERROR",
       "esearchresult.errorlist.phrasesnotfound",
       "esearchresult.warninglist.quotedphrasesnotfound",
       "esearchresult.warninglist.phrasesignored",
@@ -274,7 +293,7 @@
       "esearchresult.querytranslation"
     ],
     "mesh_terms_are_not_exempt": "A MeSH heading invented by a model is medically plausible and syntactically valid, so it raises no error: PubMed simply drops it and reports it under quotedphrasesnotfound. Measured 2026-09-16: '\"Atherosclerotic Cardiovascular Disease\"[Mesh]' returns 0 records with no errorlist. Inside an OR block it cost nothing; as an AND block it would have returned zero for the whole search. The official descriptor is 'Atherosclerosis'.",
-    "rule_for_headings": "Any [Mesh] or [mh] heading must either be validated against db=mesh before use, or be confirmed absent from quotedphrasesnotfound after execution. A heading that was dropped is reported, never presented as if it had contributed.",
+    "rule_for_headings": "db=mesh is useful for discovery, but a returned entry term can map to a different descriptor and therefore does not prove literal identity. Any [Mesh] or [mh] heading must be validated by executing the exact tagged heading in db=pubmed with retmax=0, requiring a non-empty querytranslation and confirming that it is absent from quotedphrasesnotfound and phrasesignored. A heading that was dropped is reported, never presented as if it had contributed.",
     "zero_is_not_always_zero": "count 0 with a non-empty quotedphrasesnotfound is a broken query, not an empty field.",
     "translation_check": "Read querytranslation to confirm PubMed parsed what was intended, particularly around NOT clauses, phrase matching and automatic term mapping."
   },
@@ -488,11 +507,25 @@
     "never_use_fixed_article_count_as_saturation": true
   },
   "provenance": {
+    "record_per_run": [
+      "contract_version",
+      "repository",
+      "repository_ref",
+      "repository_commit",
+      "repository_dirty",
+      "router_sha256",
+      "execution_engine"
+    ],
     "record_per_pass": [
       "purpose",
       "exact_query",
       "filter_paths_or_ids",
       "filter_hash_if_available",
+      "querytranslation",
+      "warninglist",
+      "errorlist",
+      "raw_response_or_sha256",
+      "pmid_list_or_sha256",
       "date_policy",
       "result_count",
       "records_retrieved",
@@ -508,7 +541,22 @@
     "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so.",
     "counts_are_not_interchangeable": "result_count is what PubMed reports; records_retrieved is what was actually downloaded; abstracts_read is what was actually read. Reporting the first as if it were the third overstates the screening by orders of magnitude. If only the first 30 of 256 were retrieved, say so.",
     "exact_query_means_literal": "The recorded query is the string that was sent, with the filter expanded inline. A placeholder such as '(topic) AND (<contents of filters/...>)' documents the intent but is not provenance and cannot be re-executed.",
-    "record_at_execution_time": "Counters are written when each action happens. Provenance reconstructed from memory at the end of the work is not provenance."
+    "record_at_execution_time": "Counters are written when each action happens. Provenance reconstructed from memory at the end of the work is not provenance.",
+    "filter_hash_rule": "Record SHA-256 for every filter whose working tree is dirty, mutable, unresolved to a repository commit, or modified for the run; otherwise repository_commit plus filter path is sufficient.",
+    "execution_snapshot_rule": "Archive the raw ESearch response or its SHA-256 and the retrieved PMID list or its SHA-256. A reported count alone is not a reproducible execution snapshot.",
+    "operational_status": {
+      "semantic_values": [
+        "verified",
+        "planned",
+        "unsupported"
+      ],
+      "dimensions": [
+        "query_integrity",
+        "coverage",
+        "reading_depth"
+      ],
+      "display_rule": "Colours and icons are derived views. Persist semantic values and dimensions, never colour names as the source of truth."
+    }
   },
   "language_policy": {
     "internal_schema_language": "en",
