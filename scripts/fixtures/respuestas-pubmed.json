@@ -57,5 +57,23 @@
     "esearchresult": {
       "count": "0"
     }
+  },
+  "termino-descartado-con-resultados": {
+    "_nota": "Caso real detectado en una busqueda de campo (wearables, 09/2026). PubMed descarta \"body battery\"[tiab] dentro de un OR y aun asi devuelve 5 resultados. No hay cero, no hay error y el recuento parece razonable: es el termino descartado MAS peligroso, porque nada llama la atencion. La consulta sin ese termino devuelve los mismos 5.",
+    "term": "(wearable*[tiab] OR smartwatch*[tiab] OR Oura[tiab] OR Garmin[tiab] OR WHOOP[tiab] OR \"Apple Watch\"[tiab]) AND (\"readiness score\"[tiab] OR \"recovery score\"[tiab] OR \"training readiness\"[tiab] OR \"body battery\"[tiab])",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "5",
+      "warninglist": {
+        "phrasesignored": [],
+        "quotedphrasesnotfound": [
+          "\"body battery\"[tiab]"
+        ],
+        "outputmessages": []
+      },
+      "querytranslation": "(\"wearable*\"[Title/Abstract] OR \"smartwatch*\"[Title/Abstract] OR \"Oura\"[Title/Abstract] OR \"Garmin\"[Title/Abstract] OR \"WHOOP\"[Title/Abstract] OR \"Apple Watch\"[Title/Abstract]) AND (\"readiness score\"[Title/Abstract] OR \"recovery score\"[Title/Abstract] OR \"training readiness\"[Title/Abstract])"
+    }
   }
 }

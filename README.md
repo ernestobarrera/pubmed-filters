@@ -39,11 +39,12 @@ INTENCIÓN → FILTRO SIMBÓLICO → BÚSQUEDA → ABSTRACTS/FUENTES → LECTURA
 \________________ router ________________/  \_________ superficie _________/
 ```
 
-Cuatro bloques que conviene leer antes de consumirlo, porque evitan errores que no hacen ruido:
+Cinco bloques que conviene leer antes de consumirlo, porque evitan errores que no hacen ruido:
 
 - **`filter_file_contract`** — cómo se extrae la consulta de un `.txt`. Tomar solo la primera línea no comentada trunca los filtros multilínea y devuelve recuentos plausibles pero falsos.
 - **`composition.negation_filters`** — los filtros que empiezan por `NOT` (`humans`, `adults`, `ocde`) se añaden **sin** `AND`. Componerlos con `AND` invierte el filtro: PubMed traduce `AND (NOT X)` como `AND X` y devuelve justo lo que se quería excluir.
 - **`registry_validation`** — qué entradas son de elaboración propia y no están validadas, y por qué las listas de revistas no son filtros validados.
+- **`query_execution_contract`** — una consulta que devuelve resultados no es una consulta que se ejecutó entera. PubMed descarta en silencio un término que no existe y el recuento sigue pareciendo razonable. Inspecciona `querytranslation` y `warninglist` **antes** de usar el resultado, no después.
 - **`surface_profiles`** — qué secciones aplican según lo que la superficie sepa hacer realmente: ejecutar PubMed literal, leer abstracts, deduplicar por PMID, registrar procedencia. Lo que no pueda hacer se dice, no se simula.
 
 Cada sección del router tiene un único dueño declarado en `rule_classification`: contrato mecánico

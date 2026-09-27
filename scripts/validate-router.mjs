@@ -92,6 +92,33 @@ const fatal = inspectResponse({ count: '0', querytranslation: 'cancer', ERROR: '
 check('Q5', fatal.usable === false && fatal.problems.some((p) => p.startsWith('ERROR_FATAL')),
   'esearchresult.ERROR invalida la respuesta aunque haya count y querytranslation');
 
+// El término descartado MÁS peligroso: no hay cero, no hay error y el recuento parece razonable.
+// Caso real de campo: PubMed tira "body battery"[tiab] dentro de un OR y devuelve 5 resultados,
+// los mismos que devolvería la consulta sin ese término.
+const conResultados = juicio('termino-descartado-con-resultados');
+check('Q6', conResultados.usable === false
+  && conResultados.dropped.length === 1
+  && Number(respuestas['termino-descartado-con-resultados'].esearchresult.count) > 0
+  && !conResultados.problems.some((p) => p.startsWith('CERO_ROTO')),
+  'un término descartado se caza aunque la consulta devuelva resultados y no haya ningún cero');
+
+// Un recuento ausente o no numérico no es un recuento. Sin esta puerta, inspectResponse daba
+// `usable: true` a una respuesta sin count: luz verde a lo que existe para vigilar.
+const recuentos = [
+  ['ausente', { querytranslation: 'x' }, false],
+  ['no numérico', { count: 'invalid', querytranslation: 'x' }, false],
+  ['vacío', { count: '', querytranslation: 'x' }, false],
+  ['null', { count: null, querytranslation: 'x' }, false],
+  ['negativo', { count: '-3', querytranslation: 'x' }, false],
+  ['válido', { count: '1234', querytranslation: 'x' }, true],
+  ['cero legítimo', { count: '0', querytranslation: 'x' }, true],
+];
+const malos = recuentos.filter(([, r, esperado]) => inspectResponse(r).usable !== esperado);
+check('Q7', malos.length === 0,
+  `recuentos malformados (${recuentos.length} casos): ${malos.length === 0
+    ? 'ninguno pasa como utilizable y los válidos siguen pasando'
+    : JSON.stringify(malos.map(([n]) => n))}`);
+
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
 // ---------------------------------------------------------------------------------------------

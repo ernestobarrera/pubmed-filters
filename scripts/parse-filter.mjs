@@ -80,11 +80,24 @@ export function hasEmbeddedDateLimit(query) {
  */
 export function inspectResponse(esearchresult) {
   const r = esearchresult ?? {};
-  const count = Number(r.count ?? NaN);
+  const rawCount = r.count;
+  const count = Number(rawCount);
+  // Un recuento ausente, vacío o no numérico no es un recuento. Sin esta puerta la función
+  // devolvía `usable: true` para {querytranslation: '...'} sin count, para count: 'invalid',
+  // vacío y null: daba luz verde justo a lo que existe para vigilar. Lo encontró una revisión
+  // externa leyendo el código, no la suite.
+  const countIsValid = typeof rawCount === 'string' || typeof rawCount === 'number'
+    ? String(rawCount).trim() !== '' && Number.isInteger(count) && count >= 0
+    : false;
   const warn = r.warninglist;
   const err = r.errorlist ?? {};
   const problems = [];
   const fatal = r.ERROR;
+
+  if (!countIsValid) {
+    problems.push(`RECUENTO_INVALIDO: la respuesta no trae un recuento utilizable `
+      + `(${JSON.stringify(rawCount)}). No se puede informar de cuántos registros hay.`);
+  }
 
   if (fatal !== undefined && String(fatal).trim() !== '') {
     problems.push(`ERROR_FATAL: ${String(fatal).trim()}`);
@@ -126,8 +139,9 @@ export function inspectResponse(esearchresult) {
   }
 
   return {
-    usable: verifiable && dropped.length === 0 && problems.length === 0,
+    usable: verifiable && countIsValid && dropped.length === 0 && problems.length === 0,
     verifiable,
+    countIsValid,
     dropped,
     problems,
   };
