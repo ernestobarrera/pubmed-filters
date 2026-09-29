@@ -44,8 +44,8 @@ Cinco bloques que conviene leer antes de consumirlo, porque evitan errores que n
 - **`filter_file_contract`** — cómo se extrae la consulta de un `.txt`. Tomar solo la primera línea no comentada trunca los filtros multilínea y devuelve recuentos plausibles pero falsos.
 - **`composition.negation_filters`** — los filtros que empiezan por `NOT` (`humans`, `adults`, `ocde`) se añaden **sin** `AND`. Componerlos con `AND` invierte el filtro: PubMed traduce `AND (NOT X)` como `AND X` y devuelve justo lo que se quería excluir.
 - **`registry_validation`** — qué entradas son de elaboración propia y no están validadas, y por qué las listas de revistas no son filtros validados.
-- **`query_execution_contract`** — una consulta que devuelve resultados no es una consulta que se ejecutó entera. PubMed descarta en silencio un término que no existe y el recuento sigue pareciendo razonable. Inspecciona `querytranslation` y `warninglist` **antes** de usar el resultado, no después.
-- **`surface_profiles`** — qué secciones aplican según lo que la superficie sepa hacer realmente: ejecutar PubMed literal, leer abstracts, deduplicar por PMID, registrar procedencia. Lo que no pueda hacer se dice, no se simula.
+- **`query_execution_contract`** — una consulta que devuelve resultados no es una consulta que se ejecutó entera. PubMed descarta en silencio un término que no existe y el recuento sigue pareciendo razonable. Inspecciona `querytranslation` y `warninglist` **antes** de usar el resultado, no después, y léelos de la respuesta de PubMed: el eco de la consulta enviada o un aviso resumido que devuelva una herramienta no los sustituyen. La consulta viaja por POST; un GET con un filtro compuesto termina en HTTP 414.
+- **`surface_profiles`** — qué secciones aplican según lo que la superficie sepa hacer realmente: ejecutar PubMed literal, ver su diagnóstico, transportar consultas largas, leer abstracts, deduplicar por PMID, registrar procedencia. Lo que no pueda hacer se dice, no se simula. Ejecutar PubMed sin poder ver qué ejecutó es un perfil propio: devuelve registros reales, pero sus pasadas no cuentan como cobertura.
 
 Cada sección del router tiene un único dueño declarado en `rule_classification`: contrato mecánico
 (propiedad de este repositorio), política de recuperación (propiedad del router) o frontera. Lo que
@@ -57,7 +57,8 @@ una regla, nunca redefinirla en silencio.
 ### Inicio rápido reproducible
 
 Con Node.js 18 o posterior, este ejemplo carga el filtro real de tratamiento específico, lo compone
-con un tema, ejecuta ESearch con `retmax=0` y rechaza la respuesta si PubMed omite o descarta algo:
+con un tema, ejecuta ESearch por POST con `retmax=0` y rechaza la respuesta si PubMed omite o
+descarta algo:
 
 ```
 node scripts/quickstart.mjs

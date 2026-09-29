@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.7.2",
+  "schema_version": "1.8.0",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.7.2",
+    "version": "1.8.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -44,7 +44,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.7.2",
+    "contract_version": "1.8.0",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented, the sections implemented, the repository commit tested and the adapter's own test result. Running this repository suite validates the reference implementation only; it does not certify a third-party adapter.",
@@ -74,7 +74,9 @@
         "zero_is_not_always_zero",
         "translation_check",
         "count_must_be_a_count",
-        "dropped_term_with_results"
+        "dropped_term_with_results",
+        "diagnostics_come_from_the_response",
+        "transport_carries_the_whole_query"
       ],
       "guiding_prose_not_a_vector": [
         "rule"
@@ -307,8 +309,10 @@
     "rule_for_headings": "db=mesh is useful for discovery, but a returned entry term can map to a different descriptor and therefore does not prove literal identity. Any [Mesh] or [mh] heading must be validated by executing the exact tagged heading in db=pubmed with retmax=0, requiring a non-empty querytranslation and confirming that it is absent from quotedphrasesnotfound and phrasesignored. A heading that was dropped is reported, never presented as if it had contributed.",
     "zero_is_not_always_zero": "count 0 with a non-empty quotedphrasesnotfound is a broken query, not an empty field.",
     "translation_check": "Read querytranslation to confirm PubMed parsed what was intended, particularly around NOT clauses, phrase matching and automatic term mapping.",
-    "count_must_be_a_count": "A missing, empty or non-numeric count is not a count. A response without a usable count cannot be reported as \"N records found\", whatever else it carries.",
-    "dropped_term_with_results": "A dropped term is most dangerous when the query still returns results: no zero, no error, a plausible count. Measured 2026-09: PubMed dropped \"body battery\"[tiab] from an OR block and returned 5 records, the same 5 the query without that term returns. Absence of a zero is not evidence of integrity."
+    "count_must_be_a_count": "A missing, empty or non-numeric count is not a count. A response without a usable count cannot be reported as \"N records found\", whatever else it carries. The usual way this breaks is coercion in the adapter, not PubMed: parseInt(count) || 0 turns an absent or malformed count into a plausible zero, and parseInt accepts a numeric prefix, so '12abc' becomes 12. Found 2026-09-29 by static audit of a public PubMed MCP server.",
+    "dropped_term_with_results": "A dropped term is most dangerous when the query still returns results: no zero, no error, a plausible count. Measured 2026-09: PubMed dropped \"body battery\"[tiab] from an OR block and returned 5 records, the same 5 the query without that term returns. Absence of a zero is not evidence of integrity.",
+    "diagnostics_come_from_the_response": "querytranslation, warninglist, errorlist and ERROR are read from PubMed's own response (retmode=xml carries the same as QueryTranslation, WarningList, ErrorList and ERROR). Nothing a tool builds itself substitutes for them: an echo of the query it sent (effective, sanitized or normalized query) shows what was sent, not what PubMed executed; a list of filters it applied shows what it asked for, not what PubMed kept; a prose notice that summarises some warning types proves nothing about the types it never checks, so the absence of a notice is not the absence of a warning. An engine that does not return these fields produces a pass that was executed but is not verifiable. Found 2026-09-29 by static audit of a public PubMed MCP server: querytranslation was parsed internally and never returned, and neither phrasesignored nor outputmessages reached the consumer, which received the sent query labelled as effective query and a notice covering three warning types.",
+    "transport_carries_the_whole_query": "A composed query travels in the request body (POST, application/x-www-form-urlencoded), or the engine is shown to switch to POST before URL limits. A topic plus an inline methodological filter routinely exceeds what a GET URL carries. Measured 2026-09-28: E-utilities accepted a GET of 3,573 URL-encoded characters and answered HTTP 414 at 5,343; one conversational engine answered 414 at 2,925 characters of query. A rejected or truncated request is a declared transport failure: never a zero, never 'no results', never 'not evaluable', and never silently retried with a shortened query. An engine whose transport is unknown is tested with a query above those lengths before it runs composed filters."
   },
   "registry_validation": {
     "rule": "validated_filters_as_symbolic_truth applies to filters carrying a published validation reference. The entries listed below are author-made and have none; cite them as such and never present them as validated.",
@@ -532,6 +536,7 @@
     "record_per_pass": [
       "purpose",
       "exact_query",
+      "transport",
       "filter_paths_or_ids",
       "filter_hash_if_available",
       "querytranslation",
@@ -683,7 +688,9 @@
     "literal_pubmed_engine": "any_tool_capable_of_exact_pubmed_syntax",
     "rule": "A semantic search must not silently substitute a literal PubMed query when reproducibility is required.",
     "engine_selection": "The concrete engine is surface configuration, not a property of this repository. Declare in provenance which engine actually ran each pass.",
-    "semantic_expansion": "Optional and always additional; a semantic index may widen the concept space but never replaces a literal PubMed pass when reproducibility is required."
+    "semantic_expansion": "Optional and always additional; a semantic index may widen the concept space but never replaces a literal PubMed pass when reproducibility is required.",
+    "identifier_retrieval": "Retrieval by identifier (full text, formatted citations, related articles, preprints, ID conversion) is a different capability from search. An engine may be adopted for it without being trusted for search passes, and the reverse. Its output feeds reading_and_drilldown, never coverage: a related-articles list is a discovery lane, not a search pass; extracted full text is checked against the record it claims to be (title and DOI or PMID) before it is read as that article; and the provider that actually answered is recorded, because a fallback chain changes the source without changing the tool name.",
+    "mesh_lookup_tools": "A tool that looks headings up in db=mesh is discovery under query_execution_contract.rule_for_headings, not validation, whatever its name promises."
   },
   "surface_profiles": {
     "rule": "A section requiring a capability the surface does not have is skipped explicitly and said out loud, never simulated.",
@@ -693,7 +700,9 @@
       "abstract_reading",
       "parallel_passes",
       "pmid_deduplication",
-      "provenance_logging"
+      "provenance_logging",
+      "execution_diagnostics",
+      "long_query_transport"
     ],
     "profiles": {
       "query_builder_surface": {
@@ -717,7 +726,21 @@
         ]
       },
       "conversational_surface_with_literal_pubmed": {
-        "description": "A surface able to execute exact PubMed syntax and read abstracts.",
+        "description": "A surface able to execute exact PubMed syntax, read PubMed's own diagnostics for every pass, carry long composed queries and read abstracts.",
+        "has": [
+          "file_read_from_repo",
+          "literal_pubmed_execution",
+          "abstract_reading",
+          "parallel_passes",
+          "pmid_deduplication",
+          "provenance_logging",
+          "execution_diagnostics",
+          "long_query_transport"
+        ],
+        "applies": "all"
+      },
+      "conversational_surface_with_unverifiable_pubmed": {
+        "description": "A surface that executes exact PubMed syntax but whose engine does not return querytranslation, warninglist and errorlist as PubMed sent them, or cannot carry long composed queries. It returns real records; it cannot show what PubMed executed.",
         "has": [
           "file_read_from_repo",
           "literal_pubmed_execution",
@@ -726,7 +749,19 @@
           "pmid_deduplication",
           "provenance_logging"
         ],
-        "applies": "all"
+        "must_apply": [
+          "query_execution_contract.diagnostics_come_from_the_response",
+          "query_execution_contract.transport_carries_the_whole_query",
+          "provenance.operational_status"
+        ],
+        "record": "query_integrity is recorded as unsupported for every pass, whatever count it returned.",
+        "forbidden": [
+          "reporting a count as a verified search result",
+          "counting a pass as coverage for a report, decision, publication or review",
+          "recording a tool's echo, applied-filter list or notice as querytranslation or warninglist",
+          "running a composed filter through an engine whose transport has not been shown to carry it"
+        ],
+        "handoff": "When the result will support a claim, say that this surface cannot verify its execution and hand the query to a surface with execution_diagnostics. Retrieval by identifier stays available here under tool_requirements.identifier_retrieval."
       },
       "conversational_surface_without_literal_pubmed": {
         "description": "A conversational surface with web access but no exact PubMed execution.",

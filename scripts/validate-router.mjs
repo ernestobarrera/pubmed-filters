@@ -110,6 +110,8 @@ const recuentos = [
   ['vacío', { count: '', querytranslation: 'x' }, false],
   ['null', { count: null, querytranslation: 'x' }, false],
   ['negativo', { count: '-3', querytranslation: 'x' }, false],
+  ['prefijo numérico', { count: '12abc', querytranslation: 'x' }, false],
+  ['solo espacios', { count: '  ', querytranslation: 'x' }, false],
   ['válido', { count: '1234', querytranslation: 'x' }, true],
   ['cero legítimo', { count: '0', querytranslation: 'x' }, true],
 ];
@@ -313,6 +315,38 @@ const reglasSinVector = Object.keys(qec)
 check('C9', reglasSinVector.length === 0 && prosaDeclarada.length > 0,
   `toda regla de query_execution_contract tiene su vector o se declara prosa rectora${
     reglasSinVector.length ? ` — sin vector: ${reglasSinVector.join(', ')}` : ''}`);
+
+// Perfiles de superficie: una capacidad que ningún perfil declara es una capacidad que ninguno puede
+// reclamar, y un perfil que dice aplicarlo todo sin tenerlas todas miente. La 1.8 añadió
+// `execution_diagnostics`: sin esta comprobación, olvidarla en el perfil completo pasaba en verde.
+const perfiles = router.surface_profiles?.profiles ?? {};
+const capacidades = router.surface_profiles?.capabilities ?? [];
+const capacidadFantasma = Object.entries(perfiles)
+  .flatMap(([n, p]) => (p.has ?? []).filter((c) => !capacidades.includes(c)).map((c) => `${n}:${c}`));
+const todoSinTodo = Object.entries(perfiles)
+  .filter(([, p]) => p.applies === 'all' && !capacidades.every((c) => (p.has ?? []).includes(c)))
+  .map(([n]) => n);
+check('C10', capacidadFantasma.length === 0 && todoSinTodo.length === 0,
+  `perfiles de superficie: ${capacidadFantasma.length === 0 && todoSinTodo.length === 0
+    ? 'toda capacidad declarada existe y «applies: all» las tiene todas'
+    : `capacidades inexistentes ${JSON.stringify(capacidadFantasma)} / «all» incompleto ${JSON.stringify(todoSinTodo)}`}`);
+
+// Ejecutar sin poder ver lo ejecutado es un estado propio, no una variante del perfil completo: la
+// superficie devuelve registros reales y aun así no puede sostener una afirmación con ellos.
+const ciega = Object.values(perfiles).filter((p) => (p.has ?? []).includes('literal_pubmed_execution')
+  && !(p.has ?? []).includes('execution_diagnostics'));
+check('C11', ciega.length > 0 && ciega.every((p) => (p.forbidden ?? []).some((f) => /coverage/.test(f))),
+  'la superficie que ejecuta PubMed sin ver su diagnóstico tiene perfil propio y no cuenta como cobertura');
+
+// El repositorio cumple su propia regla de transporte. quickstart.mjs usaba GET: con un tema real y
+// un filtro largo, la misma plantilla que se ofrece para copiar habría devuelto HTTP 414.
+const scriptsEutils = readdirSync(join(ROOT, 'scripts')).filter((f) => f.endsWith('.mjs'))
+  .map((f) => `scripts/${f}`)
+  .filter((f) => f !== router.conformance.test_suite && read(f).includes('eutils.ncbi.nlm.nih.gov'));
+const porGet = scriptsEutils.filter((f) => !/method:\s*'POST'/.test(read(f)));
+check('C12', scriptsEutils.length > 0 && porGet.length === 0,
+  `scripts que llaman a E-utilities (${scriptsEutils.length}): ${porGet.length === 0
+    ? 'todos por POST' : `por GET ${JSON.stringify(porGet)}`}`);
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.
