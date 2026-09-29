@@ -1,0 +1,31 @@
+/**
+ * La única forma en que este repositorio llama a ESearch.
+ *
+ * La consulta viaja en el cuerpo, por POST (query_execution_contract.transport_carries_the_whole_query).
+ * Un tema real con un filtro metodológico compuesto en línea no cabe en una URL: por GET, E-utilities
+ * responde HTTP 414. Y ese 414 no es un cero ni un «no evaluable»: es un fallo de transporte declarado.
+ *
+ * `fetcher` es inyectable para que la suite observe la petición que de verdad se entrega —método,
+ * dónde va `term` y si llega íntegro—, no el texto del código que la construye.
+ */
+
+export const ESEARCH_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
+export const TRANSPORT = 'POST';
+
+export class TransportError extends Error {
+  constructor(status) {
+    super(`FALLO_DE_TRANSPORTE: HTTP ${status}. La consulta no llegó entera a PubMed; `
+      + 'no es un cero ni un resultado vacío.');
+    this.status = status;
+  }
+}
+
+/** Ejecuta ESearch y devuelve { transport, esearchresult }. `term` nunca puede sobrescribirse. */
+export async function esearch(term, { params = {}, fetcher = fetch } = {}) {
+  const body = new URLSearchParams({ db: 'pubmed', retmode: 'json', ...params, term });
+  const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });
+  if (response.status === 413 || response.status === 414) throw new TransportError(response.status);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const payload = await response.json();
+  return { transport: TRANSPORT, esearchresult: payload.esearchresult };
+}

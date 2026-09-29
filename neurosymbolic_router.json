@@ -740,7 +740,7 @@
         "applies": "all"
       },
       "conversational_surface_with_unverifiable_pubmed": {
-        "description": "A surface that executes exact PubMed syntax but whose engine does not return querytranslation, warninglist and errorlist as PubMed sent them, or cannot carry long composed queries. It returns real records; it cannot show what PubMed executed.",
+        "description": "A surface whose engine executes exact PubMed syntax but does not return querytranslation, warninglist and errorlist as PubMed sent them. It returns real records; it cannot show what PubMed executed. Transport is judged separately, per request.",
         "has": [
           "file_read_from_repo",
           "literal_pubmed_execution",
@@ -749,19 +749,22 @@
           "pmid_deduplication",
           "provenance_logging"
         ],
+        "operational_status": {
+          "query_integrity": "unsupported"
+        },
+        "counts_as_coverage": false,
         "must_apply": [
           "query_execution_contract.diagnostics_come_from_the_response",
           "query_execution_contract.transport_carries_the_whole_query",
           "provenance.operational_status"
         ],
-        "record": "query_integrity is recorded as unsupported for every pass, whatever count it returned.",
         "forbidden": [
           "reporting a count as a verified search result",
           "counting a pass as coverage for a report, decision, publication or review",
-          "recording a tool's echo, applied-filter list or notice as querytranslation or warninglist",
-          "running a composed filter through an engine whose transport has not been shown to carry it"
+          "recording a tool's echo, applied-filter list or notice as querytranslation or warninglist"
         ],
-        "handoff": "When the result will support a claim, say that this surface cannot verify its execution and hand the query to a surface with execution_diagnostics. Retrieval by identifier stays available here under tool_requirements.identifier_retrieval."
+        "still_allowed": "Records it returns may support a claim once each one is read and checked against its PubMed record; what they cannot support is a statement about how much was searched.",
+        "handoff": "When a result will support a claim about coverage, say that this surface cannot verify its execution and hand the query to an engine with execution_diagnostics. Retrieval by identifier stays available under tool_requirements.identifier_retrieval."
       },
       "conversational_surface_without_literal_pubmed": {
         "description": "A conversational surface with web access but no exact PubMed execution.",
@@ -775,6 +778,7 @@
           "presenting semantic search output as a PubMed pass"
         ]
       }
-    }
+    },
+    "per_engine_and_pass": "Profiles describe engines, not products. A surface with several engines is profiled per pass, by the engine that ran it. long_query_transport is judged per request: an engine that returns full diagnostics but cannot carry a long composed query still verifies the passes it carries whole, and declares a transport failure for the rest; a transport limit is not a missing diagnostic. A platform is not bound to a profile forever: an engine it connects later is profiled by what that engine returns."
   }
 }

@@ -332,21 +332,78 @@ check('C10', capacidadFantasma.length === 0 && todoSinTodo.length === 0,
     : `capacidades inexistentes ${JSON.stringify(capacidadFantasma)} / «all» incompleto ${JSON.stringify(todoSinTodo)}`}`);
 
 // Ejecutar sin poder ver lo ejecutado es un estado propio, no una variante del perfil completo: la
-// superficie devuelve registros reales y aun así no puede sostener una afirmación con ellos.
-const ciega = Object.values(perfiles).filter((p) => (p.has ?? []).includes('literal_pubmed_execution')
+// superficie devuelve registros reales y aun así no puede sostener una afirmación con ellos. Se
+// comprueba en campos que un adaptador puede leer, no en prosa: la primera versión buscaba la palabra
+// «coverage» y una prohibición reducida a esa sola palabra pasaba en verde.
+const estados = router.provenance.operational_status ?? {};
+const ciega = Object.entries(perfiles).filter(([, p]) => (p.has ?? []).includes('literal_pubmed_execution')
   && !(p.has ?? []).includes('execution_diagnostics'));
-check('C11', ciega.length > 0 && ciega.every((p) => (p.forbidden ?? []).some((f) => /coverage/.test(f))),
-  'la superficie que ejecuta PubMed sin ver su diagnóstico tiene perfil propio y no cuenta como cobertura');
+const ciegaMal = ciega.filter(([, p]) => p.operational_status?.query_integrity !== 'unsupported'
+  || p.counts_as_coverage !== false).map(([n]) => n);
+check('C11', ciega.length > 0 && ciegaMal.length === 0
+  && (estados.semantic_values ?? []).includes('unsupported')
+  && (estados.dimensions ?? []).includes('query_integrity'),
+  `ejecutar PubMed sin ver su diagnóstico: ${ciega.length > 0 && ciegaMal.length === 0
+    ? 'perfil propio con query_integrity unsupported y counts_as_coverage false'
+    : `perfil ausente o incompleto ${JSON.stringify(ciegaMal)}`}`);
 
-// El repositorio cumple su propia regla de transporte. quickstart.mjs usaba GET: con un tema real y
-// un filtro largo, la misma plantilla que se ofrece para copiar habría devuelto HTTP 414.
-const scriptsEutils = readdirSync(join(ROOT, 'scripts')).filter((f) => f.endsWith('.mjs'))
+// El repositorio cumple su propia regla de transporte, y se comprueba la petición ENTREGADA, no el
+// texto que la construye. La primera versión de C12 buscaba la cadena `method: 'POST'`: una revisión
+// externa cambió quickstart.mjs a un GET real, dejó esa cadena en un comentario y la suite siguió en
+// verde. Ahora hay dos partes:
+//   a) toda llamada a ESearch pasa por scripts/esearch.mjs, y ningún otro script nombra el servicio;
+//   b) esearch() se ejecuta contra un fetcher de prueba, con una consulta corta y otra larga de verdad
+//      (tema de 950 caracteres + filtro de síntesis), y se exige POST, `term` fuera de la URL y el
+//      cuerpo idéntico a la consulta. Así caen un GET, un GET condicional para consultas cortas y un
+//      truncado. Un 414 simulado debe acabar en fallo de transporte, nunca en un recuento.
+const ESEARCH_MODULE = 'scripts/esearch.mjs';
+const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.endsWith('.mjs'))
   .map((f) => `scripts/${f}`)
-  .filter((f) => f !== router.conformance.test_suite && read(f).includes('eutils.ncbi.nlm.nih.gov'));
-const porGet = scriptsEutils.filter((f) => !/method:\s*'POST'/.test(read(f)));
-check('C12', scriptsEutils.length > 0 && porGet.length === 0,
-  `scripts que llaman a E-utilities (${scriptsEutils.length}): ${porGet.length === 0
-    ? 'todos por POST' : `por GET ${JSON.stringify(porGet)}`}`);
+  .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE
+    && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi/.test(read(f)));
+const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs']
+  .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)));
+check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0,
+  `ESearch solo se llama desde ${ESEARCH_MODULE}: ${scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0
+    ? 'sí' : `servicio nombrado fuera ${JSON.stringify(scriptsConServicio)} / sin el módulo ${JSON.stringify(ejecutanSinModulo)}`}`);
+
+const { esearch, TransportError } = await import('./esearch.mjs');
+const entregadas = [];
+const fetcherDePrueba = (status = 200) => async (url, init = {}) => {
+  entregadas.push({ url: String(url), method: init.method ?? 'GET', body: init.body?.toString() ?? '' });
+  return { ok: status === 200, status, json: async () => ({ esearchresult: { count: '1', querytranslation: 'x' } }) };
+};
+const temaLargo = `(${Array.from({ length: 60 }, (_, i) => `"termino clinico ${i}"[tiab]`).join(' OR ')})`.slice(0, 950);
+const consultas = {
+  corta: 'asthma[tiab]',
+  larga: compose(compose(temaLargo, query('filters/methodology/metaanalysis.txt')),
+    query('filters/methodology/clinical_rules_ap.txt')),
+};
+// La consulta larga tiene que superar de verdad lo que GET transporta: 414 medido a 5.343 caracteres
+// URL-encoded contra E-utilities. Si no, la prueba no distingue POST de GET.
+const codificada = new URLSearchParams({ term: consultas.larga }).toString().length;
+const malEntregadas = [];
+for (const [nombre, term] of Object.entries(consultas)) {
+  entregadas.length = 0;
+  await esearch(term, { params: { retmax: '0' }, fetcher: fetcherDePrueba() });
+  const p = entregadas[0];
+  const ok = entregadas.length === 1 && p.method === 'POST'
+    && !new URL(p.url).searchParams.has('term')
+    && new URLSearchParams(p.body).get('term') === term;
+  if (!ok) malEntregadas.push(nombre);
+}
+check('T1', malEntregadas.length === 0 && codificada > 5343,
+  `petición entregada, consulta corta y larga (${codificada} caracteres codificados): ${malEntregadas.length === 0
+    ? 'POST, term en el cuerpo e íntegro' : `mal transportadas ${JSON.stringify(malEntregadas)}`}`);
+
+let resultado414;
+try {
+  resultado414 = await esearch(consultas.larga, { fetcher: fetcherDePrueba(414) });
+} catch (e) {
+  resultado414 = e;
+}
+check('T2', resultado414 instanceof TransportError,
+  'un HTTP 414 acaba en fallo de transporte declarado, no en un recuento ni en «no evaluable»');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.

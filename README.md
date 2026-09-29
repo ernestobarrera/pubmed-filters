@@ -85,6 +85,10 @@ node scripts/validate-router.mjs
   y la misma consulta rota pedida con `rettype=count`, donde el aviso ya no viene.
 - `inspectResponse()` juzga una respuesta de ESearch antes de usar su recuento, y distingue tres
   estados que no son lo mismo: utilizable, rota y **no verificable**.
+- `scripts/esearch.mjs` es la única forma en que el repositorio llama a ESearch: por POST, con la
+  consulta en el cuerpo. La suite no se fía del código que construye la petición; observa la que se
+  entrega, con una consulta corta y otra que supera lo que un GET transporta, y exige que llegue
+  íntegra. Un HTTP 414 es un fallo de transporte declarado, nunca un cero.
 
 Y una comprobación que necesita red, y por eso no está en la CI:
 

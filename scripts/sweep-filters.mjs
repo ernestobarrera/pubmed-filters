@@ -22,26 +22,23 @@ import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFilter, isNegation, inspectResponse } from './parse-filter.mjs';
+import { esearch as esearchPost, TransportError } from './esearch.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const EUTILS = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
 const KEY = process.env.NCBI_API_KEY ?? '';
 const PAUSE = KEY ? 120 : 380;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function esearch(term) {
-  const body = new URLSearchParams({
-    db: 'pubmed', term, retmode: 'json', retmax: '0',
-    tool: 'pubmed-filters-sweep', ...(KEY ? { api_key: KEY } : {}),
-  });
+  const params = { retmax: '0', tool: 'pubmed-filters-sweep', ...(KEY ? { api_key: KEY } : {}) };
   for (let intento = 0; intento < 3; intento += 1) {
     await sleep(PAUSE);
     try {
-      const res = await fetch(EUTILS, { method: 'POST', body });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()).esearchresult;
+      return (await esearchPost(term, { params })).esearchresult;
     } catch (e) {
+      // Un 414 no se reintenta ni se esconde entre los «no evaluables»: la consulta no cabe.
+      if (e instanceof TransportError) return { _error: e.message, _transporte: true };
       if (intento === 2) return { _error: String(e) };
       await sleep(2000);
     }
@@ -61,12 +58,14 @@ console.log(`Barriendo ${files.length} filtros contra PubMed${KEY ? ' (con clave
 let limpios = 0;
 const sucios = [];
 const noEvaluables = [];
+const falloTransporte = [];
 
 for (const f of files) {
   const q = parseFilter(readFileSync(join(ROOT, f), 'utf8'));
   // Una cláusula de exclusión aislada no es ejecutable: se ancla a un tema neutro para poder verla.
   const term = isNegation(q) ? `(humans[mh]) ${q}` : q;
   const r = await esearch(term);
+  if (r._transporte) { falloTransporte.push([f, r._error]); continue; }
   if (r._error) { noEvaluables.push([f, r._error]); continue; }
   const juicio = inspectResponse(r);
   if (juicio.dropped.length > 0) sucios.push([f, Number(r.count), juicio.dropped]);
@@ -74,12 +73,13 @@ for (const f of files) {
 }
 
 console.log(`limpios: ${limpios}   con términos descartados: ${sucios.length}   `
-  + `no evaluables: ${noEvaluables.length}\n`);
+  + `fallos de transporte: ${falloTransporte.length}   no evaluables: ${noEvaluables.length}\n`);
 for (const [f, n, dropped] of sucios) {
   console.log(`${f}   count=${n.toLocaleString('es-ES')}`);
   for (const t of dropped) console.log(`    descartado: ${t}`);
 }
 for (const [f, e] of noEvaluables) console.log(`${f}   NO EVALUABLE: ${e}`);
+for (const [f, e] of falloTransporte) console.log(`${f}   ${e}`);
 
 if (sucios.length > 0) {
   console.log('\nAntes de tocar nada, tría cada caso:');
@@ -87,4 +87,4 @@ if (sucios.length > 0) {
   console.log('  ¿es un término dirigido a un campo donde no existe? Está muerto: mide qué aporta');
   console.log('  arreglarlo antes de editar un filtro publicado y referenciado.');
 }
-process.exit(noEvaluables.length > 0 ? 2 : 0);
+process.exit(falloTransporte.length > 0 || noEvaluables.length > 0 ? 2 : 0);
