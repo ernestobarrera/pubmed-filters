@@ -301,6 +301,19 @@ check('C8', (router.conformance.adapter_conformance?.required_declaration ?? [])
   && (router.conformance.adapter_conformance?.minimum_query_vectors ?? []).includes('esearchresult.ERROR'),
   'la conformidad externa exige declaración y pruebas del adaptador, no solo la suite del repositorio');
 
+// Una regla sin su vector es una regla que ningún adaptador está obligado a demostrar. Pasó de
+// verdad: la 1.7.1 añadió `count_must_be_a_count` y `dropped_term_with_results` y dejó los vectores
+// congelados en los siete de la 1.7, así que el contrato exigía menos de lo que definía. Quien se
+// guiara por la lista de vectores —su uso previsto— se habría creído conforme sin cubrirlas.
+// Esto lo convierte en un fallo de la suite en vez de en un descubrimiento por accidente.
+const vectores = router.conformance.adapter_conformance?.minimum_query_vectors ?? [];
+const prosaDeclarada = router.conformance.adapter_conformance?.guiding_prose_not_a_vector ?? [];
+const reglasSinVector = Object.keys(qec)
+  .filter((regla) => !vectores.includes(regla) && !prosaDeclarada.includes(regla));
+check('C9', reglasSinVector.length === 0 && prosaDeclarada.length > 0,
+  `toda regla de query_execution_contract tiene su vector o se declara prosa rectora${
+    reglasSinVector.length ? ` — sin vector: ${reglasSinVector.join(', ')}` : ''}`);
+
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.
 //    Una suite que no sabe rechazar una implementación mala no prueba nada.

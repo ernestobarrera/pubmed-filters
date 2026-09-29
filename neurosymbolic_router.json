@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.7.1",
+  "schema_version": "1.7.2",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.7.1",
+    "version": "1.7.2",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -44,7 +44,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.7.1",
+    "contract_version": "1.7.2",
     "reference_parser": "scripts/parse-filter.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented, the sections implemented, the repository commit tested and the adapter's own test result. Running this repository suite validates the reference implementation only; it does not certify a third-party adapter.",
@@ -67,8 +67,19 @@
         "warninglist.quotedphrasesnotfound",
         "warninglist.phrasesignored",
         "nonempty_errorlist",
-        "esearchresult.ERROR"
-      ]
+        "esearchresult.ERROR",
+        "inspect_in_every_response",
+        "mesh_terms_are_not_exempt",
+        "rule_for_headings",
+        "zero_is_not_always_zero",
+        "translation_check",
+        "count_must_be_a_count",
+        "dropped_term_with_results"
+      ],
+      "guiding_prose_not_a_vector": [
+        "rule"
+      ],
+      "rule_vector_completeness": "Every rule in query_execution_contract is either a vector in minimum_query_vectors or listed in guiding_prose_not_a_vector. There is no third option: a rule that is neither is a rule no adapter is required to prove. The repository suite enforces this, so adding a rule without its vector fails the suite instead of passing unnoticed."
     }
   },
   "surface_policy_not_owned_here": {
