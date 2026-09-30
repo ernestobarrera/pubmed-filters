@@ -20,3 +20,10 @@ jobs:
           node-version: "20"
       - name: Suite de conformidad
         run: node scripts/validate-router.mjs
+
+      # Una suite en verde solo dice que nada de lo que mira esta roto. Esta puerta comprueba que
+      # la suite SABE RECHAZAR una implementacion mala: cada mutacion debe romper la comprobacion que
+      # dice vigilarla. Tres veces en 09/2026 una comprobacion estuvo en verde vigilando un fallo ya
+      # presente, y las tres las encontro una persona leyendo el codigo, no el banco.
+      - name: Puerta de mutacion
+        run: node scripts/validate-mutations.mjs
