@@ -29,11 +29,11 @@
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SUITE = join(ROOT, 'scripts', 'validate-router.mjs');
 
 /**
  * Cada entrada es una forma concreta de equivocarse, tomada de un fallo real o de la clase de fallo
@@ -62,13 +62,34 @@ const MUTACIONES = [
     porque: 'un script vuelve a hablar con el servicio por su cuenta, fuera del unico modulo que lo hace',
     fichero: 'scripts/quickstart.mjs',
     de: "import { esearch } from './esearch.mjs';",
-    // La URL va partida a propósito. Escrita entera, C12 caza ESTE fichero —«servicio nombrado
-    // fuera de esearch.mjs»— y la suite se pone en rojo antes de empezar. Ocurrió el 2026-09-30 al
-    // añadir esta mutación: la puerta cazó a quien la escribía. Se parte aquí en vez de eximir este
-    // fichero en C12, porque una exención es una comprobación un poco más floja para siempre.
-    a: "import { esearch } from './esearch.mjs';\nconst _ = 'https://eutils"
-      + '.ncbi.nlm.nih.gov/entrez/eutils/esearch' + ".fcgi';",
+    // Hace una LLAMADA de verdad, no solo una constante con la URL. La primera versión declaraba
+    // una constante y ya: C12 caía porque encuentra el texto, no porque hubiera una llamada fuera
+    // del módulo. Era otro mutante EQUIVALENTE, y lo señaló Codex el 2026-09-30 con razón, porque
+    // el defecto anunciado no se producía. De paso deja ver algo del propio C12, que acredita por
+    // texto: esta mutación demuestra que C12 reacciona, no que sepa distinguir una llamada.
+    //
+    // La URL va partida en el literal. Escrita entera, C12 caza ESTE fichero —«servicio nombrado
+    // fuera de esearch.mjs»— y la suite se pone en rojo antes de empezar: la puerta cazó a quien la
+    // escribía. Se parte en vez de eximir este fichero en C12, porque una exención es una
+    // comprobación un poco más floja para siempre.
+    a: "import { esearch } from './esearch.mjs';\n"
+      + "export async function esearchPropio(term) {\n"
+      + "  const u = new URL('https://eutils"
+      + ".ncbi.nlm.nih.gov/entrez/eutils/esearch" + ".fcgi');\n"
+      + "  u.searchParams.set('db', 'pubmed');\n"
+      + "  u.searchParams.set('term', term);\n"
+      + "  return (await fetch(u)).json();\n"
+      + "}",
     rompe: 'C12',
+  },
+  {
+    id: 'T2-CERO',
+    porque: 'un 414 se presenta como un recuento de cero en vez de como fallo de transporte: el disfraz exacto que el contrato prohibe',
+    fichero: 'scripts/esearch.mjs',
+    de: 'if (response.status === 413 || response.status === 414) throw new TransportError(response.status);',
+    a: "if (response.status === 413 || response.status === 414) "
+      + "return { transport: TRANSPORT, esearchresult: { count: '0', querytranslation: term } };",
+    rompe: 'T2',
   },
   {
     id: 'M1',
@@ -141,18 +162,56 @@ const arbolSucio = () => {
 const fallosDe = (salida) => [...salida.matchAll(/^\s*(?:FAIL|fail)\s+(\S+)/gm)].map((m) => m[1]);
 
 const correrSuite = () => {
-  const r = spawnSync(process.execPath, [SUITE], { cwd: ROOT, encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [join(RAIZ, 'scripts', 'validate-router.mjs')],
+    { cwd: RAIZ, encoding: 'utf8' });
   return { status: r.status, salida: `${r.stdout ?? ''}${r.stderr ?? ''}` };
 };
 
+// DÓNDE SE MUTA, y por qué no siempre aquí.
+//
+// En CI el checkout es desechable: mutar en sitio no puede llevarse nada de nadie. En una máquina de
+// trabajo no. `finally` no protege de un corte abrupto ni de otra escritura entre la comprobación y
+// la restauración, y el árbol es el del usuario. Lo señaló Codex el 2026-09-30. Así que fuera de CI
+// se trabaja sobre un `git worktree` desechable y el árbol compartido no se toca nunca.
+//
+// Y si git no se puede comprobar, se ABORTA. Antes continuaba «con restauración en finally», que es
+// confiar la seguridad justo a lo que no basta.
+const EN_CI = Boolean(process.env.CI);
+let RAIZ = ROOT;
+let worktree = null;
+
 const sucio = arbolSucio();
-if (sucio === true) {
-  console.error('ABORTA: el árbol de git tiene cambios sin guardar.');
-  console.error('Esta puerta muta ficheros en sitio y los restaura; con trabajo sin guardar el riesgo');
-  console.error('no merece la pena. Haz commit o stash y vuelve a lanzarla.');
+if (sucio === null) {
+  console.error('ABORTA: no se pudo comprobar el estado de git.');
+  console.error('Esta puerta muta ficheros, y sin git no hay forma de saber qué había antes ni de');
+  console.error('trabajar sobre una copia desechable. No se continúa a ciegas.');
+  process.exit(2);
+}
+if (sucio === true && EN_CI) {
+  console.error('ABORTA: el árbol tiene cambios sin guardar y en CI se muta en sitio.');
   process.exit(1);
 }
-if (sucio === null) console.log('aviso: no se pudo comprobar el estado de git; se continúa con restauración en finally.\n');
+if (!EN_CI) {
+  worktree = join(tmpdir(), `pubmed-filters-mutaciones-${process.pid}`);
+  try {
+    execFileSync('git', ['worktree', 'add', '--quiet', '--detach', worktree, 'HEAD'],
+      { cwd: ROOT, encoding: 'utf8' });
+    RAIZ = worktree;
+    console.log(`copia desechable: ${worktree}`);
+    if (sucio) console.log('aviso: tu árbol tiene cambios sin guardar; la copia sale de HEAD, no de ellos.');
+    console.log('');
+  } catch (err) {
+    console.error(`ABORTA: no se pudo crear la copia desechable (${String(err.message).split('\n')[0]}).`);
+    process.exit(2);
+  }
+}
+const limpiarCopia = () => {
+  if (!worktree) return;
+  try {
+    execFileSync('git', ['worktree', 'remove', '--force', worktree], { cwd: ROOT, encoding: 'utf8' });
+  } catch { /* si quedara, `git worktree prune` lo recoge */ }
+};
+process.on('exit', limpiarCopia);
 
 // Línea base: sin mutar, la suite tiene que estar en verde. Si no, lo que viene después no significa
 // nada —una mutación «detectada» sobre un banco ya roto no prueba absolutamente nada—.
@@ -169,7 +228,7 @@ const pass = [];
 const fallo = [];
 
 for (const m of MUTACIONES) {
-  const ruta = join(ROOT, m.fichero);
+  const ruta = join(RAIZ, m.fichero);
   const original = readFileSync(ruta, 'utf8');
   if (!original.includes(m.de)) {
     fallo.push(`${m.id}  la mutación NO se puede aplicar: «${m.de.slice(0, 40)}» no está en ${m.fichero}`
