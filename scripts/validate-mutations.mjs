@@ -42,6 +42,35 @@ const SUITE = join(ROOT, 'scripts', 'validate-router.mjs');
  */
 const MUTACIONES = [
   {
+    id: 'T1-GET',
+    porque: 'la consulta vuelve a viajar por GET: el fallo que la 1.8.0 cerro',
+    fichero: 'scripts/esearch.mjs',
+    de: '{ method: TRANSPORT, body }',
+    a: "{ method: 'GET', body }",
+    rompe: 'T1',
+  },
+  {
+    id: 'T1-TRUNCA',
+    porque: 'el cuerpo se trunca DESPUES de construirlo, que es como una prueba de transporte pasa en verde vigilando el truncado',
+    fichero: 'scripts/esearch.mjs',
+    de: '...params, term })',
+    a: '...params, term: term.slice(0, 10) })',
+    rompe: 'T1',
+  },
+  {
+    id: 'T1-FUERA',
+    porque: 'un script vuelve a hablar con el servicio por su cuenta, fuera del unico modulo que lo hace',
+    fichero: 'scripts/quickstart.mjs',
+    de: "import { esearch } from './esearch.mjs';",
+    // La URL va partida a propósito. Escrita entera, C12 caza ESTE fichero —«servicio nombrado
+    // fuera de esearch.mjs»— y la suite se pone en rojo antes de empezar. Ocurrió el 2026-09-30 al
+    // añadir esta mutación: la puerta cazó a quien la escribía. Se parte aquí en vez de eximir este
+    // fichero en C12, porque una exención es una comprobación un poco más floja para siempre.
+    a: "import { esearch } from './esearch.mjs';\nconst _ = 'https://eutils"
+      + '.ncbi.nlm.nih.gov/entrez/eutils/esearch' + ".fcgi';",
+    rompe: 'C12',
+  },
+  {
     id: 'M1',
     porque: 'los vectores vuelven a quedarse congelados, como estaban en la 1.7.1',
     fichero: 'neurosymbolic_router.json',
