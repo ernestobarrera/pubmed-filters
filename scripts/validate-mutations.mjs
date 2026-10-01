@@ -43,10 +43,15 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MUTACIONES = [
   {
     id: 'T1-GET',
-    porque: 'la consulta vuelve a viajar por GET: el fallo que la 1.8.0 cerro',
+    porque: 'la consulta vuelve a viajar por GET, con term en la URL: el fallo que la 1.8.0 cerro',
     fichero: 'scripts/esearch.mjs',
-    de: '{ method: TRANSPORT, body }',
-    a: "{ method: 'GET', body }",
+    // Reproduce el defecto COMO SERIA: un GET de verdad, con la consulta en la query string. La
+    // primera version solo cambiaba `method` y dejaba el cuerpo, que ningun regreso real a GET
+    // escribiria —y que `fetch` ni siquiera acepta—. Caia T1 igual, porque la suite usa un fetcher
+    // de prueba y veia el metodo entregado; pero una mutacion debe parecerse al fallo que vigila,
+    // no bastarle con tumbar la comprobacion. Lo senalo Codex el 2026-10-01.
+    de: 'const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });',
+    a: "const response = await fetcher(`${ESEARCH_URL}?${body}`, { method: 'GET' });",
     rompe: 'T1',
   },
   {
