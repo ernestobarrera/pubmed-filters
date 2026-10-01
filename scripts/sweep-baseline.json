@@ -1,5 +1,20 @@
 {
   "medido_el": "2026-10-01",
-  "filtros_barridos": 49,
-  "descartes_aceptados": {}
+  "filtros_barridos": 122,
+  "descartes_aceptados": {
+    "filters/journals/jnl_developmental_disabilities.txt": [
+      "Disabil",
+      "Educ"
+    ],
+    "filters/journals/jnl_natural_medicines_medicinal_plants.txt": [
+      "Phytosci"
+    ],
+    "filters/journals/jnl_nutrition_science.txt": [
+      "Int"
+    ],
+    "filters/journals/jnl_transplantation.txt": [
+      "Immunol"
+    ]
+  },
+  "por_que_se_aceptan": "Los cinco huerfanos proceden de cuatro revistas que NO estan indexadas en PubMed: Int J Disabil Dev Educ, Food Rev Int, Transplant Immunol y Clin Phytosci. Comprobado el 2026-10-01 con y sin comillas: cero registros en ambas formas, asi que no es una errata que se arregle citando. No hacen dano -PubMed las descarta, no las busca como texto libre, y aportan cero dentro de la cadena OR-, pero apareceran en cada barrida. Se aceptan aqui para que la barrida solo hable de lo que cambia. Si alguna se indexa algun dia, dejara de aparecer y la barrida lo dira como resuelto."
 }

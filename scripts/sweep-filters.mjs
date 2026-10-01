@@ -56,7 +56,11 @@ async function esearch(term) {
   return { _error: 'sin respuesta' };
 }
 
-const files = ['methodology', 'clinical', 'scope', 'candidates'].flatMap((d) => {
+// `journals` entra desde el 2026-10-01. Faltaba, y era el bloque MAS usado: buscar-pubmed.html pide
+// 120 filtros y 72 son de revistas, asi que la barrida cubria 49 de 120 mientras se llamaba a si
+// misma completa. Un filtro de revistas es justo donde mas se muere un termino solo: una revista se
+// renombra, deja de indexarse, y su [ta] desaparece sin que nadie toque el fichero.
+const files = ['methodology', 'clinical', 'scope', 'candidates', 'journals'].flatMap((d) => {
   const dir = join(ROOT, 'filters', d);
   return existsSync(dir)
     ? readdirSync(dir).filter((f) => f.endsWith('.txt')).map((f) => `filters/${d}/${f}`)
