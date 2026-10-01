@@ -9,8 +9,18 @@
  * dejado de existir, o no haber existido nunca en el campo al que se dirige, y el motor lo descarta
  * sin dar error.
  *
- * NO forma parte de la suite ni de la CI: necesita red y depende de un servicio externo. Se ejecuta
- * a mano cuando se añaden filtros o de tarde en tarde. Respeta el límite de 3 peticiones por segundo
+ * NO forma parte de la suite ni de la CI: necesita red y depende de un servicio externo. Pero tampoco
+ * depende de que alguien se acuerde: deja una LÍNEA BASE en `scripts/sweep-baseline.json` con lo que
+ * se descartaba el día que se midió, y a partir de ahí **solo habla de lo que ha cambiado**. Un
+ * descarte nuevo sale con código 1 aunque el repositorio no se haya tocado — porque PubMed sí cambia:
+ * un encabezado se retira, un tipo de publicación se renombra, y un filtro que ayer recuperaba
+ * empieza a recuperar menos sin avisar a nadie.
+ *
+ *   node scripts/sweep-filters.mjs                 compara contra la línea base
+ *   node scripts/sweep-filters.mjs --fijar-base    reescribe la línea base con lo medido hoy
+ *
+ * El comprobador de coherencia del entorno avisa cuando la línea base envejece, que es lo que
+ * convierte esto en vigilancia y no en un script que se ejecutó una vez. Respeta el límite de 3 peticiones por segundo
  * de NCBI; con una clave de API en NCBI_API_KEY va algo más rápido.
  *
  * Distingue dos cosas que no son iguales:
@@ -18,7 +28,7 @@
  *   - un término dirigido a un campo donde no existe (no aporta nada y parece que sí).
  */
 
-import { readdirSync, existsSync, readFileSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFilter, isNegation, inspectResponse } from './parse-filter.mjs';
@@ -81,10 +91,57 @@ for (const [f, n, dropped] of sucios) {
 for (const [f, e] of noEvaluables) console.log(`${f}   NO EVALUABLE: ${e}`);
 for (const [f, e] of falloTransporte) console.log(`${f}   ${e}`);
 
-if (sucios.length > 0) {
-  console.log('\nAntes de tocar nada, tría cada caso:');
-  console.log('  ¿es una frase de texto libre que no existe en la literatura? Aviso benigno.');
-  console.log('  ¿es un término dirigido a un campo donde no existe? Está muerto: mide qué aporta');
-  console.log('  arreglarlo antes de editar un filtro publicado y referenciado.');
+// ---------------------------------------------------------------------------------------------
+// Línea base: lo que importa no es que haya descartes, es que aparezcan descartes NUEVOS.
+// ---------------------------------------------------------------------------------------------
+const BASE = join(ROOT, 'scripts', 'sweep-baseline.json');
+const medido = Object.fromEntries(sucios.map(([f, , dropped]) => [f, [...dropped].sort()]));
+
+if (process.argv.includes('--fijar-base')) {
+  writeFileSync(BASE, `${JSON.stringify({
+    medido_el: new Date().toISOString().slice(0, 10),
+    filtros_barridos: limpios + sucios.length,
+    descartes_aceptados: medido,
+  }, null, 2)}\n`);
+  console.log(`\nlínea base fijada: ${Object.keys(medido).length} filtro(s) con descartes aceptados.`);
+  process.exit(0);
 }
-process.exit(falloTransporte.length > 0 || noEvaluables.length > 0 ? 2 : 0);
+
+let base = null;
+try { base = JSON.parse(readFileSync(BASE, 'utf8')); } catch { /* sin línea base todavía */ }
+if (!base) {
+  console.log('\nNo hay línea base. Tría lo de arriba y fíjala con: node scripts/sweep-filters.mjs --fijar-base');
+  process.exit(falloTransporte.length > 0 || noEvaluables.length > 0 ? 2 : 0);
+}
+
+const aceptados = base.descartes_aceptados ?? {};
+const nuevos = [];
+const resueltos = [];
+for (const [f, terms] of Object.entries(medido)) {
+  const ya = new Set(aceptados[f] ?? []);
+  for (const t of terms) if (!ya.has(t)) nuevos.push(`${f}: ${t}`);
+}
+for (const [f, terms] of Object.entries(aceptados)) {
+  const hoy = new Set(medido[f] ?? []);
+  for (const t of terms) if (!hoy.has(t)) resueltos.push(`${f}: ${t}`);
+}
+
+const dias = Math.floor((Date.now() - Date.parse(base.medido_el)) / 86400000);
+console.log(`línea base del ${base.medido_el} (${dias} día(s)).`);
+if (resueltos.length) {
+  console.log(`\nYa no se descartan (${resueltos.length}) — fija la base para dejarlo escrito:`);
+  for (const r of resueltos) console.log(`  + ${r}`);
+}
+if (nuevos.length) {
+  console.log(`\nDESCARTES NUEVOS (${nuevos.length}), que no estaban el ${base.medido_el}:`);
+  for (const n of nuevos) console.log(`  ! ${n}`);
+  console.log('\nTría cada caso antes de tocar nada:');
+  console.log('  frase de texto libre que no existe en la literatura -> aviso benigno;');
+  console.log('  termino dirigido a un campo donde no existe -> esta muerto, mide que aporta');
+  console.log('  arreglarlo antes de editar un filtro publicado y referenciado.');
+  console.log('  Y comprueba si la forma sin comillas vive: medido el 2026-10-01, cinco terminos');
+  console.log('  de cuatro filtros estaban muertos SOLO por ir entrecomillados.');
+}
+if (!nuevos.length && !resueltos.length) console.log('sin cambios respecto a la línea base.');
+
+process.exit(nuevos.length > 0 ? 1 : (falloTransporte.length > 0 || noEvaluables.length > 0 ? 2 : 0));
