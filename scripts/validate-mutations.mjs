@@ -92,6 +92,14 @@ const MUTACIONES = [
     rompe: 'T2',
   },
   {
+    id: 'R14-ERRATA',
+    porque: 'vuelve la errata real de spanish.txt: «O R» en vez de «OR», que PubMed no rechaza, parte la consulta y devuelve un recuento plausible',
+    fichero: 'filters/scope/spanish.txt',
+    de: 'lerida[ad] OR girona[ad]',
+    a: 'lerida[ad] O R girona[ad]',
+    rompe: 'R14',
+  },
+  {
     id: 'M1',
     porque: 'los vectores vuelven a quedarse congelados, como estaban en la 1.7.1',
     fichero: 'neurosymbolic_router.json',

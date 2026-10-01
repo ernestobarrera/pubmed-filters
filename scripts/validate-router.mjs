@@ -227,6 +227,34 @@ check('R11', undeclaredNegations.length === 0,
   `cláusulas de exclusión sin declarar en TODO el repositorio (${allFilters.length} filtros): ${
     undeclaredNegations.length === 0 ? 'ninguna' : JSON.stringify(undeclaredNegations)}`);
 
+// Sintaxis booleana de cada filtro. No comprueba que la consulta sea BUENA —eso no lo decide una
+// regex— sino que esté bien ESCRITA, que es otra cosa y sí es decidible.
+//
+// Por qué existe, medido el 2026-10-01: `filters/scope/spanish.txt` llevaba desde 2022 un `O R`
+// en lugar de `OR` y dos etiquetas con espacio dentro, `[ ad]`. PubMed no da error con eso: parte
+// la consulta y devuelve un recuento plausible. Lo encontró un agente usando el filtro en una
+// búsqueda real, no este banco, que miraba exclusiones, fechas y espejos pero nunca si la cadena
+// estaba bien formada. Un filtro mal escrito es exactamente el fallo silencioso que este
+// repositorio existe para impedir, y vivía dentro del repositorio.
+const MALFORMADO = [
+  [/\b[A-Z]\s+[A-Z]\b(?!\w)/, 'operador partido en dos letras sueltas, como «O R» en vez de «OR»'],
+  [/\[\s+[a-zA-Z]+\s*\]|\[\s*[a-zA-Z]+\s+\]/, 'etiqueta de campo con espacios dentro, como «[ ad]»'],
+  [/\b(AND|OR|NOT)\s+(AND|OR|NOT)\b/, 'dos operadores seguidos'],
+  [/(^|\()\s*(AND|OR)\b/, 'la consulta o un grupo empieza por un operador'],
+  [/\b(AND|OR|NOT)\s*(\)|$)/, 'la consulta o un grupo termina en un operador'],
+];
+const malEscritos = allFilters.flatMap((f) => {
+  const q = query(f);
+  const fallos = MALFORMADO.filter(([re]) => re.test(q)).map(([, que]) => que);
+  const abre = (q.match(/\(/g) ?? []).length;
+  const cierra = (q.match(/\)/g) ?? []).length;
+  if (abre !== cierra) fallos.push(`paréntesis descompensados (${abre} abren, ${cierra} cierran)`);
+  return fallos.length ? [`${f}: ${fallos.join('; ')}`] : [];
+});
+check('R14', malEscritos.length === 0,
+  `sintaxis booleana de los ${allFilters.length} filtros: ${
+    malEscritos.length === 0 ? 'sin anomalías' : JSON.stringify(malEscritos)}`);
+
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
 check('R12', undeclaredDates.length === 0,
