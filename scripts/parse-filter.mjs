@@ -76,12 +76,17 @@ export function hasEmbeddedDateLimit(query) {
  * consulta devuelve el mismo 0 **sin ninguna warninglist**. Por eso esta función distingue
  * «verificado y limpio» de «no verificable»: no son lo mismo y no deben informarse igual.
  *
- * Con `{ sentQuery }` mira además lo único que la respuesta NO dice: una etiqueta de campo que no
- * existe. Medido el 2026-10-08: `asthma[foo]` devuelve 246.024 registros, `errorlist.fieldsnotfound`
- * VACÍO y ningún aviso; PubMed tira la etiqueta y pasa el término por Automatic Term Mapping. Una
- * errata plausible como `[tiabb]` se comporta igual. Sin la consulta enviada, eso sale «limpio».
+ * Con `{ sentQuery }` mira además lo que la respuesta NO dice: etiquetas de campo ignoradas y
+ * asteriscos falsos. Medido el 2026-10-08: `asthma[foo]` devuelve 246.024 registros,
+ * `errorlist.fieldsnotfound` VACÍO y ningún aviso. Sin la consulta enviada no se da por comprobado.
  *
- * Devuelve { usable, verifiable, countIsValid, dropped, unknownTags, pagination, problems }.
+ * Lo que esta función NO puede saber: de dónde viene el objeto. Una respuesta de ESearch impecable
+ * tampoco trae warninglist (no hay nada que avisar), así que un adaptador que recorte los avisos y deje
+ * la traducción es indistinguible de PubMed limpio. La procedencia la garantiza quien llama: el
+ * ejecutor de referencia habla con ESearch directamente.
+ *
+ * Devuelve { usable, verifiable, countIsValid, fieldTagsChecked, dropped, unknownTags, tagIssues,
+ * lookalikes, pagination, anomalies, problems }.
  */
 export function inspectResponse(esearchresult, { sentQuery } = {}) {
   const r = esearchresult ?? {};
@@ -150,10 +155,24 @@ export function inspectResponse(esearchresult, { sentQuery } = {}) {
     .filter((m) => !/^No items found\.?$/i.test(m) && !pagination.includes(m));
   if (messages.length > 0) problems.push(`AVISO_SEMANTICO: ${JSON.stringify(messages)}`);
 
-  const unknownTags = sentQuery === undefined ? [] : unknownFieldTags(sentQuery);
-  if (unknownTags.length > 0) {
-    problems.push(`ETIQUETA_DESCONOCIDA: ${JSON.stringify(unknownTags)}. PubMed no avisa: descarta la `
-      + 'etiqueta y aplica Automatic Term Mapping, así que el término no se buscó donde se pidió.');
+  // Lo que solo se ve en la consulta enviada. Sin ella, NO se da por comprobado: la primera versión
+  // devolvía `usable: true` si no se pasaba `sentQuery`, y `asthma[foo]` salía limpio (Codex, 2026-10-08).
+  const fieldTagsChecked = typeof sentQuery === 'string';
+  const tagIssues = fieldTagsChecked ? fieldTagIssues(sentQuery) : [];
+  const unknownTags = tagIssues.map((x) => x.tag);
+  const lookalikes = fieldTagsChecked ? lookalikeCharacters(sentQuery) : [];
+  if (!fieldTagsChecked) {
+    problems.push('ETIQUETAS_NO_COMPROBADAS: falta la consulta enviada (sentQuery). Una etiqueta de '
+      + 'campo inexistente no produce ningún aviso de PubMed, así que sin ella no se puede dar por buena.');
+  }
+  if (tagIssues.length > 0) {
+    problems.push(`ETIQUETA_IGNORADA: ${JSON.stringify(tagIssues)}. PubMed no avisa: tira la etiqueta o `
+      + 'el modificador y aplica Automatic Term Mapping, así que el término no se buscó donde se pidió.');
+  }
+  if (lookalikes.length > 0) {
+    problems.push(`TRUNCAMIENTO_FALSO: ${JSON.stringify(lookalikes)}. Parece un asterisco pero no lo es: `
+      + 'PubMed lo descarta sin avisar y busca la raíz exacta (`intervent∗[ti]` = 9 registros; '
+      + '`intervent*[ti]` = 269.566, medido el 2026-10-08).');
   }
 
   if (count === 0 && dropped.length > 0) {
@@ -161,27 +180,55 @@ export function inspectResponse(esearchresult, { sentQuery } = {}) {
       + 'no un campo vacío.');
   }
 
+  // Dos clases de problema que no significan lo mismo: una ANOMALÍA es un defecto conocido (la consulta
+  // no se ejecutó como se escribió); la FALTA de diagnóstico es no poder saberlo. Una anomalía basta
+  // para refutar la integridad aunque falte querytranslation; la falta nunca basta para verificarla.
+  const anomalies = problems.filter((p) => !/^(NO_VERIFICABLE|ETIQUETAS_NO_COMPROBADAS):/.test(p));
+
   return {
-    usable: verifiable && countIsValid && dropped.length === 0 && problems.length === 0,
+    usable: verifiable && countIsValid && fieldTagsChecked && problems.length === 0,
     verifiable,
     countIsValid,
+    fieldTagsChecked,
     dropped,
     unknownTags,
+    tagIssues,
+    lookalikes,
     pagination,
+    anomalies,
     problems,
   };
 }
 
 /**
- * Etiquetas de campo de PubMed, en minúsculas y sin modificadores (`:noexp`, `:~N`). Cada una se
- * comprobó contra E-utilities el 2026-10-08: con ella, la traducción cambia de campo; con una que no
- * existe (`[foo]`, `[xyz]`, `[tiabb]`), la traducción es idéntica a la del término sin etiqueta.
- * La lista puede quedarse corta —una etiqueta legítima que falte sale como desconocida y se ve—, que
- * es el lado seguro: lo contrario es una etiqueta muerta pasando por buena sin que nadie lo sepa.
+ * Caracteres que parecen sintaxis de PubMed y no lo son. Llegan al copiar estrategias de un PDF: el
+ * asterisco matemático `∗` (U+2217) de las tipografías científicas. Medido el 2026-10-08 en
+ * `filters/methodology/horizon.txt`, que lo trae en seis términos copiados del artículo.
+ */
+const LOOKALIKES = { '∗': 'U+2217 (asterisco matemático)', '＊': 'U+FF0A (asterisco de ancho completo)',
+  '⁎': 'U+204E (asterisco bajo)', '✱': 'U+2731 (asterisco grueso)', '﹡': 'U+FE61 (asterisco pequeño)' };
+
+/** Términos de una consulta con un carácter que imita la sintaxis de PubMed, fuera de comillas. */
+export function lookalikeCharacters(query) {
+  const found = [];
+  for (const m of String(query).replace(/["“][^"”]*["”]/g, '""').matchAll(/[^\s()|]*[∗＊⁎✱﹡][^\s()|]*/g)) {
+    const ch = [...m[0]].find((c) => c in LOOKALIKES);
+    const entry = `${m[0]} (${LOOKALIKES[ch]})`;
+    if (!found.includes(entry)) found.push(entry);
+  }
+  return found;
+}
+
+/**
+ * Etiquetas de campo de PubMed, en minúsculas y sin modificadores. Verificadas una a una contra
+ * E-utilities el 2026-10-08, cada una con un término que existe en su campo: con la etiqueta, la
+ * traducción nombra el campo; con una que no existe (`[foo]`, `[tiabb]`, `[author identifier]`),
+ * PubMed la tira en silencio y aplica Automatic Term Mapping. La lista puede quedarse corta —una
+ * etiqueta legítima que falte sale como problema y se ve—, que es el lado seguro.
  */
 export const PUBMED_FIELD_TAGS = new Set([
   'ad', 'affiliation', 'aid', 'all', 'all fields', 'au', 'author', '1au', 'author - first', 'lastau',
-  'author - last', 'fau', 'full author name', 'auid', 'author identifier', 'book', 'cn',
+  'author - last', 'fau', 'full author name', 'auid', 'book', 'cn',
   'corporate author', 'author - corporate', 'cois', 'conflict of interest statements', 'crdt',
   'date - create', 'dcom', 'date - completion', 'dp', 'pdat', 'date - publication',
   'publication date', 'edat', 'date - entry', 'epdat', 'electronic publication date', 'ppdat',
@@ -197,15 +244,111 @@ export const PUBMED_FIELD_TAGS = new Set([
 ]);
 
 /**
- * Etiquetas de campo de una consulta que PubMed no reconoce. Solo cuenta como etiqueta un corchete
- * pegado a lo que etiqueta (palabra, comilla, asterisco o paréntesis de cierre): `[18F]FDG`, que
- * empieza un término, no lo es.
+ * Campos que admiten cada modificador. Fuera de ellos PubMed lo tira SIN AVISAR, medido el 2026-10-08:
+ * `asthma[mh:~3]` se busca como MeSH normal, `"asthma control"[tw:~2]` como Text Word sin proximidad y
+ * `asthma[ti:noexp]` como Title. La proximidad solo existe en título, título/resumen y afiliación.
  */
-export function unknownFieldTags(query) {
-  const found = [];
-  for (const m of String(query).matchAll(/(?<=[\p{L}\p{N}"'”’*)])\[([^\]]*)\]/gu)) {
-    const tag = m[1].trim().toLowerCase().replace(/:(noexp|~\d+)$/, '').trim();
-    if (!PUBMED_FIELD_TAGS.has(tag) && !found.includes(m[0])) found.push(m[0]);
+const NOEXP_TAGS = new Set(['mh', 'mesh', 'mesh terms', 'majr', 'mesh major topic', 'sh', 'mesh subheading',
+  'subheading', 'pt', 'publication type']);
+const PROXIMITY_TAGS = new Set(['ti', 'title', 'tiab', 'title/abstract', 'ad', 'affiliation']);
+
+const OPEN_QUOTES = new Set(['"', '“']);
+const CLOSE_QUOTES = new Set(['"', '”']);
+const TERM_END = /[\p{L}\p{N}"”'’*)∗＊⁎✱﹡]/u;
+const WORD = /[\p{L}\p{N}]/u;
+
+/**
+ * Problemas de las etiquetas de campo de una consulta. PubMed no avisa de NINGUNO. Devuelve
+ * [{ tag, reason }], con reason:
+ *   'desconocida'  la etiqueta no existe;
+ *   'modificador'  `:noexp` o `:~N` en un campo que no lo admite;
+ *   'grupo'        etiqueta sobre un grupo con operadores: `(asthma OR copd)[tiab]` se busca en todos
+ *                  los campos, no en título/resumen (351.416 frente a 257.958, medido el 2026-10-08).
+ *                  Un paréntesis sin operadores es parte del término: `Front Endocrinol (Lausanne)[JO]`;
+ *   'posicion'     etiqueta detrás de un operador, o sin término al que aplicarse.
+ *
+ * Recorre la consulta en vez de usar una expresión regular, porque lo que decide es el contexto. La
+ * primera versión era una regex con lookbehind y una revisión externa (Codex, 2026-10-08) la tumbó:
+ *  - PubMed aplica la etiqueta aunque haya espacios delante (`asthma [tiab]` = `asthma[tiab]`), así que
+ *    `asthma [tiabb]` es una etiqueta muerta; la regex exigía el corchete pegado y daba `verified`;
+ *  - dentro de comillas un corchete es texto: `"[18F]FDG"[tiab]` es una búsqueda válida y la regex lo
+ *    marcaba como etiqueta `[18F]`;
+ *  - un corchete que empieza un término y va pegado a lo que sigue (`[18F]FDG`) no es etiqueta.
+ */
+export function fieldTagIssues(query) {
+  const q = String(query);
+  const issues = [];
+  const add = (tag, reason) => {
+    if (!issues.some((x) => x.tag === tag && x.reason === reason)) issues.push({ tag, reason });
+  };
+  let inQuote = false;
+  for (let i = 0; i < q.length; i += 1) {
+    const c = q[i];
+    if (inQuote) {
+      if (CLOSE_QUOTES.has(c)) inQuote = false;
+      continue;
+    }
+    if (OPEN_QUOTES.has(c)) { inQuote = true; continue; }
+    if (c !== '[') continue;
+
+    const close = q.indexOf(']', i + 1);
+    if (close === -1) break; // corchete sin cerrar: lo vigila la sintaxis (R14), no esto
+    const raw = q.slice(i, close + 1);
+    let j = i - 1;
+    while (j >= 0 && /\s/.test(q[j])) j -= 1;
+    const prev = j >= 0 ? q[j] : '';
+    const next = q[close + 1] ?? '';
+
+    if (!TERM_END.test(prev)) {
+      // Nada a lo que aplicarse. Pegado a lo que sigue, empieza un término (`[18F]FDG`); si no, es una
+      // etiqueta suelta.
+      if (!WORD.test(next)) add(raw, 'posicion');
+      i = close;
+      continue;
+    }
+    if (/(^|[\s()])(AND|OR|NOT)$/.test(q.slice(0, j + 1))) {
+      add(raw, 'posicion');
+      i = close;
+      continue;
+    }
+
+    const inner = q.slice(i + 1, close).trim().toLowerCase().replace(/\s+/g, ' ');
+    const [, base, modifier] = /^(.*?)(?::\s*(noexp|~\s*\d+))?$/.exec(inner);
+    const field = base.trim();
+    if (!PUBMED_FIELD_TAGS.has(field)) add(raw, 'desconocida');
+    else if (modifier === 'noexp' && !NOEXP_TAGS.has(field)) add(raw, 'modificador');
+    else if (modifier && modifier !== 'noexp' && !PROXIMITY_TAGS.has(field)) add(raw, 'modificador');
+
+    if (prev === ')' && groupHasOperator(q, j)) add(`(…)${raw}`, 'grupo');
+    i = close;
   }
-  return found;
+  return issues;
+}
+
+/** ¿El grupo que cierra el paréntesis en la posición `end` contiene un operador booleano? */
+function groupHasOperator(q, end) {
+  let depth = 0;
+  let inQuote = false;
+  for (let k = end; k >= 0; k -= 1) {
+    const c = q[k];
+    if (inQuote) {
+      if (OPEN_QUOTES.has(c)) inQuote = false;
+      continue;
+    }
+    if (CLOSE_QUOTES.has(c)) { inQuote = true; continue; }
+    if (c === ')') depth += 1;
+    else if (c === '(') {
+      depth -= 1;
+      if (depth === 0) {
+        const inside = q.slice(k + 1, end).replace(/["“][^"”]*["”]/g, '""');
+        return /\b(AND|OR|NOT)\b|\|/.test(inside);
+      }
+    }
+  }
+  return false;
+}
+
+/** Las etiquetas con problema, como cadenas. */
+export function unknownFieldTags(query) {
+  return fieldTagIssues(query).map((x) => x.tag);
 }

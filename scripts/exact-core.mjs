@@ -38,8 +38,11 @@ export const ESEARCH_WINDOW = 9999;
  *   unsupported  No se puede saber: falta querytranslation, así que el diagnóstico no es verificable.
  */
 export function queryIntegrity(inspection) {
-  if (!inspection.verifiable) return 'unsupported';
-  return inspection.usable ? 'verified' : 'failed';
+  // Primero lo conocido: una anomalía refuta la integridad aunque falte el diagnóstico completo.
+  // La primera versión preguntaba antes por `verifiable` y un ERROR sin querytranslation salía
+  // `unsupported`, escondiendo un defecto conocido detrás de un desconocido (Codex, 2026-10-08).
+  if (inspection.anomalies.length > 0) return 'failed';
+  return inspection.usable ? 'verified' : 'unsupported';
 }
 
 /** Ejecuta `term` tal cual y devuelve el recibo. Un 413/414 lanza TransportError: nunca hay recibo con recuento. */

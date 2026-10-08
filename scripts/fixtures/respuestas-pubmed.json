@@ -198,5 +198,112 @@
       "retmax": "1"
     },
     "_raw": "{\"header\":{\"type\":\"esearch\",\"version\":\"0.3\"},\"esearchresult\":{\"ERROR\":\"Search Backend failed: Exception:\n'retstart' cannot be larger than 9998. For PubMed, ESearch can only retrieve the first 9,999 records matching the query. To obtain more than 9,999 PubMed records, consider using EDirect that contains additional logic to batch PubMed search results automatically so that an arbitrary number can be retrieved. For details see https://www.ncbi.nlm.nih.gov/books/NBK25499/\"}}\n"
+  },
+  "etiqueta-desconocida-con-espacio": {
+    "_nota": "La errata [tiabb] con un espacio delante. PubMed aplica las etiquetas aunque haya espacio (asthma [tiab] = asthma[tiab]), así que esta es una etiqueta muerta: 246.024 registros por Automatic Term Mapping y ningún aviso. La primera heurística exigía el corchete pegado y la daba por limpia (Codex).",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "asthma [tiabb]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "246024",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [
+        {
+          "from": "asthma",
+          "to": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma's\"[All Fields]"
+        }
+      ],
+      "querytranslation": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma s\"[All Fields]",
+      "errorlist": {
+        "phrasesnotfound": [],
+        "fieldsnotfound": []
+      }
+    }
+  },
+  "etiqueta-sobre-grupo": {
+    "_nota": "Etiqueta de campo sobre un grupo con operadores: PubMed la ignora sin avisar y busca en todos los campos. 351.416 registros frente a 257.958 de asthma[tiab] OR copd[tiab].",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "(asthma OR copd)[tiab]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "351416",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [
+        {
+          "from": "asthma",
+          "to": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma's\"[All Fields]"
+        },
+        {
+          "from": "copd",
+          "to": "\"pulmonary disease, chronic obstructive\"[MeSH Terms] OR (\"pulmonary\"[All Fields] AND \"disease\"[All Fields] AND \"chronic\"[All Fields] AND \"obstructive\"[All Fields]) OR \"chronic obstructive pulmonary disease\"[All Fields] OR \"copd\"[All Fields]"
+        }
+      ],
+      "querytranslation": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma s\"[All Fields] OR (\"pulmonary disease, chronic obstructive\"[MeSH Terms] OR (\"pulmonary\"[All Fields] AND \"disease\"[All Fields] AND \"chronic\"[All Fields] AND \"obstructive\"[All Fields]) OR \"chronic obstructive pulmonary disease\"[All Fields] OR \"copd\"[All Fields])",
+      "errorlist": {
+        "phrasesnotfound": [],
+        "fieldsnotfound": []
+      }
+    }
+  },
+  "modificador-ignorado": {
+    "_nota": "Proximidad en un campo que no la admite: PubMed tira el modificador sin avisar y busca MeSH normal.",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "asthma[mh:~3]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "153321",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [
+        {
+          "from": "asthma[mh:~3]",
+          "to": "\"asthma\"[MeSH Terms]"
+        }
+      ],
+      "querytranslation": "\"asthma\"[MeSH Terms]"
+    }
+  },
+  "corchete-en-frase": {
+    "_nota": "Corchetes dentro de una frase entrecomillada: son texto, no una etiqueta. Búsqueda válida (Codex encontró que la primera heurística la marcaba como etiqueta [18F]).",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "\"[18F]FDG\"[tiab]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "13894",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [],
+      "querytranslation": "\"18f fdg\"[Title/Abstract]"
+    }
+  },
+  "asterisco-tipografico": {
+    "_nota": "Asterisco matemático U+2217, copiado de un PDF, en vez de *. PubMed no lo toma como truncamiento ni avisa: busca la raíz exacta. intervent*[ti] devuelve 269.566. Caso real de filters/methodology/horizon.txt.",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "intervent∗[ti]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "9",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [],
+      "querytranslation": "\"intervent\"[Title]"
+    }
   }
 }

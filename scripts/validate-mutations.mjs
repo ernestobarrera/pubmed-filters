@@ -151,8 +151,8 @@ const MUTACIONES = [
     id: 'E-COLAPSO',
     porque: 'una consulta que PubMed muestra rota se declara «no verificable»: un defecto conocido escondido detrás de un desconocido',
     fichero: 'scripts/exact-core.mjs',
-    de: "return inspection.usable ? 'verified' : 'failed';",
-    a: "return inspection.usable ? 'verified' : 'unsupported';",
+    de: "if (inspection.anomalies.length > 0) return 'failed';",
+    a: "if (inspection.anomalies.length > 0) return 'unsupported';",
     rompe: 'E2',
   },
   {
@@ -191,8 +191,8 @@ const MUTACIONES = [
     id: 'Q8-SIN-ETIQUETAS',
     porque: 'el juicio deja de mirar las etiquetas de la consulta enviada, y una etiqueta inexistente, que PubMed calla, pasa por verificada',
     fichero: 'scripts/parse-filter.mjs',
-    de: 'const unknownTags = sentQuery === undefined ? [] : unknownFieldTags(sentQuery);',
-    a: 'const unknownTags = [];',
+    de: "const fieldTagsChecked = typeof sentQuery === 'string';",
+    a: 'const fieldTagsChecked = true;',
     rompe: 'Q8',
   },
   {
@@ -218,6 +218,70 @@ const MUTACIONES = [
     de: 'murder*[tiab]',
     a: 'murder*[tiabb]',
     rompe: 'R16',
+  },
+  {
+    id: 'Q8-ESPACIO',
+    porque: 'una etiqueta con un espacio delante vuelve a tratarse como texto, y asthma [tiabb] pasa por verificada (el hallazgo F1 de Codex)',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "const next = q[close + 1] ?? '';",
+    a: "const next = q[close + 1] ?? ''; if (j !== i - 1) { i = close; continue; }",
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-GRUPO',
+    porque: 'una etiqueta sobre un grupo con operadores, que PubMed ignora, deja de vigilarse',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "if (prev === ')' && groupHasOperator(q, j))",
+    a: "if (false && groupHasOperator(q, j))",
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-MODIFICADOR',
+    porque: 'la proximidad en un campo que no la admite, que PubMed tira sin avisar, vuelve a pasar',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "else if (modifier && modifier !== 'noexp' && !PROXIMITY_TAGS.has(field)) add(raw, 'modificador');",
+    a: '',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-COMILLAS',
+    porque: 'los corchetes dentro de una frase vuelven a leerse como etiqueta: "[18F]FDG"[tiab] sale roto',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'if (OPEN_QUOTES.has(c)) { inQuote = true; continue; }',
+    a: 'if (false) { inQuote = true; continue; }',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-ASTERISCO',
+    porque: 'un asterisco tipográfico deja de invalidar la consulta, y PubMed busca la raíz exacta en silencio',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'if (lookalikes.length > 0) {',
+    a: 'if (false) {',
+    rompe: 'Q8',
+  },
+  {
+    id: 'R17-ASTERISCO',
+    porque: 'un filtro curado gana un asterisco tipográfico sin declararlo, como horizon.txt',
+    fichero: 'filters/clinical/mortality.txt',
+    de: 'murder*[tiab]',
+    a: 'murder∗[tiab]',
+    rompe: 'R17',
+  },
+  {
+    id: 'E8-PRIORIDAD',
+    porque: 'la falta de diagnóstico vuelve a mirarse antes que la anomalía, y un ERROR sin traducción sale unsupported',
+    fichero: 'scripts/exact-core.mjs',
+    de: "if (inspection.anomalies.length > 0) return 'failed';",
+    a: "if (!inspection.verifiable) return 'unsupported';\n  if (inspection.anomalies.length > 0) return 'failed';",
+    rompe: 'E8',
+  },
+  {
+    id: 'E9-PMIDHASH',
+    porque: 'el hash de la lista de PMIDs es fijo y no el de lo recibido: sobrevivía a las dos suites (Codex)',
+    fichero: 'scripts/exact-core.mjs',
+    de: "pmid_list_sha256: await sha256(pmids.join('\\n')),",
+    a: "pmid_list_sha256: await sha256(''),",
+    rompe: 'E9',
   },
   {
     id: 'M4',
@@ -262,10 +326,18 @@ const arbolSucio = () => {
 
 const fallosDe = (salida) => [...salida.matchAll(/^\s*(?:FAIL|fail)\s+(\S+)/gm)].map((m) => m[1]);
 
+// Las dos suites: la de conformidad y la del MCP. La puerta solo corría la primera, así que una
+// mutación del Worker o del protocolo no podía caer nunca (lo dejó ver la revisión de Codex).
+const SUITES = [['scripts', 'validate-router.mjs'], ['mcp', 'test.mjs']];
 const correrSuite = () => {
-  const r = spawnSync(process.execPath, [join(RAIZ, 'scripts', 'validate-router.mjs')],
-    { cwd: RAIZ, encoding: 'utf8' });
-  return { status: r.status, salida: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  let status = 0;
+  let salida = '';
+  for (const ruta of SUITES) {
+    const r = spawnSync(process.execPath, [join(RAIZ, ...ruta)], { cwd: RAIZ, encoding: 'utf8' });
+    if (r.status !== 0) status = r.status ?? 1;
+    salida += `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  }
+  return { status, salida };
 };
 
 // DÓNDE SE MUTA, y por qué no siempre aquí.

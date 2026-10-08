@@ -316,8 +316,8 @@
     "dropped_term_with_results": "A dropped term is most dangerous when the query still returns results: no zero, no error, a plausible count. Measured 2026-09: PubMed dropped \"body battery\"[tiab] from an OR block and returned 5 records, the same 5 the query without that term returns. Absence of a zero is not evidence of integrity.",
     "diagnostics_come_from_the_response": "querytranslation, warninglist, errorlist and ERROR are read from PubMed's own response (retmode=xml carries the same as QueryTranslation, WarningList, ErrorList and ERROR). Nothing a tool builds itself substitutes for them: an echo of the query it sent (effective, sanitized or normalized query) shows what was sent, not what PubMed executed; a list of filters it applied shows what it asked for, not what PubMed kept; a prose notice that summarises some warning types proves nothing about the types it never checks, so the absence of a notice is not the absence of a warning. An engine that does not return these fields produces a pass that was executed but is not verifiable. Found 2026-09-29 by static audit of a public PubMed MCP server: querytranslation was parsed internally and never returned, and neither phrasesignored nor outputmessages reached the consumer, which received the sent query labelled as effective query and a notice covering three warning types.",
     "transport_carries_the_whole_query": "A composed query travels in the request body (POST, application/x-www-form-urlencoded), or the engine is shown to switch to POST before URL limits. A topic plus an inline methodological filter routinely exceeds what a GET URL carries. Measured 2026-09-28: E-utilities accepted a GET of 3,573 URL-encoded characters and answered HTTP 414 at 5,343; one conversational engine answered 414 at 2,925 characters of query. A rejected or truncated request is a declared transport failure: never a zero, never 'no results', never 'not evaluable', and never silently retried with a shortened query. An engine whose transport is unknown is tested with a query above those lengths before it runs composed filters.",
-    "field_tags_are_not_reported": "A field tag that does not exist raises no diagnostic at all. Measured 2026-10-08 against E-utilities: 'asthma[foo]' returned 246,024 records with errorlist.fieldsnotfound empty and no warning; PubMed discarded the tag and sent the term through Automatic Term Mapping. A plausible typo such as [tiabb] behaves the same. The response alone cannot reveal it, so the check is made on the sent query against the list of real field tags (reference: PUBMED_FIELD_TAGS in scripts/parse-filter.mjs, each verified live). An unknown tag makes the pass failed, not verified.",
-    "pagination_window": "PubMed ESearch serves only the first 9,999 records of a result (retstart <= 9998). Measured 2026-10-08: beyond it PubMed answers with an ERROR whose JSON is malformed (a raw newline inside the string), and an adapter that cannot read it and falls back to 0 fabricates a zero, as one conversational connector did for asthma[tiab]. A page request that overlaps the edge is trimmed with outputmessages 'Restrictions achieved...', which is a pagination notice, not a query-integrity warning. A rejected page is never a count; fewer records retrieved than counted is declared, never presented as all of them."
+    "field_tags_are_not_reported": "PubMed reports nothing when it ignores a field tag, so the response alone cannot reveal it; the check is made on the sent query. Measured 2026-10-08 against E-utilities, all with clean diagnostics and a plausible count: an unknown tag ('asthma[foo]', the typo 'asthma[tiabb]', also with a space before it: tags apply across whitespace); a tag on a group with operators ('(asthma OR copd)[tiab]' searches all fields: 351,416 against 257,958 for asthma[tiab] OR copd[tiab]); a modifier on a field that does not take it (':~N' only on title, title/abstract and affiliation; ':noexp' only on MeSH, subheading and publication type: 'asthma[mh:~3]' runs as plain MeSH); and a look-alike truncation character ('intervent∗[ti]' with U+2217 = 9 records, 'intervent*[ti]' = 269,566). Brackets inside a quoted phrase are text, not tags ('\"[18F]FDG\"[tiab]' is valid). Any of these makes the pass failed. A judgement made without the sent query cannot be verified. Reference: fieldTagIssues() and lookalikeCharacters() in scripts/parse-filter.mjs, PUBMED_FIELD_TAGS verified tag by tag.",
+    "pagination_window": "A page PubMed rejects is never a count, and fewer records retrieved than counted is declared, never presented as all of them. The size of the window is an observed, dated limit, not part of this rule: on 2026-10-08 PubMed ESearch served the first 9,999 records (retstart <= 9998) and said so in its own ERROR, against the 10,000 in NCBI's documentation. Beyond it the ERROR arrives as malformed JSON (a raw newline inside the string), and an adapter that cannot read it and falls back to 0 fabricates a zero, as one conversational connector did for asthma[tiab]. A request overlapping the edge is trimmed with outputmessages 'Restrictions achieved...': a pagination notice, not a query-integrity warning."
   },
   "registry_validation": {
     "rule": "validated_filters_as_symbolic_truth applies to filters carrying a published validation reference. The entries listed below are author-made and have none; cite them as such and never present them as validated.",
@@ -363,7 +363,18 @@
         },
         "why_not_fixed_here": "The measured impact is between zero and 0.02%, and editing a published, referenced filter is a methodological decision with its own provenance, not a cleanup. Declared so it is visible and can be decided on."
       },
-      "how_this_was_found": "By applying the router's own query_execution_contract to the repository's own filters. The rule written for a model's invented MeSH heading found four cases inside curated filters."
+      "how_this_was_found": "By applying the router's own query_execution_contract to the repository's own filters. The rule written for a model's invented MeSH heading found four cases inside curated filters.",
+      "typographic_truncation": {
+        "what": "A character that looks like the truncation asterisk but is not one, usually copied from a PDF. PubMed searches the bare stem and reports nothing, so no sweep sees it.",
+        "cases": {
+          "filters/methodology/horizon.txt": {
+            "terms": "emergente∗[ti], intervent∗[ti], surger∗[ti], tool∗[ti], transplant∗[ti] and, inside the exclusion block, VACCIN∗[ti]; U+2217 instead of *.",
+            "measured_impact": "2026-10-08: intervent∗[ti] = 9 records against 269,566 for intervent*[ti]; VACCIN∗[ti] = 20 against 264,448, so the vaccine exclusion barely excludes. Whole filter: 356,107 as written, 420,561 with * (+18%); last 5 years 93,074 against 113,429.",
+            "status": "Declared, not corrected: correcting it changes the recall of a published, referenced filter, which is the owner's decision."
+          }
+        },
+        "completeness_rule": "Every filter carrying such a character must be listed here. The suite fails otherwise (R17), and also fails if a listed filter no longer has it, so a correction removes the entry."
+      }
     }
   },
   "composition": {
@@ -583,7 +594,7 @@
         "unsupported"
       ],
       "value_meanings": {
-        "verified": "Checked against the source and found to hold. For query_integrity: PubMed's full diagnostics (querytranslation, warninglist, errorlist, ERROR) were read and nothing was dropped, broken or doubtful.",
+        "verified": "Checked against the source and found to hold. For query_integrity: PubMed's full diagnostics were read, the sent query was checked for what PubMed ignores silently, and nothing was dropped, broken or doubtful. It is a mechanical statement only: it does not say the query means what the question needs (Automatic Term Mapping, the choice of MeSH and the boolean algebra still need review), nor anything about coverage or reading.",
         "failed": "Checked against the source and found NOT to hold. For query_integrity: the diagnostics available, full or partial, show that the query did not run as written (a dropped term, an error, an unusable count, a term missing from querytranslation). Partial diagnostics are enough to reach failed, because one observed anomaly refutes integrity.",
         "planned": "Intended but not yet performed.",
         "unsupported": "Cannot be checked with the capabilities at hand. For query_integrity: there are no diagnostics, or only partial ones that show no anomaly. Partial diagnostics can refute integrity but never verify it: measured 2026-10-08, a translation-only engine returned an invented MeSH heading as the same zero as a legitimate one, and echoed the sent query verbatim when every term had been dropped.",
@@ -613,7 +624,8 @@
         "coverage",
         "reading_depth"
       ],
-      "display_rule": "Colours and icons are derived views. Persist semantic values and dimensions, never colour names as the source of truth."
+      "display_rule": "Colours and icons are derived views. Persist semantic values and dimensions, never colour names as the source of truth.",
+      "unknown_values": "A consumer that meets a value it does not know treats it as unsupported, never as verified. Values are added in minor versions (failed in 1.9.0); this rule is what makes that safe."
     }
   },
   "language_policy": {
