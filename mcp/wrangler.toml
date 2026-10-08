@@ -5,4 +5,10 @@ compatibility_date = "2026-09-01"
 workers_dev = true
 
 # Sin almacenamiento, sin Durable Objects, sin bindings: nada que mantener ni que pagar.
-# Los secretos (NCBI_API_KEY, ACCESS_KEY) se ponen con `npx wrangler secret put`, nunca aquí.
+# Los secretos (ACCESS_KEY, NCBI_API_KEY, NCBI_EMAIL, ALLOWED_ORIGINS) se ponen con
+# `npx wrangler secret put`, nunca aquí.
+
+# Sin registros: la clave de acceso viaja en la ruta de la URL, y un registro de peticiones la
+# guardaría. Explícito para que no dependa del valor por defecto de la cuenta.
+[observability]
+enabled = false

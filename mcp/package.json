@@ -7,7 +7,7 @@
     "test": "node test.mjs",
     "stdio": "node stdio.mjs",
     "dev": "node stamp.mjs && wrangler dev",
-    "deploy": "node stamp.mjs && wrangler deploy"
+    "deploy": "node stamp.mjs --deploy && wrangler deploy"
   },
   "devDependencies": {
     "wrangler": "4.135.0"

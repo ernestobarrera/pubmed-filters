@@ -68,8 +68,8 @@ pide al arrancar y no se guarda en el fichero:
 }
 ```
 
-**Comprobarlo:** pide en el chat *«usa pubmed_search_exact con `asthma[tiabb]`»*. Debe responder
-`failed` con `ETIQUETA_DESCONOCIDA`: la errata `[tiabb]` que PubMed acepta en silencio.
+**Comprobarlo:** pide en el chat *«usa pubmed_search_exact con `asthma [tiabb]`»*. Debe responder
+`failed` con `ETIQUETA_IGNORADA`. La errata es a propósito: PubMed la acepta en silencio.
 
 Detrás de un proxy corporativo, añade `"NODE_USE_ENV_PROXY": "1"` a `env`.
 
@@ -112,7 +112,7 @@ Después:
 cd mcp
 npm ci                         # instala wrangler 4.135.0, la versión fijada
 npx wrangler whoami            # COMPRUEBA que sale el correo de la cuenta NUEVA
-npm run deploy                 # sella commit y contrato, y despliega
+npm run deploy                 # sella commit, contrato y código, y despliega (se niega con cambios sin commit)
 ```
 
 Al terminar te dice la URL base, del tipo `https://pubmed-filters-exact.tunombre-pubmed.workers.dev`.
@@ -120,16 +120,33 @@ Al terminar te dice la URL base, del tipo `https://pubmed-filters-exact.tunombre
 
 ### B3. Secretos
 
-```
-node -e "console.log(crypto.randomUUID())"   # genera una clave de acceso larga y aleatoria; cópiala
-npx wrangler secret put ACCESS_KEY           # pégala
-npx wrangler secret put NCBI_API_KEY         # opcional: tu clave de NCBI
-```
-
-Tu URL de conexión queda así (guárdala bien: **quien la tenga, puede usarlo**):
+Una **clave de acceso por persona**, de 32 caracteres o más. Genera una por cada persona que vaya a
+usarlo (tú incluido):
 
 ```
-https://pubmed-filters-exact.tunombre-pubmed.workers.dev/mcp/<ACCESS_KEY>
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+```
+
+Ponlas todas juntas, separadas por comas, en un solo secreto:
+
+```
+npx wrangler secret put ACCESS_KEY      # pega: clave1,clave2,clave3
+```
+
+Apunta qué clave es de quién **fuera del repositorio** (por ejemplo, en tu carpeta privada de OneDrive).
+Sin ninguna clave válida, o con alguna de menos de 32 caracteres, el Worker no atiende (503).
+
+La URL de cada persona es la suya (**quien la tenga, puede usarlo**):
+
+```
+https://pubmed-filters-exact.tunombre-pubmed.workers.dev/mcp/<su-clave>
+```
+
+Opcionales:
+
+```
+npx wrangler secret put NCBI_EMAIL      # un correo de contacto para NCBI (ver Seguridad)
+npx wrangler secret put NCBI_API_KEY    # NO tu clave personal (ver Seguridad)
 ```
 
 ### B4. Conectarla
@@ -140,39 +157,53 @@ https://pubmed-filters-exact.tunombre-pubmed.workers.dev/mcp/<ACCESS_KEY>
   connector**, pega la URL, autenticación **No authentication**, marca que confías en él → crear.
   Actívalo en el chat. Los nombres de los menús cambian entre versiones.
 
-Comprueba con `asthma[tiabb]`, como en A.
+Comprueba con `asthma [tiabb]`, como en A. La errata es a propósito: PubMed la acepta en silencio y
+devuelve 246.024 registros como si nada, y el conector debe responder `failed`. Además, prueba una
+búsqueda normal, que debe dar `verified`.
+
+**Sin probar todavía en ningún chat real.** El servidor cumple la versión 2025-06-18 del protocolo y
+pasa sus pruebas, pero que claude.ai y ChatGPT lo acepten se comprueba al conectarlo. Si un chat
+rechaza la conexión por el origen (403), añade ese origen a `ALLOWED_ORIGINS`
+(`npx wrangler secret put ALLOWED_ORIGINS`, por ejemplo `https://claude.ai`).
 
 ### B5. Compartirlo con compañeros
 
-Envíales la **URL completa**. Solo tienen que hacer B4. No necesitan Cloudflare, Node ni el
-repositorio.
+Envía a cada uno **su** URL. Solo tienen que hacer B4. No necesitan Cloudflare, Node ni el repositorio.
 
-- **Retirar el acceso a todos:** `npx wrangler secret put ACCESS_KEY` con una clave nueva. La URL
-  vieja deja de funcionar al instante; reparte la nueva.
+- **Retirar el acceso a una persona:** vuelve a poner `ACCESS_KEY` sin su clave. Las demás siguen.
 - **Actualizar** tras cambios en el repositorio: `git pull` y `npm run deploy` (con el token puesto).
-  Los recibos dicen qué commit está desplegado.
+  El despliegue **se niega** si hay cambios sin commit, y los recibos dicen qué commit y qué ficheros
+  (`code_sha256`) están desplegados.
 
 ---
 
 ## Seguridad: qué viaja y qué no
 
-- **A PubMed** solo llega la consulta, `tool=pubmed-filters-mcp` y, si la pusiste, tu clave de NCBI.
-  **Nunca tu correo** ni datos personales.
-- **La clave de NCBI** se guarda como secreto de Cloudflare: no está en el código, en el repositorio ni
-  en ningún recibo (lo comprueba la prueba M8). Si alguien con tu URL abusara, el riesgo es que agote
-  tu cuota de NCBI o que NCBI te pida bajar el ritmo; tu clave no queda expuesta. Cambiar
-  `ACCESS_KEY` lo corta al instante. Si te preocupa, puedes no ponerla: funciona igual, más despacio
-  (3 peticiones por segundo en vez de 10, compartidas con otros usuarios de Cloudflare).
-- **Qué guarda el servidor:** nada. No escribe registros ni almacena consultas.
+- **A PubMed** solo llega la consulta, `tool=pubmed-filters-mcp` y, si los pusiste, `NCBI_EMAIL` y
+  `NCBI_API_KEY`. Ninguno de los dos aparece en ningún recibo (pruebas M8 y M9).
+- **`NCBI_EMAIL`**: NCBI pide un contacto junto a `tool` para poder avisar antes de bloquear un
+  servicio que abuse. Es recomendable y no es obligatorio. Usa un correo de contacto del servicio, no uno
+  que no quieras ver en los registros de NCBI. Nunca se escribe en el repositorio.
+- **`NCBI_API_KEY`: no pongas tu clave personal.** La cuota de NCBI es **por clave**, y la compartirían
+  el Worker y cualquier otra herramienta tuya que la use: un abuso desde una URL filtrada te dejaría sin
+  cuota también en ellas. Una cuenta de Cloudflare aparte no lo aísla. Dos opciones seguras:
+  1. **Sin clave** (recomendado para empezar): funciona igual, a 3 peticiones por segundo.
+  2. **Una clave solo para esto**: crea una cuenta de NCBI aparte y genera allí la clave. Así un
+     abuso solo afecta al Worker.
+- **Qué guarda el servidor:** nada. No escribe registros ni almacena consultas, y los registros de
+  Cloudflare están desactivados en `wrangler.toml`, porque la clave de acceso viaja en la ruta de la URL.
 - **Solo lectura:** la herramienta no puede escribir en ningún sitio.
-- **Cerrado por defecto:** sin `ACCESS_KEY` el Worker no atiende (503). Cualquier ruta distinta de la
-  tuya devuelve 404, sin pistas de qué hay detrás.
+- **Cerrado por defecto:** sin claves válidas no atiende (503). Una ruta o clave desconocida devuelve 404,
+  sin pistas. Una petición de navegador desde un origen no declarado, 403. Un cuerpo de más de 64 KiB,
+  413, sin llegar a leerlo entero. Una ráfaga que no cabe en la cola se rechaza.
+- **Límites conocidos:** el espaciado entre llamadas a NCBI es por instancia, no global, y no hay
+  reintentos: un 429 o un 502 de NCBI llegan como error declarado, nunca como un cero.
 
 ## Pruebas
 
 ```
-node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en la CI)
+node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en la CI y en la puerta de mutación)
 ```
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,
-contra PubMed real.
+contra PubMed real. Sin probar todavía dentro de `workerd` contra PubMed, ni desde claude.ai o ChatGPT.

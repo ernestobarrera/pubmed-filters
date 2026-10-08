@@ -70,7 +70,9 @@ if (isMain) {
   }
   const run = await runContext();
   try {
-    const receipt = await runExact(term, { retmax, apiKey: process.env.NCBI_API_KEY ?? '' });
+    const receipt = await runExact(term, {
+      retmax, apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '',
+    });
     console.log(JSON.stringify({ run, ...receipt }, null, 2));
     process.exitCode = receipt.status.query_integrity === 'verified' ? 0 : 1;
   } catch (e) {

@@ -46,14 +46,24 @@ export function queryIntegrity(inspection) {
 }
 
 /** Ejecuta `term` tal cual y devuelve el recibo. Un 413/414 lanza TransportError: nunca hay recibo con recuento. */
-export async function runExact(term, { retmax = 0, apiKey = '', tool = 'pubmed-filters-exact', engine = 'scripts/pubmed-exact.mjs', fetcher, now = () => new Date() } = {}) {
+/**
+ * `email` es el contacto que NCBI pide junto a `tool` para poder avisar antes de bloquear: viaja a NCBI
+ * y nunca al recibo, igual que la clave. `timeoutMs` corta una petición colgada: sin él, un Worker o un
+ * chat esperan sin fin, y lo que llega después es un error declarado, nunca un recuento.
+ */
+export async function runExact(term, {
+  retmax = 0, apiKey = '', email = '', tool = 'pubmed-filters-exact', engine = 'scripts/pubmed-exact.mjs',
+  timeoutMs = 30000, fetcher, now = () => new Date(),
+} = {}) {
   if (typeof term !== 'string' || term.trim() === '') throw new Error('La consulta está vacía.');
   if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_WINDOW) {
     throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_WINDOW}.`);
   }
-  const params = { retmax: String(retmax), tool, ...(apiKey ? { api_key: apiKey } : {}) };
+  const params = { retmax: String(retmax), tool, ...(email ? { email } : {}), ...(apiKey ? { api_key: apiKey } : {}) };
   const executedAt = now().toISOString();
-  const { transport, esearchresult, raw } = await esearch(term, { params, ...(fetcher ? { fetcher } : {}) });
+  const { transport, esearchresult, raw } = await esearch(term, {
+    params, signal: AbortSignal.timeout(timeoutMs), ...(fetcher ? { fetcher } : {}),
+  });
 
   const r = esearchresult ?? {};
   const inspection = inspectResponse(esearchresult, { sentQuery: term });
@@ -67,7 +77,7 @@ export async function runExact(term, { retmax = 0, apiKey = '', tool = 'pubmed-f
     sent_query: term,
     sent_query_sha256: await sha256(term),
     transport,
-    request: { retstart: 0, retmax, api_key_used: Boolean(apiKey) },
+    request: { retstart: 0, retmax, api_key_used: Boolean(apiKey), email_used: Boolean(email) },
     result_count: count,
     count_raw: r.count ?? null,
     records_retrieved: pmids.length,

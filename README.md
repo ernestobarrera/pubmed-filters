@@ -87,10 +87,17 @@ escribió) o `unsupported` (no hay diagnóstico verificable). No reescribe, sane
 consulta, y si recupera menos registros de los que hay, o el resultado supera la ventana de 9.999
 de ESearch, lo dice. Con `NCBI_API_KEY` en el entorno la usa sin escribirla: da cuota, no integridad.
 
-Dos cosas que PubMed **no** avisa y el ejecutor sí: una etiqueta de campo que no existe (`asthma[foo]`
-o la errata `[tiabb]` devuelven cientos de miles de registros sin ningún aviso, porque PubMed tira la
-etiqueta y reinterpreta el término) y una página fuera de la ventana de 9.999 registros, cuyo ERROR
-llega como JSON inválido y que un adaptador descuidado convierte en cero.
+Lo que PubMed **no** avisa y el ejecutor sí, todo medido contra E-utilities el 2026-10-08. En
+cada caso PubMed devuelve un recuento plausible con el diagnóstico limpio:
+
+- una etiqueta de campo que no existe, también con un espacio delante (`asthma [tiabb]`: 246.024
+  registros, porque PubMed tira la etiqueta y reinterpreta el término);
+- una etiqueta sobre un grupo con operadores: `(asthma OR copd)[tiab]` busca en todos los campos;
+- un modificador en un campo que no lo admite: `asthma[mh:~3]` se busca como MeSH normal;
+- un asterisco tipográfico copiado de un PDF: `intervent∗[ti]` da 9 registros, e `intervent*[ti]`
+  da 269.566;
+- una página fuera de la ventana de 9.999 registros, cuyo ERROR llega como JSON inválido y que un
+  adaptador descuidado convierte en cero.
 
 Detrás de un proxy (como en los entornos cloud), `fetch` de Node no lo usa por defecto:
 

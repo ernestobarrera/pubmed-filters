@@ -17,7 +17,9 @@ import { createMcpHandler } from './protocol.mjs';
 import { runContext } from '../scripts/pubmed-exact.mjs';
 
 const run = await runContext().catch(() => null);
-const handle = createMcpHandler({ apiKey: process.env.NCBI_API_KEY ?? '', run, engine: 'mcp/stdio.mjs' });
+const handle = createMcpHandler({
+  apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '', run, engine: 'mcp/stdio.mjs',
+});
 const send = (msg) => process.stdout.write(`${JSON.stringify(msg)}\n`);
 
 const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });

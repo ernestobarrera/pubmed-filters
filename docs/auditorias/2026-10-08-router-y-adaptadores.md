@@ -20,6 +20,19 @@ Los hashes completos están en el historial de la sesión; los abreviados bastan
 
 ---
 
+## Estado vigente (lee esto primero)
+
+Este informe se escribió en cuatro tiempos el mismo día: la auditoría (§A–§L), las correcciones tras la revisión de ChatGPT (§0bis), las medidas con red (§0ter) y la revisión adversarial de Codex (§0quater). **Si una sección anterior contradice a una posterior, manda la posterior.** Las secciones A, G, K y L se conservan como registro y no como plan: lo que llaman «diferido» en parte ya está hecho, y la propuesta de PR a cyanheads quedó **descartada** porque el propietario no quiere tocar repositorios ajenos.
+
+Situación actual:
+
+- **Ejecutor y juicio:** corregidos con la revisión de Codex (§0quater). Detectan todo lo que PubMed ignora en silencio y se ha medido: etiquetas inexistentes, también con espacio; etiquetas sobre grupos; modificadores fuera de sitio; y asteriscos tipográficos.
+- **Contrato:** 1.9.0.
+- **MCP:** endurecido, pero **sin desplegar y sin probar en ningún chat real**.
+- **Pendiente de decisión del propietario:** corregir los asteriscos tipográficos de `filters/methodology/horizon.txt` (§0quater).
+
+---
+
 ## 0. Qué se pudo y qué no se pudo ejecutar
 
 Esto condiciona todo lo demás, así que va primero.
@@ -115,6 +128,42 @@ Con la red abierta a `eutils.ncbi.nlm.nih.gov`, todo lo de esta sección es **RE
 **Estado final:** suite **63/0**; puerta de mutación **22/22**.
 
 **Lo que sigue sin probar:** OpenAlex, Semantic Scholar, Europe PMC y Crossref (no se abrieron; no hacían falta para decidir sobre el núcleo); el benchmark OQL; Sider y la PubMed nativa de ChatGPT.
+
+---
+
+## 0quater. Revisión adversarial de Codex y lo que se hizo con ella (2026-10-08, tarde)
+
+Codex revisó la cabeza `8e1e5e0` con las suites, 15 peticiones a PubMed y el MCP por stdio. Su veredicto: no fusionar entero ni desplegar. Cada hallazgo se **reprodujo de nuevo en vivo** antes de tocar nada. Todo lo que sigue es REPRODUCIDO contra E-utilities, y las respuestas nuevas son fixtures reales.
+
+| Hallazgo de Codex | Verificación propia | Arreglo |
+|---|---|---|
+| F1 `asthma [tiabb]` sale `verified` (la regex exigía el corchete pegado) | Confirmado: 246.024, ningún aviso. PubMed aplica las etiquetas aunque haya espacios: `asthma [tiab]` = 195.441 = `asthma[tiab]` | `fieldTagIssues()` recorre la consulta con contexto en vez de usar una regex |
+| F2 una anomalía sin `querytranslation` sale `unsupported` | Confirmado en código | `queryIntegrity` mira antes las anomalías conocidas (E8) |
+| F2b sin `sentQuery` el juicio da por buena la consulta (y Q8 lo exigía) | Confirmado | sin consulta enviada: `ETIQUETAS_NO_COMPROBADAS`; sweep y quickstart la pasan |
+| F3 Worker: Origin, versión y lotes sin controlar | Confirmado | 403 para orígenes no declarados, 400 para versiones no soportadas y para lotes; solo se anuncia la 2025-06-18 |
+| F4 límite de cuerpo tardío y por caracteres | Confirmado | lector acotado por bytes, más `Content-Length` (W6) |
+| F5 un hash fijo de PMIDs pasaba las suites | Confirmado | E9 con cálculo independiente, y mutación |
+| F6 `"[18F]FDG"[tiab]` marcada como etiqueta | Confirmado: búsqueda válida, 13.894 | las comillas se respetan |
+| F6b modificadores sin validar | Confirmado: `asthma[mh:~3]` y `asthma[ti:noexp]` se ignoran sin aviso | `:~N` solo en ti/tiab/ad; `:noexp` solo en MeSH, subencabezado y tipo de publicación |
+| D14 no poner la clave NCBI personal | De acuerdo: la cuota es por clave | guía: sin clave, o una de una cuenta NCBI aparte |
+| D13 una clave común para todos | De acuerdo | varias claves, una por persona, de 32 caracteres o más |
+| Falta `email` | De acuerdo, sin datos en el repo | `NCBI_EMAIL` opcional, solo a NCBI (M9) |
+| Sellado con árbol sucio | De acuerdo | `stamp --deploy` se niega, y sella el SHA-256 de cada fichero de código |
+| D7 la cifra 9.999 no debe ser normativa | De acuerdo | `pagination_window` la trata como límite observado y fechado |
+| D6 R15 solo miraba `[sb]` | De acuerdo | también `[subset]` y `[filter]` (medido: `medline[filter]` = `medline[subset]`) |
+
+**Lo que Codex no vio y salió al rehacer la heurística:**
+
+1. **Etiqueta sobre grupo.** `(asthma OR copd)[tiab]` → 351.416 registros por ATM en todos los campos, frente a 257.958 de `asthma[tiab] OR copd[tiab]`. Ningún aviso. Un paréntesis sin operadores sí funciona (`Front Endocrinol (Lausanne)[JO]`).
+2. **Asteriscos tipográficos en un filtro curado.** `filters/methodology/horizon.txt` lleva `∗` (U+2217, copiado del PDF del artículo) en seis términos: `emergente∗`, `intervent∗`, `surger∗`, `tool∗`, `transplant∗` y, dentro del bloque de exclusión, `VACCIN∗`. PubMed busca la raíz exacta sin avisar: `intervent∗[ti]` = 9 registros frente a 269.566; `VACCIN∗[ti]` = 20 frente a 264.448, así que la exclusión de vacunas casi no excluye. El filtro entero da 356.107 registros tal cual y 420.561 corregido (+18 %). Ninguna barrida lo había visto, porque PubMed no lo reporta. **No se ha corregido:** cambia el recall de un filtro publicado y es decisión del propietario. Queda declarado en `registry_validation.terms_pubmed_drops.typographic_truncation`, y R17 falla si aparece otro caso.
+3. **`[author identifier]`** no es una etiqueta (PubMed la ignora; la buena es `[auid]`). Se quitó de la lista. Las demás se verificaron una a una con un término de su campo.
+
+**En qué no estoy de acuerdo con Codex:**
+
+- **D4, partir el PR en tres.** Fusionar no despliega nada: el Worker solo sale con `npm run deploy`, y ahora este se niega con el árbol sucio. La seguridad la da esa puerta, no el número de PRs. Partirlo es razonable si se prefiere revisar por partes; no es necesario para la seguridad.
+- **«Un objeto con solo traducción pasa como verified».** Es cierto, y no tiene arreglo dentro de `inspectResponse`: una respuesta impecable de ESearch tampoco trae `warninglist`, así que lo recortado y lo limpio son indistinguibles en el objeto. La procedencia la garantiza quien llama: el ejecutor habla con ESearch directamente. Queda escrito en la documentación de la función.
+
+**Estado:** suite **66/0**; MCP **16/0**; puerta de mutación **38/38**. Ahora corre también las pruebas del MCP, con once mutaciones del ejecutor, el juicio y el Worker. **Sigue sin probar:** el Worker dentro de `workerd` contra PubMed, y la aceptación real en claude.ai y ChatGPT.
 
 ---
 

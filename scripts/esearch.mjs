@@ -27,9 +27,9 @@ export class TransportError extends Error {
  * (provenance.execution_snapshot_rule). Un hash del JSON re-serializado sería el hash de lo que este
  * código entendió, no de lo que PubMed respondió. Un cuerpo que no es JSON lanza: no es un cero.
  */
-export async function esearch(term, { params = {}, fetcher = fetch } = {}) {
+export async function esearch(term, { params = {}, fetcher = fetch, signal } = {}) {
   const body = new URLSearchParams({ db: 'pubmed', retmode: 'json', ...params, term });
-  const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });
+  const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body, ...(signal ? { signal } : {}) });
   if (response.status === 413 || response.status === 414) throw new TransportError(response.status);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const raw = await response.text();
