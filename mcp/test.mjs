@@ -163,9 +163,12 @@ try {
   const conEnv = (e, path = `/mcp/${K1}`) => worker.fetch(new Request(`https://w.example${path}`, { method: 'POST', body: ping }), e);
   const sinClave = await conEnv({}, '/mcp');
   const debil = await conEnv({ ACCESS_KEY: `${K1},corta` });
+  // La frontera exacta: 31 caracteres no, 32 sí (una mutación que bajaba el mínimo a 8 sobrevivía).
+  const de31 = await conEnv({ ACCESS_KEY: 'c'.repeat(31) }, `/mcp/${'c'.repeat(31)}`);
   const segunda = await conEnv(env, `/mcp/${K2}`);
   const retirada = await conEnv({ ACCESS_KEY: K2 });
-  check('W3', sinClave.status === 503 && debil.status === 503 && segunda.status === 200 && retirada.status === 404,
+  check('W3', sinClave.status === 503 && debil.status === 503 && de31.status === 503 && segunda.status === 200
+    && retirada.status === 404 && K1.length === 32,
     'sin clave, o con una de menos de 32 caracteres, no atiende (503); varias claves valen y quitar una corta solo esa');
 
   // Origin: sin él (cliente de servidor a servidor) se atiende; uno no admitido, 403; uno admitido, con CORS propio.

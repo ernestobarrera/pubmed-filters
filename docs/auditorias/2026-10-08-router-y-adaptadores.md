@@ -22,11 +22,11 @@ Los hashes completos están en el historial de la sesión; los abreviados bastan
 
 ## Estado vigente (lee esto primero)
 
-Este informe se escribió en cuatro tiempos el mismo día: la auditoría (§A–§L), las correcciones tras la revisión de ChatGPT (§0bis), las medidas con red (§0ter) y la revisión adversarial de Codex (§0quater). **Si una sección anterior contradice a una posterior, manda la posterior.** Las secciones A, G, K y L se conservan como registro y no como plan: lo que llaman «diferido» en parte ya está hecho, y la propuesta de PR a cyanheads quedó **descartada** porque el propietario no quiere tocar repositorios ajenos.
+Este informe se escribió en cinco tiempos el mismo día: la auditoría (§A–§L), las correcciones tras la revisión de ChatGPT (§0bis), las medidas con red (§0ter) y dos rondas de revisión adversarial de Codex (§0quater y §0quinquies). **Si una sección anterior contradice a una posterior, manda la posterior.** Las secciones A, G, K y L se conservan como registro y no como plan: lo que llaman «diferido» en parte ya está hecho, y la propuesta de PR a cyanheads quedó **descartada** porque el propietario no quiere tocar repositorios ajenos.
 
 Situación actual:
 
-- **Ejecutor y juicio:** corregidos con la revisión de Codex (§0quater). Detectan todo lo que PubMed ignora en silencio y se ha medido: etiquetas inexistentes, también con espacio; etiquetas sobre grupos; modificadores fuera de sitio; y asteriscos tipográficos.
+- **Ejecutor y juicio:** corregidos tras dos rondas de Codex (§0quater, §0quinquies). Detectan todo lo que PubMed ignora en silencio y se ha medido: etiquetas inexistentes, también con espacio; etiquetas sobre grupos con AND, OR o NOT; modificadores fuera de sitio; proximidad que no va sobre una frase válida; y asteriscos tipográficos, también dentro de frases.
 - **Contrato:** 1.9.0.
 - **MCP:** endurecido, pero **sin desplegar y sin probar en ningún chat real**.
 - **Pendiente de decisión del propietario:** corregir los asteriscos tipográficos de `filters/methodology/horizon.txt` (§0quater).
@@ -164,6 +164,31 @@ Codex revisó la cabeza `8e1e5e0` con las suites, 15 peticiones a PubMed y el MC
 - **«Un objeto con solo traducción pasa como verified».** Es cierto, y no tiene arreglo dentro de `inspectResponse`: una respuesta impecable de ESearch tampoco trae `warninglist`, así que lo recortado y lo limpio son indistinguibles en el objeto. La procedencia la garantiza quien llama: el ejecutor habla con ESearch directamente. Queda escrito en la documentación de la función.
 
 **Estado:** suite **66/0**; MCP **16/0**; puerta de mutación **38/38**. Ahora corre también las pruebas del MCP, con once mutaciones del ejecutor, el juicio y el Worker. **Sigue sin probar:** el Worker dentro de `workerd` contra PubMed, y la aceptación real en claude.ai y ChatGPT.
+
+---
+
+## 0quinquies. Segunda ronda de Codex (2026-10-08, noche)
+
+Codex revisó `b466d78`. Cierra F1–F5, el sellado, el email, R15 y D7. Acepta los dos desacuerdos de §0quater: no hace falta partir el PR, y la procedencia la garantiza quien llama. Deja como parciales F6, D13 y D14. Todo lo que sigue se reprodujo en vivo, y las respuestas son fixtures reales.
+
+| Hallazgo | Medido | Arreglo |
+|---|---|---|
+| Asterisco tipográfico **dentro de una frase** sale `verified` | `"randomized trial∗"[tiab]` = 65.068 sin truncar, frente a 109.950 con `*` | `lookalikeCharacters()` ya no vacía las comillas antes de mirar |
+| Proximidad sobre una frase **con comodín** sale `verified` | `"asthma* control"[tiab:~2]` = 10.391: PubMed tira la proximidad | `:~N` solo vale sobre una frase entrecomillada de dos o más palabras, sin comodines |
+| *(nuevo, al corregir)* Proximidad **sin comillas**, o sobre una sola palabra | `asthma control[tiab:~2]` y `"asthma"[tiab:~2]`: proximidad ignorada sin aviso | la misma regla |
+| Mutación superviviente: quitar `NOT` del detector de grupos | `(asthma NOT copd)[tiab]` = 223.754, frente a 184.029 bien escrita | fixture real y prueba; mutación Q8-NOT |
+| Mutación superviviente: bajar el mínimo de la clave de 32 a 8 | — | prueba de frontera 31/32; mutación W-CLAVE-31 |
+
+Los 28 usos de proximidad de los filtros del repo cumplen la regla (R16 sigue en verde).
+
+**Siguen parciales y se declaran, no se arreglan aquí:**
+
+- D13: no hay cuota por persona.
+- D14: el espaciado entre llamadas a NCBI es por instancia, no global.
+
+Las dos cosas exigen estado compartido (Durable Objects o KV), y el diseño evita ese estado a propósito para no tener nada que mantener. La mitigación es la guía: un piloto pequeño, sin clave NCBI personal y con una clave de acceso por persona.
+
+**Lo único que sigue sin probar:** el Worker en Cloudflare y su conexión desde claude.ai o ChatGPT.
 
 ---
 

@@ -211,7 +211,10 @@ const LOOKALIKES = { '∗': 'U+2217 (asterisco matemático)', '＊': 'U+FF0A (as
 /** Términos de una consulta con un carácter que imita la sintaxis de PubMed, fuera de comillas. */
 export function lookalikeCharacters(query) {
   const found = [];
-  for (const m of String(query).replace(/["“][^"”]*["”]/g, '""').matchAll(/[^\s()|]*[∗＊⁎✱﹡][^\s()|]*/g)) {
+  // También dentro de comillas: la primera versión las vaciaba antes de mirar, y
+  // `"randomized trial∗"[tiab]` (65.068, sin truncar) salía verified frente a los 109.950 de
+  // `"randomized trial*"[tiab]` (Codex, segunda ronda, 2026-10-08).
+  for (const m of String(query).matchAll(/[^\s()|]*[∗＊⁎✱﹡][^\s()|]*/g)) {
     const ch = [...m[0]].find((c) => c in LOOKALIKES);
     const entry = `${m[0]} (${LOOKALIKES[ch]})`;
     if (!found.includes(entry)) found.push(entry);
@@ -265,7 +268,10 @@ const WORD = /[\p{L}\p{N}]/u;
  *   'grupo'        etiqueta sobre un grupo con operadores: `(asthma OR copd)[tiab]` se busca en todos
  *                  los campos, no en título/resumen (351.416 frente a 257.958, medido el 2026-10-08).
  *                  Un paréntesis sin operadores es parte del término: `Front Endocrinol (Lausanne)[JO]`;
- *   'posicion'     etiqueta detrás de un operador, o sin término al que aplicarse.
+ *   'posicion'     etiqueta detrás de un operador, o sin término al que aplicarse;
+ *   'proximidad'   `:~N` que no va sobre una frase entrecomillada de dos o más palabras sin comodines.
+ *                  PubMed la tira sin avisar (2026-10-08): `"asthma* control"[tiab:~2]` = 10.391, sin
+ *                  proximidad (Codex, segunda ronda); `asthma control[tiab:~2]` sin comillas, igual.
  *
  * Recorre la consulta en vez de usar una expresión regular, porque lo que decide es el contexto. La
  * primera versión era una regex con lookbehind y una revisión externa (Codex, 2026-10-08) la tumbó:
@@ -318,11 +324,26 @@ export function fieldTagIssues(query) {
     if (!PUBMED_FIELD_TAGS.has(field)) add(raw, 'desconocida');
     else if (modifier === 'noexp' && !NOEXP_TAGS.has(field)) add(raw, 'modificador');
     else if (modifier && modifier !== 'noexp' && !PROXIMITY_TAGS.has(field)) add(raw, 'modificador');
+    else if (modifier && modifier !== 'noexp' && !proximityPhraseOk(q, j)) add(raw, 'proximidad');
 
     if (prev === ')' && groupHasOperator(q, j)) add(`(…)${raw}`, 'grupo');
     i = close;
   }
   return issues;
+}
+
+/**
+ * ¿Lo que precede a una etiqueta con `:~N` es una frase válida para proximidad? Tiene que ser una frase
+ * entrecomillada, de dos o más palabras y sin comodines (ni asteriscos tipográficos): la ayuda de
+ * PubMed no admite truncamiento dentro de una búsqueda por proximidad.
+ */
+function proximityPhraseOk(q, end) {
+  if (!CLOSE_QUOTES.has(q[end])) return false;
+  let k = end - 1;
+  while (k >= 0 && !OPEN_QUOTES.has(q[k])) k -= 1;
+  if (k < 0) return false;
+  const phrase = q.slice(k + 1, end).trim();
+  return phrase.split(/\s+/).length >= 2 && !/[*∗＊⁎✱﹡]/.test(phrase);
 }
 
 /** ¿El grupo que cierra el paréntesis en la posición `end` contiene un operador booleano? */

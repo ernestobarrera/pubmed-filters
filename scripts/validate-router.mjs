@@ -137,18 +137,25 @@ check('Q7', malos.length === 0,
 // etiqueta inexistente, la misma con un espacio delante, etiqueta sobre un grupo con operadores,
 // modificador en un campo que no lo admite y asterisco tipográfico. Sin la consulta enviada, el juicio
 // NO da nada por bueno: la primera versión daba `usable: true` y Q8 lo exigía (Codex, 2026-10-08).
+// Segunda ronda de Codex (2026-10-08): asterisco tipográfico dentro de una frase, proximidad sobre una
+// frase con comodín y grupo con NOT, más la proximidad sin comillas que salió al corregirlas.
 const ignoradas = ['campo-invalido', 'etiqueta-desconocida-con-espacio', 'etiqueta-sobre-grupo',
-  'modificador-ignorado', 'asterisco-tipografico'];
+  'modificador-ignorado', 'asterisco-tipografico', 'asterisco-tipografico-en-frase', 'proximidad-con-comodin',
+  'proximidad-sin-comillas', 'etiqueta-sobre-grupo-not'];
 const ignoradaComoBuena = ignoradas.filter((k) => juicio(k).usable || juicio(k).anomalies.length === 0);
 const sinConsulta = inspectResponse(respuestas['campo-invalido'].esearchresult);
 // Y no se marca lo que no es etiqueta. Cada caso «sí» se comprobó contra PubMed el 2026-10-08.
 const noSonProblema = ['[18F]FDG[tiab]', '"[18F]FDG"[tiab]', '"asthma control"[tiab:~2]', 'asthma [tiab]',
   'asthma[mesh:noexp]', 'review[pt:noexp]', 'therapy[sh:noexp]', '(asthma)[tiab]', 'Front Endocrinol (Lausanne)[JO]',
   '“mini-mental state”[tiab]', 'alzheimer’s[tiab]', 'asthma[Title/Abstract]', 'asthma/therapy[mh]', 'lancet[jo]',
-  '("a OR b")[tiab]'].filter((q) => unknownFieldTags(q).length > 0 || lookalikeCharacters(q).length > 0);
+  '("a OR b")[tiab]', '"asthma control"[ad:~2]', '“asthma control”[Title/Abstract:~3]',
+  'asthma[tiab] NOT copd[tiab]'].filter((q) => unknownFieldTags(q).length > 0 || lookalikeCharacters(q).length > 0);
 const siSonProblema = ['asthma [tiabb]', 'asthma\t[foo]', '(asthma OR copd)[tiab]', '(asthma|copd) [tiab]',
-  'asthma[mh:~3]', 'asthma[ti:noexp]', '"asthma control"[tw:~2]', 'asthma OR [tiab]', 'asthma [author identifier]']
-  .filter((q) => unknownFieldTags(q).length === 0);
+  'asthma[mh:~3]', 'asthma[ti:noexp]', '"asthma control"[tw:~2]', 'asthma OR [tiab]', 'asthma [author identifier]',
+  '(asthma AND copd)[tiab]', '(asthma NOT copd)[tiab]', '"asthma"[tiab:~2]', 'asthma control[tiab:~2]',
+  '"asthma* control"[tiab:~2]']
+  .filter((q) => unknownFieldTags(q).length === 0)
+  .concat(['"randomized trial∗"[tiab]'].filter((q) => lookalikeCharacters(q).length === 0));
 check('Q8', juicio('corchete-en-frase').usable === true && ignoradaComoBuena.length === 0
   && sinConsulta.usable === false && sinConsulta.problems.some((p) => p.startsWith('ETIQUETAS_NO_COMPROBADAS'))
   && noSonProblema.length === 0 && siSonProblema.length === 0,

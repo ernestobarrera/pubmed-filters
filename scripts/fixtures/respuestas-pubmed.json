@@ -305,5 +305,87 @@
       "translationset": [],
       "querytranslation": "\"intervent\"[Title]"
     }
+  },
+  "asterisco-tipografico-en-frase": {
+    "_nota": "Asterisco tipográfico DENTRO de una frase. PubMed busca la frase sin truncar (65.068) frente a 109.950 de \"randomized trial*\"[tiab], sin avisar. La primera versión vaciaba las comillas antes de buscar asteriscos falsos y lo daba por verificado (Codex, segunda ronda).",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "\"randomized trial∗\"[tiab]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "65068",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [],
+      "querytranslation": "\"randomized trial\"[Title/Abstract]"
+    }
+  },
+  "proximidad-con-comodin": {
+    "_nota": "Proximidad sobre una frase con comodín: PubMed tira la proximidad sin avisar y busca la frase truncada (10.391). La ayuda de PubMed no admite truncamiento en búsquedas por proximidad (Codex, segunda ronda).",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "\"asthma* control\"[tiab:~2]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "10391",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [],
+      "querytranslation": "\"asthma* control\"[Title/Abstract]"
+    }
+  },
+  "proximidad-sin-comillas": {
+    "_nota": "Proximidad sin comillas: PubMed la tira sin avisar y reinterpreta los términos. Encontrado al corregir la segunda ronda de Codex.",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "asthma control[tiab:~2]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "38329",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [
+        {
+          "from": "asthma",
+          "to": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma's\"[All Fields]"
+        }
+      ],
+      "querytranslation": "(\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma s\"[All Fields]) AND \"control\"[Title/Abstract]"
+    }
+  },
+  "etiqueta-sobre-grupo-not": {
+    "_nota": "Etiqueta sobre un grupo con NOT: ignorada sin avisar (223.754) frente a 184.029 de asthma[tiab] NOT copd[tiab]. Una mutación que quitaba NOT del detector de grupos sobrevivía (Codex, segunda ronda).",
+    "_capturado": "2026-10-08, E-utilities por POST",
+    "term": "(asthma NOT copd)[tiab]",
+    "_params": {
+      "retmax": "0"
+    },
+    "esearchresult": {
+      "count": "223754",
+      "retmax": "0",
+      "retstart": "0",
+      "idlist": [],
+      "translationset": [
+        {
+          "from": "asthma",
+          "to": "\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma's\"[All Fields]"
+        },
+        {
+          "from": "copd",
+          "to": "\"pulmonary disease, chronic obstructive\"[MeSH Terms] OR (\"pulmonary\"[All Fields] AND \"disease\"[All Fields] AND \"chronic\"[All Fields] AND \"obstructive\"[All Fields]) OR \"chronic obstructive pulmonary disease\"[All Fields] OR \"copd\"[All Fields]"
+        }
+      ],
+      "querytranslation": "(\"asthma\"[MeSH Terms] OR \"asthma\"[All Fields] OR \"asthmas\"[All Fields] OR \"asthma s\"[All Fields]) NOT (\"pulmonary disease, chronic obstructive\"[MeSH Terms] OR (\"pulmonary\"[All Fields] AND \"disease\"[All Fields] AND \"chronic\"[All Fields] AND \"obstructive\"[All Fields]) OR \"chronic obstructive pulmonary disease\"[All Fields] OR \"copd\"[All Fields])",
+      "errorlist": {
+        "phrasesnotfound": [],
+        "fieldsnotfound": []
+      }
+    }
   }
 }

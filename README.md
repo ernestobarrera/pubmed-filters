@@ -94,8 +94,10 @@ cada caso PubMed devuelve un recuento plausible con el diagnóstico limpio:
   registros, porque PubMed tira la etiqueta y reinterpreta el término);
 - una etiqueta sobre un grupo con operadores: `(asthma OR copd)[tiab]` busca en todos los campos;
 - un modificador en un campo que no lo admite: `asthma[mh:~3]` se busca como MeSH normal;
-- un asterisco tipográfico copiado de un PDF: `intervent∗[ti]` da 9 registros, e `intervent*[ti]`
-  da 269.566;
+- una proximidad que no va sobre una frase entrecomillada de dos o más palabras sin comodines:
+  `"asthma* control"[tiab:~2]` pierde la proximidad;
+- un asterisco tipográfico copiado de un PDF, también dentro de una frase: `intervent∗[ti]` da 9
+  registros, e `intervent*[ti]` da 269.566;
 - una página fuera de la ventana de 9.999 registros, cuyo ERROR llega como JSON inválido y que un
   adaptador descuidado convierte en cero.
 
