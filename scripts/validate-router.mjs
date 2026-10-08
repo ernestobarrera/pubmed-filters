@@ -112,7 +112,16 @@ const recuentos = [
   ['negativo', { count: '-3', querytranslation: 'x' }, false],
   ['prefijo numérico', { count: '12abc', querytranslation: 'x' }, false],
   ['solo espacios', { count: '  ', querytranslation: 'x' }, false],
+  // `Number()` no es un parser de recuentos: acepta hexadecimal, notación científica, decimales con
+  // cero, signo y menos cero. «0x10» pasaba como 16 y «1e3» como 1000. Medido el 2026-10-08.
+  ['hexadecimal', { count: '0x10', querytranslation: 'x' }, false],
+  ['notación científica', { count: '1e3', querytranslation: 'x' }, false],
+  ['decimal con cero', { count: '12.0', querytranslation: 'x' }, false],
+  ['con signo', { count: '+5', querytranslation: 'x' }, false],
+  ['menos cero', { count: '-0', querytranslation: 'x' }, false],
+  ['número no entero', { count: 1.5, querytranslation: 'x' }, false],
   ['válido', { count: '1234', querytranslation: 'x' }, true],
+  ['válido como número', { count: 1234, querytranslation: 'x' }, true],
   ['cero legítimo', { count: '0', querytranslation: 'x' }, true],
 ];
 const malos = recuentos.filter(([, r, esperado]) => inspectResponse(r).usable !== esperado);

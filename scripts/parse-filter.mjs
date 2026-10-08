@@ -86,9 +86,15 @@ export function inspectResponse(esearchresult) {
   // devolvía `usable: true` para {querytranslation: '...'} sin count, para count: 'invalid',
   // vacío y null: daba luz verde justo a lo que existe para vigilar. Lo encontró una revisión
   // externa leyendo el código, no la suite.
-  const countIsValid = typeof rawCount === 'string' || typeof rawCount === 'number'
-    ? String(rawCount).trim() !== '' && Number.isInteger(count) && count >= 0
-    : false;
+  //
+  // Y la puerta es la cadena, no `Number()`: `Number` acepta '0x10' (16), '1e3' (1000), '12.0', '+5'
+  // y '-0'. ESearch envía dígitos decimales y nada más; cualquier otra forma no es su recuento.
+  // Entre paréntesis a propósito: sin ellos, `x || cond ? a : b` se lee `(x || cond) ? a : b`, y la
+  // mutación M3 (`true || ...`) dejaba de anular la puerta. Lo cazó la propia puerta de mutación.
+  const countIsValid = (typeof rawCount === 'string'
+    ? /^[0-9]+$/.test(rawCount)
+    : typeof rawCount === 'number' && Number.isSafeInteger(rawCount) && rawCount >= 0
+      && !Object.is(rawCount, -0));
   const warn = r.warninglist;
   const err = r.errorlist ?? {};
   const problems = [];

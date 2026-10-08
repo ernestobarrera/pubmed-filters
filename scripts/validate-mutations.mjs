@@ -132,6 +132,14 @@ const MUTACIONES = [
     rompe: 'Q7',
   },
   {
+    id: 'M7',
+    porque: 'el recuento vuelve a juzgarse con Number(): «0x10» pasa como 16 y «1e3» como 1000',
+    fichero: 'scripts/parse-filter.mjs',
+    de: '? /^[0-9]+$/.test(rawCount)',
+    a: "? String(rawCount).trim() !== '' && Number.isInteger(count) && count >= 0",
+    rompe: 'Q7',
+  },
+  {
     id: 'M4',
     porque: 'un término descartado deja de invalidar el recuento cuando la consulta devuelve resultados',
     fichero: 'scripts/parse-filter.mjs',
