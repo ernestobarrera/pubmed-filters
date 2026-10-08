@@ -32,8 +32,18 @@ import { esearch, ESEARCH_URL, TransportError } from './esearch.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ROUTER = join(ROOT, 'neurosymbolic_router.json');
 
-/** ESearch no sirve más allá de los primeros 9.999 registros de un resultado. */
-export const ESEARCH_WINDOW = 9999;
+/**
+ * Ventana de ESearch para PubMed. Dos cifras, a propósito, porque no coinciden:
+ *  - DOCUMENTADA por NCBI: retmax <= 10000 y retstart + retmax <= 10000. Es la que este ejecutor
+ *    acepta enviar: un límite más estrecho sería convertir una observación en verdad sobre PubMed.
+ *  - OBSERVADA el 2026-10-08: el conector PubMed del entorno sirve hasta retstart=9998 (9.999
+ *    registros) y cyanheads/pubmed-mcp-server limita retstart a 9998 porque, según su código, NCBI
+ *    «fails the whole request above it». Sin acceso a E-utilities no se pudo medir directamente.
+ * Lo que no cambia con la cifra: si NCBI rechaza la petición, eso NO es un recuento de cero. Y si se
+ * recuperan menos registros de los que hay, `records_complete` es false.
+ */
+export const ESEARCH_DOCUMENTED_WINDOW = 10000;
+export const ESEARCH_OBSERVED_WINDOW = 9999;
 
 const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -52,8 +62,9 @@ export function queryIntegrity(inspection) {
 /** Ejecuta `term` tal cual y devuelve el recibo. Un 413/414 lanza TransportError: nunca hay recibo con recuento. */
 export async function runExact(term, { retmax = 0, apiKey = '', fetcher, now = () => new Date() } = {}) {
   if (typeof term !== 'string' || term.trim() === '') throw new Error('La consulta está vacía.');
-  if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_WINDOW) {
-    throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_WINDOW}.`);
+  // retstart es siempre 0 aquí, así que retstart + retmax <= 10000 se reduce a retmax <= 10000.
+  if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_DOCUMENTED_WINDOW) {
+    throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_DOCUMENTED_WINDOW}.`);
   }
   const params = { retmax: String(retmax), tool: 'pubmed-filters-exact', ...(apiKey ? { api_key: apiKey } : {}) };
   const executedAt = now().toISOString();
@@ -76,8 +87,9 @@ export async function runExact(term, { retmax = 0, apiKey = '', fetcher, now = (
     count_raw: r.count ?? null,
     records_retrieved: pmids.length,
     records_complete: count !== null && pmids.length === count,
-    window_limit: count !== null && count > ESEARCH_WINDOW
-      ? `ESearch solo sirve los primeros ${ESEARCH_WINDOW} de ${count}: el resto no es accesible por esta vía.`
+    window_limit: count !== null && count > ESEARCH_OBSERVED_WINDOW
+      ? `ESearch solo sirve una ventana inicial de ${count} registros: ${ESEARCH_DOCUMENTED_WINDOW} según `
+        + `NCBI, ${ESEARCH_OBSERVED_WINDOW} observados el 2026-10-08. El resto no es accesible por esta vía.`
       : null,
     pmids,
     pmid_list_sha256: sha256(pmids.join('\n')),

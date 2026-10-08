@@ -38,12 +38,47 @@ Si quieres cerrar estos huecos: en la configuración del entorno, **Network acce
 
 ---
 
+## 0bis. Correcciones tras la revisión externa (2026-10-08, tarde)
+
+Una revisión independiente del informe y de la rama señaló cuatro puntos. Así quedan:
+
+1. **Ventana de ESearch: 9.999 frente a 10.000. Aceptada, con un matiz medido.**
+   - La primera versión del ejecutor fijaba `ESEARCH_WINDOW = 9999` y rechazaba `retmax=10000`. Con eso convertía lo observado en un adaptador en una verdad sobre PubMed.
+   - Según la revisión, NCBI documenta `retmax ≤ 10000` y `retstart + retmax ≤ 10000`. No he podido abrir la página porque la red está bloqueada.
+   - Medido de nuevo en el conector: `retstart=9998` devuelve **un solo** registro aunque se pidan 2 o 3, y `retstart=9999` da cero. La ventana observable es de **9.999**.
+   - cyanheads lo confirma de forma independiente en su código: «NCBI's eSearch serves `retstart` up to 9998 for PubMed and fails the whole request above it».
+   - **Decisión:**
+     - El ejecutor acepta lo documentado: `retmax=10000` se envía y `10001` no (E4 y mutación E-VENTANA).
+     - Declara las dos cifras (`ESEARCH_DOCUMENTED_WINDOW`, `ESEARCH_OBSERVED_WINDOW`) sin elegir verdad.
+     - Si NCBI rechaza, el ejecutor ya no puede convertirlo en cero (Q7/E3).
+     - **Pendiente con red:** medir `retmax=10000` y `retstart=9999` directamente contra E-utilities.
+
+2. **Polisemia de `failed`. Aceptada.**
+   - `operational_status` es un vocabulario compartido por tres dimensiones, y «cobertura fallida» o «lectura fallida» no significan nada definido.
+   - 1.9.0 añade `values_by_dimension`: `failed` vale solo para `query_integrity`; `coverage` y `reading_depth` conservan `verified | planned | unsupported`.
+   - Lo vigilan C13 y la mutación C13-POLISEMIA.
+   - No adopto la alternativa de rediseñar `coverage` y `reading_depth` con vocabularios propios: cambiaría la semántica existente sin una prueba que lo pida.
+
+3. **Diagnóstico parcial. Aceptado el matiz.**
+   - «Vale lo mismo que no tener diagnóstico» era inexacto. Lo correcto: un diagnóstico parcial con una anomalía observada da `failed`; sin anomalía observada da `unsupported`.
+   - Así queda escrito en `value_meanings`.
+   - La granularidad de capacidades de un adaptador (qué campos devuelve) sigue siendo útil para auditar la infraestructura. Su sitio es la declaración de conformidad del adaptador, no el núcleo del router.
+
+4. **`NotIndexed`: «impacto nulo» era demasiado. Aceptado.**
+   - El impacto directo sobre los filtros del registry es nulo, pero el componente neural puede construir un concepto solo con `[mh]`.
+   - 1.9.0 añade `composition.indexing_status_is_not_mesh`: `Status=MEDLINE` no implica MeSH; cuando importa la sensibilidad, MeSH se acompaña de texto libre, y depender solo de MeSH es legítimo si es deliberado y se declara.
+   - R15 falla si un filtro empieza a usar `medline[sb]`, `inprocess[sb]`, `pubmednotmedline[sb]` o `publisher[sb]` sin declararlo (mutación R15-ESTADO).
+
+**Estado tras las correcciones:** suite **58/0**; puerta de mutación **18/18**. El commit `9d3fe40` (recuento estricto) sigue siendo independiente y fusionable por separado.
+
+---
+
 ## A. Resumen ejecutivo
 
 **Diagnóstico.** El router 1.8 identificó bien el fallo del incidente: la capa intermedia ejecutaba PubMed de verdad pero no devolvía su diagnóstico. **La hipótesis de partida sobrevive** (§32), con dos correcciones:
 
 1. **El diagnóstico parcial vale lo mismo que no tener diagnóstico.** Lo he reproducido: con solo `querytranslation`, un MeSH inventado da un 0 indistinguible de un cero legítimo, y cuando PubMed descarta todos los términos la traducción devuelve la cadena enviada tal cual. Comparar traducción contra consulta diría entonces «nada descartado». Un diagnóstico parcial puede **refutar** la integridad, pero nunca **verificarla**.
-2. **El fallo más grave encontrado hoy no es de diagnóstico, es de recuento.** El conector PubMed de este entorno devuelve `total_count: 0` y `has_more: false` para `asthma[tiab]` (195.437 registros) en cuanto `retstart ≥ 9999`. Es un error del backend convertido en cero plausible: el `parseInt(count) || 0` que el contrato ya prohíbe, ahora observado en vivo.
+2. **El fallo más grave encontrado hoy no es de diagnóstico, es de recuento.** El conector PubMed de este entorno devuelve `total_count: 0` y `has_more: false` para `asthma[tiab]` (195.437 registros) en cuanto `retstart ≥ 9999`. Dónde está esa frontera es secundario (ver §0bis); el defecto es convertir el rechazo en un cero plausible: el `parseInt(count) || 0` que el contrato ya prohíbe, ahora observado en vivo.
 
 **Riesgos principales.** Adaptadores que transforman la consulta en silencio:
 - BioMCP elimina `OR`/`AND` como *stopwords* y convierte `A OR B` en `A B`.
@@ -84,7 +119,7 @@ Leyenda:
 | B6 | Límites previos al envío del conector | consultas sintéticas y compuestas | rechazo explícito `INVALID_QUERY`: **2.048 caracteres**, **20 operadores** (`AND`/`OR`/`NOT`; `\|` no cuenta), **5 comodines**, `max_results` ≤ 200 | conector | REPRODUCIDO |
 | B7 | El filtro de síntesis compuesto (1.942 caracteres) no se puede ejecutar en el conector | `(asthma[tiab]) AND (<metaanalysis.txt>)` | rechazado por 39 comodines | conector | REPRODUCIDO |
 | B8 | 12 de 31 filtros del registry no caben en el conector, compuestos con un tema simple | cálculo sobre los filtros y prueba con `geriatrics_specific` (28 `\|`, aceptado) | 19/31 caben; quedan fuera, entre otros, `evidence_synthesis`, `guidelines`, `humans`, `adults` y `pediatrics` | repo + conector | REPRODUCIDO |
-| B9 | **Cero falso por paginación** | `asthma[tiab]`, `retstart` 9990 / 9999 / 10000 | 9990 → 195.437; 9999 y 10000 → `total_count: 0`, `has_more: false`, traducción sin normalizar | conector | REPRODUCIDO |
+| B9 | **Cero falso por paginación** | `asthma[tiab]`, `retstart` 9990 / 9998 / 9999 / 10000 | 9990 → 195.437; 9998 → 1 registro aunque se pidan 2 o 3; 9999 y 10000 → `total_count: 0`, `has_more: false`, traducción sin normalizar. Frontera observable: 9.999 registros (la documentación de NCBI habla de 10.000; ver §0bis) | conector | REPRODUCIDO |
 | B10 | El conector no expone MeSH, `Status` ni `IndexingMethod` | `get_article_metadata` PMID 41626901 | sin esos campos | conector | REPRODUCIDO |
 | B11 | Los «artículos relacionados» del conector no traen `neighbor_score` e ignoran el límite | PMID 41626901, `max_results: 5` | 100 PMIDs sin puntuación | conector | REPRODUCIDO |
 | B12 | La documentación del conector dice «no usar `*`», pero acepta hasta 5 | `wearable*[tiab]` | ejecutado | conector | REPRODUCIDO |
@@ -189,7 +224,7 @@ Construir un clasificador LLM sobre los contextos de S2 es posible con las condi
 | Ámbito | Impacto en este repositorio | Acción |
 |---|---|---|
 | **Parser** | **Ninguno directo.** El repositorio no parsea XML de PubMed. cyanheads y BioMCP tampoco leen `IndexingMethod` (grep vacío), así que no hay enum cerrado que rompa. | Ninguna. Si algún día se parsea, el vector V15 debe aceptar valores desconocidos. |
-| **Recuperación** | **El cambio reetiqueta el estado, no quita MeSH a nadie.** Esas citas ya no tenían MeSH estando In Process; ahora pasarán a llamarse MEDLINE. Solo se rompen las estrategias que usan el **estado** como proxy de indexación: `medline[sb]` como «indexado», o el patrón `MeSH OR (tiab AND (inprocess[sb] OR pubmednotmedline[sb]))`, que tras diciembre **dejará de recoger** estas citas. | **Ningún filtro del repositorio usa subconjuntos de estado** (solo `systematic[sb]`, 3 veces). Recomiendo una frase en `composition.topic_building` en la próxima versión. |
+| **Recuperación** | **El cambio reetiqueta el estado, no quita MeSH a nadie.** Esas citas ya no tenían MeSH estando In Process; ahora pasarán a llamarse MEDLINE. Solo se rompen las estrategias que usan el **estado** como proxy de indexación: `medline[sb]` como «indexado», o el patrón `MeSH OR (tiab AND (inprocess[sb] OR pubmednotmedline[sb]))`, que tras diciembre **dejará de recoger** estas citas. | **Ningún filtro del repositorio usa subconjuntos de estado** (solo `systematic[sb]`, 3 veces). Regla añadida en 1.9.0 (`composition.indexing_status_is_not_mesh`) y comprobación R15; ver §0bis. |
 | **MeSH** | Refuerza lo que Cochrane ya pide: vocabulario controlado **y** texto libre en búsquedas sensibles. `humans` y `adults` son exclusiones `NOT`, así que **conservan** los registros sin indexar, por diseño. Un `X[mh]` como único canal de un concepto sí los pierde. | Hacer visible esa dependencia, no abandonar MeSH (objeción 6). |
 | **FTP** | Alineación FTP = web = API. Útil para *fixtures* y regresión offline. | Experimental (fase 5). |
 | **Tests** | Un vector de fixture `Status="MEDLINE" IndexingMethod="NotIndexed"` sin MeSH solo tiene sentido si existe un parser XML. | Diferido. No fabrico fixtures sin los datos beta oficiales. |
@@ -244,8 +279,8 @@ Se pueden revertir por separado. Si prefieres no subir el contrato, revertir `06
    - nunca sumar recuentos;
    - registrar cada subconsulta.
 
-   Advertencia medida hoy: con el conector del entorno, la partición exige recuperar **todos** los PMIDs de cada trozo, y el conector sirve 200 por llamada y nada más allá de 9.999. Para temas grandes la partición es **inviable**, no solo arriesgada. Preferencia confirmada: POST directo.
-3. **`NotIndexed`**: una frase en `composition.topic_building`: «no uses subconjuntos de estado (`medline[sb]`, `inprocess[sb]`) como proxy de indexación MeSH». Más una comprobación R que falle si un filtro los usa. Hoy pasaría en verde: es una protección de futuro.
+   Advertencia medida hoy: con el conector del entorno, la partición exige recuperar **todos** los PMIDs de cada trozo, y el conector sirve 200 por llamada y nada más allá de la primera ventana (9.999 observados). Para temas grandes la partición es **inviable**, no solo arriesgada. Preferencia confirmada: POST directo.
+3. ~~`NotIndexed`~~ **Adelantado a 1.9.0** tras la revisión externa: ver §0bis.
 4. **`removed_in_this_version`** → `removed_in` con versión explícita.
 
 ### Lo que NO entra en el router
@@ -321,7 +356,7 @@ Códigos de salida:
 | V12–V13 | T1 / T2 / E5 |
 | V14 (campo inválido) | **pendiente de capturar una respuesta real de ESearch**; no se fabrica |
 | V15 (`NotIndexed`) | solo si hay parser XML |
-| V16 (paginación) | E4 en el ejecutor propio; para adaptadores ajenos, la prueba B9 (`retstart=9999` no puede dar 0) |
+| V16 (paginación) | E4 en el ejecutor propio; para adaptadores ajenos, la prueba B9 (un `retstart` fuera de la ventana no puede dar 0, sea la frontera 9.999 o 10.000) |
 
 **Lo que ningún test sustituye (PRESS, §19):** traducción de la pregunta, conceptos que faltan, adecuación de cada MeSH, si forzar un componente PICO perjudica el recall, si el filtro metodológico encaja con la pregunta. Checklist humano propuesto, que el agente invoca solo cuando la búsqueda sostendrá una afirmación de cobertura:
 

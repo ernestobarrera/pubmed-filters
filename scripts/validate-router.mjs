@@ -264,6 +264,19 @@ check('R14', malEscritos.length === 0,
   `sintaxis booleana de los ${allFilters.length} filtros: ${
     malEscritos.length === 0 ? 'sin anomalías' : JSON.stringify(malEscritos)}`);
 
+// Estado de indexación no es MeSH (baseline PubMed 2027, IndexingMethod="NotIndexed"). Un subconjunto
+// de estado usado como proxy de «indexado» deja fuera, en silencio, citas MEDLINE sin MeSH. Ningún
+// filtro lo hace hoy; esto impide que empiece a hacerlo sin declararse.
+const indexado = router.composition.indexing_status_is_not_mesh ?? {};
+const declaradosEstado = new Set(indexado.declared_status_subset_filters ?? []);
+const conSubconjuntoDeEstado = [...allFilters,
+  ...readdirSync(join(ROOT, 'filters', 'journals')).filter((f) => f.endsWith('.txt')).map((f) => `filters/journals/${f}`)]
+  .filter((f) => /\b(medline|inprocess|pubmednotmedline|publisher)\s*\[sb\]/i.test(query(f)) && !declaradosEstado.has(f));
+check('R15', typeof indexado.rule === 'string' && indexado.rule.includes('NotIndexed')
+  && conSubconjuntoDeEstado.length === 0,
+  `subconjuntos de estado como proxy de indexación MeSH: ${conSubconjuntoDeEstado.length === 0
+    ? 'ningún filtro sin declarar, y la regla NotIndexed está escrita' : JSON.stringify(conSubconjuntoDeEstado)}`);
+
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
 check('R12', undeclaredDates.length === 0,
@@ -331,6 +344,22 @@ check('C6', ['query_integrity', 'coverage', 'reading_depth']
     .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)
       && typeof router.provenance.operational_status?.value_meanings?.[s] === 'string'),
   'el estado operativo es semántico, separa integridad, cobertura y lectura, y define cada valor (comprobado y roto ≠ no comprobable)');
+
+// Un vocabulario compartido por tres dimensiones invita a usar un valor donde no significa nada:
+// `failed` está definido para la integridad de una consulta, no para «cobertura fallida» ni «lectura
+// fallida». Cada dimensión declara sus valores, todos existen en el vocabulario, y `failed` no se
+// extiende a otra dimensión sin su propio significado. Lo señaló una revisión externa el 2026-10-08.
+const os = router.provenance.operational_status ?? {};
+const porDimension = os.values_by_dimension ?? {};
+const dimensionesSinLista = (os.dimensions ?? []).filter((d) => !Array.isArray(porDimension[d]));
+const valoresHuerfanos = (os.dimensions ?? []).flatMap((d) => (porDimension[d] ?? [])
+  .filter((v) => !(os.semantic_values ?? []).includes(v)).map((v) => `${d}:${v}`));
+const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed'));
+check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
+  && (porDimension.query_integrity ?? []).includes('failed'),
+  `valores por dimensión: ${dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
+    ? 'cada dimensión declara los suyos y failed solo vale para query_integrity'
+    : `sin lista ${JSON.stringify(dimensionesSinLista)} / inexistentes ${JSON.stringify(valoresHuerfanos)} / failed fuera de sitio ${JSON.stringify(failedFuera)}`}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')
@@ -450,7 +479,7 @@ check('T2', resultado414 instanceof TransportError,
 //    por un fetcher de prueba: lo que se mira es el recibo que saldría de cada una.
 // ---------------------------------------------------------------------------------------------
 
-const { runExact, ESEARCH_WINDOW } = await import('./pubmed-exact.mjs');
+const { runExact, ESEARCH_DOCUMENTED_WINDOW } = await import('./pubmed-exact.mjs');
 const { createHash } = await import('node:crypto');
 const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
 const sirve = (cuerpo, status = 200) => async (url, init = {}) => {
@@ -461,7 +490,7 @@ const recibo = async (cuerpo, term = 'consulta[tiab]', opciones = {}) => {
   entregadas.length = 0;
   return runExact(term, { fetcher: sirve(cuerpo), now: () => new Date(0), ...opciones });
 };
-const valoresDeEstado = router.provenance.operational_status?.semantic_values ?? [];
+const valoresDeEstado = router.provenance.operational_status?.values_by_dimension?.query_integrity ?? [];
 
 // E1. Lo que se registra es lo que se envió y lo que llegó, no una reconstrucción.
 const cuerpoValido = JSON.stringify(respuestas['consulta-valida'], null, 1);
@@ -507,11 +536,19 @@ check('E3', malos3.length === 0,
 // E4. Recuperar menos registros de los que hay se dice, y la ventana de ESearch también.
 const parcial = await recibo(JSON.stringify({ esearchresult: {
   count: '12000', retmax: '2', idlist: ['1', '2'], querytranslation: 'x[tiab]' } }), 'x[tiab]', { retmax: 2 });
+// La frontera es la DOCUMENTADA (10.000), no la observada en un adaptador (9.999): un retmax de 10.000
+// se envía y uno de 10.001 no. La primera versión fijaba 9.999 y convertía el comportamiento de un
+// conector en verdad sobre PubMed; lo señaló una revisión externa el 2026-10-08.
 let ventanaRechazada = false;
-try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
+try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_DOCUMENTED_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
+await recibo(JSON.stringify({ esearchresult: { count: '0', querytranslation: 'x[tiab]' } }), 'x[tiab]',
+  { retmax: ESEARCH_DOCUMENTED_WINDOW });
+const fronteraEnviada = entregadas.length === 1
+  && new URLSearchParams(entregadas[0].body).get('retmax') === String(ESEARCH_DOCUMENTED_WINDOW);
 check('E4', parcial.records_retrieved === 2 && parcial.records_complete === false
-  && typeof parcial.window_limit === 'string' && parcial.result_count === 12000 && ventanaRechazada,
-  'result_count y records_retrieved no se confunden, la ventana de ESearch se declara y un retmax fuera de ella no se envía');
+  && typeof parcial.window_limit === 'string' && parcial.result_count === 12000 && ventanaRechazada
+  && fronteraEnviada && ESEARCH_DOCUMENTED_WINDOW === 10000,
+  'result_count y records_retrieved no se confunden, la ventana se declara, retmax=10000 se envía y 10001 no');
 
 // E5. Un 414 no produce recibo con recuento: el ejecutor lanza fallo de transporte.
 let e5;

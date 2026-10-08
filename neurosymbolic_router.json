@@ -371,6 +371,14 @@
     "same_family_filters": "Do not AND sensitive and specific versions of the same filter; choose one or run separate passes.",
     "overconstraint_rule": "If stacking filters threatens sensitivity, split into parallel searches and merge later.",
     "topic_building": "Use MeSH and title/abstract synonyms when useful without forcing every PICO component into the query.",
+    "indexing_status_is_not_mesh": {
+      "rule": "Status=MEDLINE does not imply MeSH. From the PubMed 2027 baseline (December 2026), citations in scope for MEDLINE but without an abstract move from In Process to MEDLINE with IndexingMethod=\"NotIndexed\" and carry no MeSH. A concept reached only through [mh], or a status subset (medline[sb], inprocess[sb], pubmednotmedline[sb], publisher[sb]) used as a proxy for indexing, silently misses them.",
+      "when_sensitivity_matters": "Pair MeSH with title/abstract terms for the same concept. Depending on MeSH alone is legitimate when deliberate; then declare it in the pass.",
+      "not_a_reason_to_drop_mesh": "The change relabels status; it removes MeSH from no record that had it.",
+      "source": "https://www.nlm.nih.gov/pubs/techbull/so26/so26_pubmed_2027_baseline.html",
+      "repository_check": "No filter in the repository uses a status subset. The suite fails if one starts to without being listed in declared_status_subset_filters.",
+      "declared_status_subset_filters": []
+    },
     "negation_filters": {
       "rule": "A filter whose query starts with NOT is an exclusion clause and must be appended WITHOUT AND: write `(topic) NOT (...)`, never `(topic) AND (NOT ...)`.",
       "why": "PubMed parses `AND (NOT X)` as `AND X`, silently inverting the filter and returning exactly what it was meant to exclude.",
@@ -571,11 +579,30 @@
         "unsupported"
       ],
       "value_meanings": {
-        "verified": "Checked against the source and found to hold. For query_integrity: PubMed returned its diagnostics and nothing was dropped, broken or doubtful.",
-        "failed": "Checked against the source and found NOT to hold. For query_integrity: PubMed returned its diagnostics and they show the query did not run as written (a dropped term, an error, an unusable count). Distinct from unsupported: here the defect is known.",
+        "verified": "Checked against the source and found to hold. For query_integrity: PubMed's full diagnostics (querytranslation, warninglist, errorlist, ERROR) were read and nothing was dropped, broken or doubtful.",
+        "failed": "Checked against the source and found NOT to hold. For query_integrity: the diagnostics available, full or partial, show that the query did not run as written (a dropped term, an error, an unusable count, a term missing from querytranslation). Partial diagnostics are enough to reach failed, because one observed anomaly refutes integrity.",
         "planned": "Intended but not yet performed.",
-        "unsupported": "Cannot be checked with the capabilities at hand. For query_integrity: the engine did not return PubMed's diagnostics, so nothing is known either way.",
+        "unsupported": "Cannot be checked with the capabilities at hand. For query_integrity: there are no diagnostics, or only partial ones that show no anomaly. Partial diagnostics can refute integrity but never verify it: measured 2026-10-08, a translation-only engine returned an invented MeSH heading as the same zero as a legitimate one, and echoed the sent query verbatim when every term had been dropped.",
         "why_failed_exists": "Until 1.8 a pass whose diagnostics showed a dropped term had no value of its own: calling it unsupported hid a known defect behind an unknown, and nothing else fitted. Measured 2026-10-08 with the reference executor against the repository's real fixtures."
+      },
+      "values_by_dimension": {
+        "rule": "Each dimension accepts only the values listed for it. failed is defined for query_integrity only; extending it to another dimension needs its own meaning and its own test, not reuse by analogy.",
+        "query_integrity": [
+          "verified",
+          "failed",
+          "planned",
+          "unsupported"
+        ],
+        "coverage": [
+          "verified",
+          "planned",
+          "unsupported"
+        ],
+        "reading_depth": [
+          "verified",
+          "planned",
+          "unsupported"
+        ]
       },
       "dimensions": [
         "query_integrity",
