@@ -1,0 +1,8 @@
+# Configuración de Cloudflare Workers para el MCP remoto. Pasos en mcp/README.md.
+name = "pubmed-filters-exact"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# Sin almacenamiento, sin Durable Objects, sin bindings: nada que mantener ni que pagar.
+# Los secretos (NCBI_API_KEY, ACCESS_KEY) se ponen con `npx wrangler secret put`, nunca aquí.

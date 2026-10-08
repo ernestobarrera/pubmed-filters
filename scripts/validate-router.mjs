@@ -463,7 +463,7 @@ const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.en
   .map((f) => `scripts/${f}`)
   .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE
     && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi/.test(read(f)));
-const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/pubmed-exact.mjs']
+const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/exact-core.mjs']
   .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)));
 check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0,
   `ESearch solo se llama desde ${ESEARCH_MODULE}: ${scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0

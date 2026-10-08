@@ -142,7 +142,7 @@ const MUTACIONES = [
   {
     id: 'E-COERCION',
     porque: 'el recibo vuelve a convertir un recuento ausente o malformado en un cero plausible: el `parseInt(count) || 0` de los adaptadores',
-    fichero: 'scripts/pubmed-exact.mjs',
+    fichero: 'scripts/exact-core.mjs',
     de: 'const count = inspection.countIsValid ? Number(r.count) : null;',
     a: 'const count = parseInt(r.count, 10) || 0;',
     rompe: 'E3',
@@ -150,7 +150,7 @@ const MUTACIONES = [
   {
     id: 'E-COLAPSO',
     porque: 'una consulta que PubMed muestra rota se declara «no verificable»: un defecto conocido escondido detrás de un desconocido',
-    fichero: 'scripts/pubmed-exact.mjs',
+    fichero: 'scripts/exact-core.mjs',
     de: "return inspection.usable ? 'verified' : 'failed';",
     a: "return inspection.usable ? 'verified' : 'unsupported';",
     rompe: 'E2',
@@ -158,15 +158,15 @@ const MUTACIONES = [
   {
     id: 'E-REHASH',
     porque: 'el hash se calcula sobre el JSON re-serializado, que es lo que el código entendió y no lo que PubMed respondió',
-    fichero: 'scripts/pubmed-exact.mjs',
-    de: 'raw_response_sha256: sha256(raw),',
-    a: 'raw_response_sha256: sha256(JSON.stringify(esearchresult)),',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'raw_response_sha256: await sha256(raw),',
+    a: 'raw_response_sha256: await sha256(JSON.stringify(esearchresult)),',
     rompe: 'E1',
   },
   {
     id: 'E-VENTANA',
     porque: 'la ventana sube a 10.000 por la documentación, cuando PubMed mismo declara 9.999 en su ERROR',
-    fichero: 'scripts/pubmed-exact.mjs',
+    fichero: 'scripts/exact-core.mjs',
     de: 'export const ESEARCH_WINDOW = 9999;',
     a: 'export const ESEARCH_WINDOW = 10000;',
     rompe: 'E4',

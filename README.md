@@ -98,6 +98,13 @@ Detrás de un proxy (como en los entornos cloud), `fetch` de Node no lo usa por 
 NODE_USE_ENV_PROXY=1 node scripts/pubmed-exact.mjs '…'
 ```
 
+### Desde un chat sin terminal: MCP
+
+`mcp/` envuelve este mismo ejecutor en un servidor MCP de una sola herramienta, `pubmed_search_exact`,
+que devuelve el mismo recibo. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
+Workers, y en ese caso claude.ai o ChatGPT se conectan con una URL. Instrucciones paso a paso en
+[`mcp/README.md`](mcp/README.md). No forma parte del router: es un adaptador más.
+
 ### Conformidad
 
 ```
