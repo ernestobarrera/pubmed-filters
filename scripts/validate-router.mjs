@@ -321,14 +321,16 @@ check('C5', typeof router.composition.precision_hints?.rule === 'string'
 
 check('C2', typeof router.conformance?.contract_version === 'string'
   && existsSync(join(ROOT, router.conformance.reference_parser))
-  && existsSync(join(ROOT, router.conformance.test_suite)),
-  'el router declara versión de contrato, parser de referencia y suite, y ambos ficheros existen');
+  && existsSync(join(ROOT, router.conformance.test_suite))
+  && existsSync(join(ROOT, router.conformance.reference_executor ?? '')),
+  'el router declara versión de contrato, parser y ejecutor de referencia y suite, y los tres ficheros existen');
 
 check('C6', ['query_integrity', 'coverage', 'reading_depth']
   .every((d) => (router.provenance.operational_status?.dimensions ?? []).includes(d))
-  && ['verified', 'planned', 'unsupported']
-    .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)),
-  'el estado operativo es semántico y separa integridad, cobertura y profundidad de lectura');
+  && ['verified', 'failed', 'planned', 'unsupported']
+    .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)
+      && typeof router.provenance.operational_status?.value_meanings?.[s] === 'string'),
+  'el estado operativo es semántico, separa integridad, cobertura y lectura, y define cada valor (comprobado y roto ≠ no comprobable)');
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')
@@ -398,7 +400,7 @@ const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.en
   .map((f) => `scripts/${f}`)
   .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE
     && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi/.test(read(f)));
-const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs']
+const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/pubmed-exact.mjs']
   .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)));
 check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0,
   `ESearch solo se llama desde ${ESEARCH_MODULE}: ${scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0
@@ -408,7 +410,7 @@ const { esearch, TransportError } = await import('./esearch.mjs');
 const entregadas = [];
 const fetcherDePrueba = (status = 200) => async (url, init = {}) => {
   entregadas.push({ url: String(url), method: init.method ?? 'GET', body: init.body?.toString() ?? '' });
-  return { ok: status === 200, status, json: async () => ({ esearchresult: { count: '1', querytranslation: 'x' } }) };
+  return { ok: status === 200, status, text: async () => JSON.stringify({ esearchresult: { count: '1', querytranslation: 'x' } }) };
 };
 const temaLargo = `(${Array.from({ length: 60 }, (_, i) => `"termino clinico ${i}"[tiab]`).join(' OR ')})`.slice(0, 950);
 const consultas = {
@@ -441,6 +443,80 @@ try {
 }
 check('T2', resultado414 instanceof TransportError,
   'un HTTP 414 acaba en fallo de transporte declarado, no en un recuento ni en «no evaluable»');
+
+// ---------------------------------------------------------------------------------------------
+// E. El ejecutor de referencia y su recibo (scripts/pubmed-exact.mjs).
+//    Se alimenta con las respuestas REALES de fixtures/respuestas-pubmed.json, servidas byte a byte
+//    por un fetcher de prueba: lo que se mira es el recibo que saldría de cada una.
+// ---------------------------------------------------------------------------------------------
+
+const { runExact, ESEARCH_WINDOW } = await import('./pubmed-exact.mjs');
+const { createHash } = await import('node:crypto');
+const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
+const sirve = (cuerpo, status = 200) => async (url, init = {}) => {
+  entregadas.push({ url: String(url), method: init.method ?? 'GET', body: init.body?.toString() ?? '' });
+  return { ok: status === 200, status, text: async () => cuerpo };
+};
+const recibo = async (cuerpo, term = 'consulta[tiab]', opciones = {}) => {
+  entregadas.length = 0;
+  return runExact(term, { fetcher: sirve(cuerpo), now: () => new Date(0), ...opciones });
+};
+const valoresDeEstado = router.provenance.operational_status?.semantic_values ?? [];
+
+// E1. Lo que se registra es lo que se envió y lo que llegó, no una reconstrucción.
+const cuerpoValido = JSON.stringify(respuestas['consulta-valida'], null, 1);
+const rv = await recibo(cuerpoValido, respuestas['consulta-valida'].term);
+check('E1', rv.sent_query === respuestas['consulta-valida'].term
+  && new URLSearchParams(entregadas[0].body).get('term') === rv.sent_query
+  && rv.sent_query_sha256 === sha(rv.sent_query)
+  && rv.transport === 'POST'
+  && rv.raw_response_sha256 === sha(cuerpoValido)
+  && rv.querytranslation === respuestas['consulta-valida'].esearchresult.querytranslation
+  && rv.count_raw === '67408' && rv.result_count === 67408,
+  'el recibo guarda la consulta enviada (y su hash), el transporte, el hash del cuerpo crudo y el diagnóstico tal como llegó');
+
+// E2. La integridad se deriva de la respuesta, con un valor para cada cosa distinta.
+const integridad = {};
+for (const k of ['consulta-valida', 'cero-legitimo', 'mesh-inexistente', 'termino-descartado-con-resultados',
+  'aviso-perdido-por-rettype-count']) {
+  integridad[k] = (await recibo(JSON.stringify(respuestas[k]), respuestas[k].term)).status.query_integrity;
+}
+const integridadEsperada = {
+  'consulta-valida': 'verified',
+  'cero-legitimo': 'verified',
+  'mesh-inexistente': 'failed',
+  'termino-descartado-con-resultados': 'failed',
+  'aviso-perdido-por-rettype-count': 'unsupported',
+};
+const integridadMal = Object.keys(integridadEsperada).filter((k) => integridad[k] !== integridadEsperada[k]);
+const fueraDelContrato = Object.values(integridad).filter((v) => !valoresDeEstado.includes(v));
+check('E2', integridadMal.length === 0 && fueraDelContrato.length === 0,
+  `integridad: verificada y limpia, verificada y rota, y no verificable no se confunden${
+    integridadMal.length ? ` — mal: ${JSON.stringify(integridadMal)}` : ''}${
+    fueraDelContrato.length ? ` — valores fuera de operational_status: ${JSON.stringify(fueraDelContrato)}` : ''}`);
+
+// E3. Un recuento inservible es null en el recibo, nunca un cero plausible (el `parseInt(...) || 0`).
+const malos3 = [];
+for (const raw of [{ querytranslation: 'x' }, { count: '12abc', querytranslation: 'x' }, { count: '', querytranslation: 'x' }]) {
+  const r = await recibo(JSON.stringify({ esearchresult: raw }));
+  if (r.result_count !== null || r.status.query_integrity === 'verified') malos3.push(raw);
+}
+check('E3', malos3.length === 0,
+  `recuento ausente o malformado: ${malos3.length === 0 ? 'result_count null y no verificado' : JSON.stringify(malos3)}`);
+
+// E4. Recuperar menos registros de los que hay se dice, y la ventana de ESearch también.
+const parcial = await recibo(JSON.stringify({ esearchresult: {
+  count: '12000', retmax: '2', idlist: ['1', '2'], querytranslation: 'x[tiab]' } }), 'x[tiab]', { retmax: 2 });
+let ventanaRechazada = false;
+try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
+check('E4', parcial.records_retrieved === 2 && parcial.records_complete === false
+  && typeof parcial.window_limit === 'string' && parcial.result_count === 12000 && ventanaRechazada,
+  'result_count y records_retrieved no se confunden, la ventana de ESearch se declara y un retmax fuera de ella no se envía');
+
+// E5. Un 414 no produce recibo con recuento: el ejecutor lanza fallo de transporte.
+let e5;
+try { e5 = await runExact('x[tiab]', { fetcher: sirve('', 414) }); } catch (e) { e5 = e; }
+check('E5', e5 instanceof TransportError, 'el ejecutor convierte un 414 en fallo de transporte, nunca en un recibo');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.

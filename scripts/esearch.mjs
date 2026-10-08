@@ -20,12 +20,19 @@ export class TransportError extends Error {
   }
 }
 
-/** Ejecuta ESearch y devuelve { transport, esearchresult }. `term` nunca puede sobrescribirse. */
+/**
+ * Ejecuta ESearch y devuelve { transport, esearchresult, raw }. `term` nunca puede sobrescribirse.
+ *
+ * `raw` es el cuerpo tal como llegó, antes de parsearlo: su SHA-256 es la instantánea de la ejecución
+ * (provenance.execution_snapshot_rule). Un hash del JSON re-serializado sería el hash de lo que este
+ * código entendió, no de lo que PubMed respondió. Un cuerpo que no es JSON lanza: no es un cero.
+ */
 export async function esearch(term, { params = {}, fetcher = fetch } = {}) {
   const body = new URLSearchParams({ db: 'pubmed', retmode: 'json', ...params, term });
   const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });
   if (response.status === 413 || response.status === 414) throw new TransportError(response.status);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const payload = await response.json();
-  return { transport: TRANSPORT, esearchresult: payload.esearchresult };
+  const raw = await response.text();
+  const payload = JSON.parse(raw);
+  return { transport: TRANSPORT, esearchresult: payload?.esearchresult, raw };
 }

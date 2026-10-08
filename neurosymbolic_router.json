@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.8.0",
+  "schema_version": "1.9.0",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -44,8 +44,9 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.8.0",
+    "contract_version": "1.9.0",
     "reference_parser": "scripts/parse-filter.mjs",
+    "reference_executor": "scripts/pubmed-exact.mjs",
     "test_suite": "scripts/validate-router.mjs",
     "how_a_surface_declares_support": "State the contract_version implemented, the sections implemented, the repository commit tested and the adapter's own test result. Running this repository suite validates the reference implementation only; it does not certify a third-party adapter.",
     "reimplementation_allowed": "Yes, in any language. Passing the suite is what counts, not sharing code.",
@@ -565,9 +566,17 @@
     "operational_status": {
       "semantic_values": [
         "verified",
+        "failed",
         "planned",
         "unsupported"
       ],
+      "value_meanings": {
+        "verified": "Checked against the source and found to hold. For query_integrity: PubMed returned its diagnostics and nothing was dropped, broken or doubtful.",
+        "failed": "Checked against the source and found NOT to hold. For query_integrity: PubMed returned its diagnostics and they show the query did not run as written (a dropped term, an error, an unusable count). Distinct from unsupported: here the defect is known.",
+        "planned": "Intended but not yet performed.",
+        "unsupported": "Cannot be checked with the capabilities at hand. For query_integrity: the engine did not return PubMed's diagnostics, so nothing is known either way.",
+        "why_failed_exists": "Until 1.8 a pass whose diagnostics showed a dropped term had no value of its own: calling it unsupported hid a known defect behind an unknown, and nothing else fitted. Measured 2026-10-08 with the reference executor against the repository's real fixtures."
+      },
       "dimensions": [
         "query_integrity",
         "coverage",

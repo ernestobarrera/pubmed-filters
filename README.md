@@ -68,6 +68,25 @@ La salida conserva la consulta literal, el recuento y el juicio de integridad. P
 auditable añade el commit del repositorio y conserva la respuesta o su SHA-256 según
 `provenance` en `neurosymbolic_router.json`.
 
+### Ejecutor de referencia con recibo
+
+Cualquier superficie con shell y red puede ejecutar una consulta PubMed **literal** y quedarse con
+su recibo, sin otro motor ni MCP intermedio:
+
+```
+node scripts/pubmed-exact.mjs '(asthma[tiab]) AND (systematic[sb])' --retmax 200
+node scripts/pubmed-exact.mjs --file consulta.txt
+```
+
+El recibo guarda la consulta enviada y su SHA-256, el transporte (POST), `querytranslation`,
+`warninglist`, `errorlist` y `ERROR` **tal como los devolvió PubMed**, el recuento crudo y el
+interpretado (`null`, nunca 0, si no es un recuento), los PMIDs y su hash, el SHA-256 del cuerpo
+crudo de la respuesta, el commit y el hash del router. `status.query_integrity` es `verified`
+(diagnóstico limpio), `failed` (el diagnóstico muestra que la consulta no se ejecutó como se
+escribió) o `unsupported` (no hay diagnóstico verificable). No reescribe, sanea ni trocea la
+consulta, y si recupera menos registros de los que hay, o el resultado supera la ventana de 9.999
+de ESearch, lo dice. Con `NCBI_API_KEY` en el entorno la usa sin escribirla: da cuota, no integridad.
+
 ### Conformidad
 
 ```
