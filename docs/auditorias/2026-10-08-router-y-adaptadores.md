@@ -42,7 +42,7 @@ Si quieres cerrar estos huecos: en la configuración del entorno, **Network acce
 
 Una revisión independiente del informe y de la rama señaló cuatro puntos. Así quedan:
 
-1. **Ventana de ESearch: 9.999 frente a 10.000. Aceptada, con un matiz medido.**
+1. **Ventana de ESearch: 9.999 frente a 10.000. Aceptada en principio, y luego REFUTADA por la medición directa (ver §0ter).**
    - La primera versión del ejecutor fijaba `ESEARCH_WINDOW = 9999` y rechazaba `retmax=10000`. Con eso convertía lo observado en un adaptador en una verdad sobre PubMed.
    - Según la revisión, NCBI documenta `retmax ≤ 10000` y `retstart + retmax ≤ 10000`. No he podido abrir la página porque la red está bloqueada.
    - Medido de nuevo en el conector: `retstart=9998` devuelve **un solo** registro aunque se pidan 2 o 3, y `retstart=9999` da cero. La ventana observable es de **9.999**.
@@ -70,6 +70,51 @@ Una revisión independiente del informe y de la rama señaló cuatro puntos. As�
    - R15 falla si un filtro empieza a usar `medline[sb]`, `inprocess[sb]`, `pubmednotmedline[sb]` o `publisher[sb]` sin declararlo (mutación R15-ESTADO).
 
 **Estado tras las correcciones:** suite **58/0**; puerta de mutación **18/18**. El commit `9d3fe40` (recuento estricto) sigue siendo independiente y fusionable por separado.
+
+---
+
+## 0ter. Resultados con acceso real a E-utilities (2026-10-08, ~11:30–12:30 UTC)
+
+Con la red abierta a `eutils.ncbi.nlm.nih.gov`, todo lo de esta sección es **REPRODUCIDO** contra PubMed. Las respuestas crudas relevantes son ahora fixtures reales en `scripts/fixtures/respuestas-pubmed.json`.
+
+**Barrida live (`sweep-filters.mjs`):** 122 filtros; 118 limpios; 4 con los descartes ya aceptados (revistas no indexadas); **ningún cambio respecto a la línea base del 2026-10-01**. La base no se ha tocado porque no había nada que clasificar.
+
+**Vectores adversariales contra PubMed real:**
+
+| Vector | Respuesta de PubMed | Juicio |
+|---|---|---|
+| MeSH inventado | 0 + `quotedphrasesnotfound` | `failed` (cero roto) |
+| Cero legítimo (`1804[dp]`) | 0, sin descartes | `verified` |
+| `rettype=count` | 0 **sin** `querytranslation` | `unsupported` |
+| `"body battery"` dentro de un OR | 6 registros + `quotedphrasesnotfound` | `failed` |
+| 15 frases inexistentes | 0; la traducción repite la consulta, pero **`quotedphrasesnotfound` lista las 15** | `failed`: con el diagnóstico completo, el eco de B4 deja de engañar |
+| `the[tiab] AND asthma[tiab]` | 0 + `errorlist.phrasesnotfound: ["the"]` | `failed` |
+| **`asthma[foo]`** | **246.024 registros, `fieldsnotfound` vacío, ningún aviso** | antes `verified` → **ahora `failed`** |
+| **`asthma[tiabb] OR copd[tiab]`** | **307.318 registros, ningún aviso** | **ahora `failed`** |
+| Síntesis compuesta (1.942 caracteres) | 9.247, limpia | `verified` |
+| Consulta de 6.304 caracteres por POST | 1.143 + 60 frases inventadas descartadas | `failed`; el transporte, íntegro |
+| `metformin[tiab]` + `humans` (NOT) | 30.300, NOT en la traducción | `verified` |
+| `"BMJ Simulation & Technology Enhanced Learning"[jour]` | 443 | `verified` |
+| La misma con `&amp;` (lo que deja el saneado de cyanheads) | **0** + aviso | `failed`: **el efecto de B17 queda reproducido** |
+| `retstart` 9990, `retmax` 10 | 9 PMIDs + «Restrictions achieved. start and count adjusted to 9990, 9» | antes `failed` por «aviso semántico» → **ahora aviso de paginación, sin invalidar** |
+| `retstart` 0, `retmax` 10000 | 9.999 PMIDs + «Restrictions achieved… 0, 9999» | idem |
+| `retstart` 9999 | `ERROR`: «'retstart' cannot be larger than 9998. For PubMed, ESearch can only retrieve the first 9,999 records», **en JSON inválido** (salto de línea crudo) | antes, error de parseo genérico → **ahora `RESPUESTA_ILEGIBLE` con el mensaje de PubMed** |
+
+**Conclusiones nuevas:**
+
+1. **La ventana es de 9.999, y lo dice PubMed.** La documentación de NCBI dirá 10.000, pero el servidor declara 9.999 en su propio ERROR. El ejecutor vuelve a `ESEARCH_WINDOW = 9999` (E4, mutación E-VENTANA) y deja escrita la historia de la cifra. Con esto, el defecto del conector del entorno (B9) queda bien acotado: **la frontera es de PubMed; convertir su ERROR en `total_count: 0` es del conector**. Y se entiende por qué ocurre: ese ERROR no es JSON válido, y un parser que falla y cae a 0 fabrica el cero.
+2. **Hallazgo nuevo y el más grave: las etiquetas de campo inexistentes son invisibles incluso con el diagnóstico completo.** Ni `warninglist` ni `errorlist` las reportan. Hasta hoy, el contrato 1.8 y el ejecutor habrían dado `verified` a `asthma[tiabb]`. Se corrige así:
+   - `inspectResponse(r, { sentQuery })` compara las etiquetas de la consulta enviada con `PUBMED_FIELD_TAGS`, una lista verificada en vivo etiqueta por etiqueta: con una etiqueta válida la traducción cambia de campo; con una inexistente queda idéntica a la del término sin etiqueta.
+   - Regla nueva `query_execution_contract.field_tags_are_not_reported`, con su vector.
+   - Pruebas Q8 y E6; R16 comprueba que las 27 formas de etiqueta distintas usadas por los 122 filtros son reales (lo son, incluido `[jo]`, que aparece 1.460 veces).
+   - Mutaciones Q8-SIN-ETIQUETAS y R16-ERRATA.
+3. **«Restrictions achieved» no es un problema de integridad.** Es PubMed recortando la página. Se informa en `pagination` / `pagination_notices` (Q9, mutación Q9-PAGINACION). Regla nueva `pagination_window`.
+4. **Node detrás de proxy:** `fetch` necesita `NODE_USE_ENV_PROXY=1`. Documentado en el README.
+5. **Comprobación de punta a punta del ejecutor:** asma pediátrica + síntesis + guías, 3.625 caracteres por POST: 726 registros, `verified`; recupera 200 y declara `records_complete: false`. `quickstart.mjs` funciona igual que antes.
+
+**Estado final:** suite **63/0**; puerta de mutación **22/22**.
+
+**Lo que sigue sin probar:** OpenAlex, Semantic Scholar, Europe PMC y Crossref (no se abrieron; no hacían falta para decidir sobre el núcleo); el benchmark OQL; Sider y la PubMed nativa de ChatGPT.
 
 ---
 

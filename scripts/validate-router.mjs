@@ -18,7 +18,8 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER }
+import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER,
+  unknownFieldTags, PUBMED_FIELD_TAGS }
   from './parse-filter.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -129,6 +130,30 @@ check('Q7', malos.length === 0,
   `recuentos malformados (${recuentos.length} casos): ${malos.length === 0
     ? 'ninguno pasa como utilizable y los válidos siguen pasando'
     : JSON.stringify(malos.map(([n]) => n))}`);
+
+// Q8. Una etiqueta de campo que no existe no produce NINGÚN aviso: respuesta real del 2026-10-08,
+// `asthma[foo]` = 246.024 registros con errorlist.fieldsnotfound vacío. Solo la consulta enviada lo
+// delata, así que el juicio necesita verla. Y no se marca lo que no es etiqueta.
+const campo = respuestas['campo-invalido'];
+const sinConsulta = inspectResponse(campo.esearchresult);
+const conConsulta = inspectResponse(campo.esearchresult, { sentQuery: campo.term });
+const noSonEtiquetas = ['[18F]FDG[tiab]', '"asthma control"[tiab:~2]', 'asthma[mesh:noexp]', '(x OR y)[ti]',
+  '“mini-mental state”[tiab]', 'asthma[Title/Abstract]', 'lancet[jo]'].filter((q) => unknownFieldTags(q).length > 0);
+check('Q8', sinConsulta.usable === true && conConsulta.usable === false
+  && conConsulta.problems.some((p) => p.startsWith('ETIQUETA_DESCONOCIDA'))
+  && unknownFieldTags('asthma[tiabb] OR copd[tiab]').join() === '[tiabb]' && noSonEtiquetas.length === 0,
+  `etiqueta de campo inexistente: PubMed calla, la consulta enviada la delata${
+    noSonEtiquetas.length ? ` — falsos positivos: ${JSON.stringify(noSonEtiquetas)}` : ''}`);
+
+// Q9. «Restrictions achieved» es PubMed recortando la página a su ventana, no un aviso sobre la
+// consulta: se informa como paginación y no invalida la integridad. Respuesta real del 2026-10-08.
+const recorte = inspectResponse(respuestas['restricciones-ajustadas'].esearchresult,
+  { sentQuery: respuestas['restricciones-ajustadas'].term });
+const vacia = inspectResponse(respuestas['frase-ignorada-the'].esearchresult);
+check('Q9', recorte.usable === true && recorte.pagination.length === 1
+  && !recorte.problems.some((p) => p.startsWith('AVISO_SEMANTICO'))
+  && vacia.usable === false && vacia.problems.some((p) => p.startsWith('ERRORLIST')),
+  'el recorte de página se declara como paginación sin invalidar la consulta; un errorlist real sí la invalida');
 
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
@@ -276,6 +301,15 @@ check('R15', typeof indexado.rule === 'string' && indexado.rule.includes('NotInd
   && conSubconjuntoDeEstado.length === 0,
   `subconjuntos de estado como proxy de indexación MeSH: ${conSubconjuntoDeEstado.length === 0
     ? 'ningún filtro sin declarar, y la regla NotIndexed está escrita' : JSON.stringify(conSubconjuntoDeEstado)}`);
+
+// Toda etiqueta de campo usada por un filtro del repositorio está en la lista comprobada contra
+// E-utilities. Si un filtro trae una errata en una etiqueta, PubMed no lo dirá nunca: lo dice esto.
+const todosLosFiltros = [...allFilters, ...readdirSync(join(ROOT, 'filters', 'journals'))
+  .filter((f) => f.endsWith('.txt')).map((f) => `filters/journals/${f}`)];
+const etiquetasDesconocidas = todosLosFiltros.flatMap((f) => unknownFieldTags(query(f)).map((t) => `${f}: ${t}`));
+check('R16', etiquetasDesconocidas.length === 0 && PUBMED_FIELD_TAGS.has('tiab'),
+  `etiquetas de campo de los ${todosLosFiltros.length} filtros: ${etiquetasDesconocidas.length === 0
+    ? 'todas reconocidas por PubMed' : JSON.stringify(etiquetasDesconocidas)}`);
 
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
@@ -479,7 +513,7 @@ check('T2', resultado414 instanceof TransportError,
 //    por un fetcher de prueba: lo que se mira es el recibo que saldría de cada una.
 // ---------------------------------------------------------------------------------------------
 
-const { runExact, ESEARCH_DOCUMENTED_WINDOW } = await import('./pubmed-exact.mjs');
+const { runExact, ESEARCH_WINDOW } = await import('./pubmed-exact.mjs');
 const { createHash } = await import('node:crypto');
 const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
 const sirve = (cuerpo, status = 200) => async (url, init = {}) => {
@@ -536,24 +570,38 @@ check('E3', malos3.length === 0,
 // E4. Recuperar menos registros de los que hay se dice, y la ventana de ESearch también.
 const parcial = await recibo(JSON.stringify({ esearchresult: {
   count: '12000', retmax: '2', idlist: ['1', '2'], querytranslation: 'x[tiab]' } }), 'x[tiab]', { retmax: 2 });
-// La frontera es la DOCUMENTADA (10.000), no la observada en un adaptador (9.999): un retmax de 10.000
-// se envía y uno de 10.001 no. La primera versión fijaba 9.999 y convertía el comportamiento de un
-// conector en verdad sobre PubMed; lo señaló una revisión externa el 2026-10-08.
+// La frontera es la que PubMed declara en su propio ERROR (medido el 2026-10-08): 9.999 registros.
+// Historia: se fijó en 9.999 por un conector, se subió a 10.000 por la documentación de NCBI y la
+// medición directa la devolvió a 9.999. retmax=9999 se envía; 10000 no.
 let ventanaRechazada = false;
-try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_DOCUMENTED_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
+try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
 await recibo(JSON.stringify({ esearchresult: { count: '0', querytranslation: 'x[tiab]' } }), 'x[tiab]',
-  { retmax: ESEARCH_DOCUMENTED_WINDOW });
+  { retmax: ESEARCH_WINDOW });
 const fronteraEnviada = entregadas.length === 1
-  && new URLSearchParams(entregadas[0].body).get('retmax') === String(ESEARCH_DOCUMENTED_WINDOW);
+  && new URLSearchParams(entregadas[0].body).get('retmax') === String(ESEARCH_WINDOW);
 check('E4', parcial.records_retrieved === 2 && parcial.records_complete === false
-  && typeof parcial.window_limit === 'string' && parcial.result_count === 12000 && ventanaRechazada
-  && fronteraEnviada && ESEARCH_DOCUMENTED_WINDOW === 10000,
-  'result_count y records_retrieved no se confunden, la ventana se declara, retmax=10000 se envía y 10001 no');
+  && typeof parcial.window_limit === 'string' && parcial.window_limit.startsWith('De 12000 registros')
+  && parcial.result_count === 12000 && ventanaRechazada && fronteraEnviada && ESEARCH_WINDOW === 9999,
+  'result_count y records_retrieved no se confunden, la ventana se declara bien, retmax=9999 se envía y 10000 no');
 
 // E5. Un 414 no produce recibo con recuento: el ejecutor lanza fallo de transporte.
 let e5;
 try { e5 = await runExact('x[tiab]', { fetcher: sirve('', 414) }); } catch (e) { e5 = e; }
 check('E5', e5 instanceof TransportError, 'el ejecutor convierte un 414 en fallo de transporte, nunca en un recibo');
+
+// E6. El ejecutor ve la etiqueta que PubMed calla, y el «&amp;» que deja un saneador HTML. Reales.
+const e6campo = await recibo(JSON.stringify(respuestas['campo-invalido']), respuestas['campo-invalido'].term);
+const e6amp = await recibo(JSON.stringify(respuestas['amp-como-entidad']), respuestas['amp-como-entidad'].term);
+check('E6', e6campo.status.query_integrity === 'failed' && e6campo.result_count === 246024
+  && e6amp.status.query_integrity === 'failed',
+  'etiqueta inexistente y «&amp;» saneado acaban en failed, con su recuento intacto');
+
+// E7. El ERROR de ventana de PubMed no es JSON válido (salto de línea crudo). Respuesta real: el
+// ejecutor lanza con el mensaje de PubMed, nunca devuelve un recibo con recuento.
+let e7;
+try { e7 = await recibo(respuestas['ventana-superada']._raw); } catch (e) { e7 = e; }
+check('E7', e7 instanceof Error && /RESPUESTA_ILEGIBLE/.test(e7.message) && /9,999/.test(e7.message),
+  'el ERROR ilegible de PubMed (retstart fuera de ventana) acaba en error explícito, no en un cero');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.

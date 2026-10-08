@@ -87,6 +87,17 @@ escribió) o `unsupported` (no hay diagnóstico verificable). No reescribe, sane
 consulta, y si recupera menos registros de los que hay, o el resultado supera la ventana de 9.999
 de ESearch, lo dice. Con `NCBI_API_KEY` en el entorno la usa sin escribirla: da cuota, no integridad.
 
+Dos cosas que PubMed **no** avisa y el ejecutor sí: una etiqueta de campo que no existe (`asthma[foo]`
+o la errata `[tiabb]` devuelven cientos de miles de registros sin ningún aviso, porque PubMed tira la
+etiqueta y reinterpreta el término) y una página fuera de la ventana de 9.999 registros, cuyo ERROR
+llega como JSON inválido y que un adaptador descuidado convierte en cero.
+
+Detrás de un proxy (como en los entornos cloud), `fetch` de Node no lo usa por defecto:
+
+```
+NODE_USE_ENV_PROXY=1 node scripts/pubmed-exact.mjs '…'
+```
+
 ### Conformidad
 
 ```

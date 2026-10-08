@@ -76,9 +76,14 @@ export function hasEmbeddedDateLimit(query) {
  * consulta devuelve el mismo 0 **sin ninguna warninglist**. Por eso esta función distingue
  * «verificado y limpio» de «no verificable»: no son lo mismo y no deben informarse igual.
  *
- * Devuelve { usable, verifiable, dropped, problems }.
+ * Con `{ sentQuery }` mira además lo único que la respuesta NO dice: una etiqueta de campo que no
+ * existe. Medido el 2026-10-08: `asthma[foo]` devuelve 246.024 registros, `errorlist.fieldsnotfound`
+ * VACÍO y ningún aviso; PubMed tira la etiqueta y pasa el término por Automatic Term Mapping. Una
+ * errata plausible como `[tiabb]` se comporta igual. Sin la consulta enviada, eso sale «limpio».
+ *
+ * Devuelve { usable, verifiable, countIsValid, dropped, unknownTags, pagination, problems }.
  */
-export function inspectResponse(esearchresult) {
+export function inspectResponse(esearchresult, { sentQuery } = {}) {
   const r = esearchresult ?? {};
   const rawCount = r.count;
   const count = Number(rawCount);
@@ -136,8 +141,20 @@ export function inspectResponse(esearchresult) {
   if (hasErrorList) {
     problems.push(`ERRORLIST: ${JSON.stringify(err)}`);
   }
-  const messages = (warn?.outputmessages ?? []).filter((m) => !/^No items found\.?$/i.test(m));
+  // «Restrictions achieved. start and count adjusted to …» es PubMed recortando la PÁGINA pedida a
+  // su ventana de 9.999 registros: dice cuántos PMIDs vienen, no qué se buscó. Se informa aparte, como
+  // paginación; la integridad de la consulta no depende de ello. Medido el 2026-10-08.
+  const outputmessages = warn?.outputmessages ?? [];
+  const pagination = outputmessages.filter((m) => /^Restrictions achieved\b/i.test(m));
+  const messages = outputmessages
+    .filter((m) => !/^No items found\.?$/i.test(m) && !pagination.includes(m));
   if (messages.length > 0) problems.push(`AVISO_SEMANTICO: ${JSON.stringify(messages)}`);
+
+  const unknownTags = sentQuery === undefined ? [] : unknownFieldTags(sentQuery);
+  if (unknownTags.length > 0) {
+    problems.push(`ETIQUETA_DESCONOCIDA: ${JSON.stringify(unknownTags)}. PubMed no avisa: descarta la `
+      + 'etiqueta y aplica Automatic Term Mapping, así que el término no se buscó donde se pidió.');
+  }
 
   if (count === 0 && dropped.length > 0) {
     problems.push('CERO_ROTO: cero resultados con términos descartados. Es una consulta rota, '
@@ -149,6 +166,46 @@ export function inspectResponse(esearchresult) {
     verifiable,
     countIsValid,
     dropped,
+    unknownTags,
+    pagination,
     problems,
   };
+}
+
+/**
+ * Etiquetas de campo de PubMed, en minúsculas y sin modificadores (`:noexp`, `:~N`). Cada una se
+ * comprobó contra E-utilities el 2026-10-08: con ella, la traducción cambia de campo; con una que no
+ * existe (`[foo]`, `[xyz]`, `[tiabb]`), la traducción es idéntica a la del término sin etiqueta.
+ * La lista puede quedarse corta —una etiqueta legítima que falte sale como desconocida y se ve—, que
+ * es el lado seguro: lo contrario es una etiqueta muerta pasando por buena sin que nadie lo sepa.
+ */
+export const PUBMED_FIELD_TAGS = new Set([
+  'ad', 'affiliation', 'aid', 'all', 'all fields', 'au', 'author', '1au', 'author - first', 'lastau',
+  'author - last', 'fau', 'full author name', 'auid', 'author identifier', 'book', 'cn',
+  'corporate author', 'author - corporate', 'cois', 'conflict of interest statements', 'crdt',
+  'date - create', 'dcom', 'date - completion', 'dp', 'pdat', 'date - publication',
+  'publication date', 'edat', 'date - entry', 'epdat', 'electronic publication date', 'ppdat',
+  'print publication date', 'ed', 'editor', 'filter', 'sb', 'subset', 'fir', 'ir', 'investigator',
+  'full investigator name', 'gr', 'grants and funding', 'ip', 'issue', 'is', 'issn', 'jid', 'jo',
+  'jour', 'journal', 'ta', 'so', 'la', 'lang', 'language', 'lid', 'location id', 'lr',
+  'date - modification', 'majr', 'mesh major topic', 'mh', 'mesh', 'mesh terms', 'mhda',
+  'date - mesh', 'nm', 'supplementary concept', 'substance name', 'ot', 'other term', 'pa',
+  'pharmacological action', 'pg', 'pagination', 'pl', 'place of publication', 'pmid', 'uid', 'ps',
+  'subject - personal name', 'pt', 'publication type', 'pubn', 'publisher', 'rn', 'si',
+  'secondary source id', 'sh', 'mesh subheading', 'subheading', 'ti', 'title', 'tiab',
+  'title/abstract', 'tt', 'transliterated title', 'tw', 'text word', 'vi', 'volume',
+]);
+
+/**
+ * Etiquetas de campo de una consulta que PubMed no reconoce. Solo cuenta como etiqueta un corchete
+ * pegado a lo que etiqueta (palabra, comilla, asterisco o paréntesis de cierre): `[18F]FDG`, que
+ * empieza un término, no lo es.
+ */
+export function unknownFieldTags(query) {
+  const found = [];
+  for (const m of String(query).matchAll(/(?<=[\p{L}\p{N}"'”’*)])\[([^\]]*)\]/gu)) {
+    const tag = m[1].trim().toLowerCase().replace(/:(noexp|~\d+)$/, '').trim();
+    if (!PUBMED_FIELD_TAGS.has(tag) && !found.includes(m[0])) found.push(m[0]);
+  }
+  return found;
 }

@@ -33,17 +33,17 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ROUTER = join(ROOT, 'neurosymbolic_router.json');
 
 /**
- * Ventana de ESearch para PubMed. Dos cifras, a propósito, porque no coinciden:
- *  - DOCUMENTADA por NCBI: retmax <= 10000 y retstart + retmax <= 10000. Es la que este ejecutor
- *    acepta enviar: un límite más estrecho sería convertir una observación en verdad sobre PubMed.
- *  - OBSERVADA el 2026-10-08: el conector PubMed del entorno sirve hasta retstart=9998 (9.999
- *    registros) y cyanheads/pubmed-mcp-server limita retstart a 9998 porque, según su código, NCBI
- *    «fails the whole request above it». Sin acceso a E-utilities no se pudo medir directamente.
- * Lo que no cambia con la cifra: si NCBI rechaza la petición, eso NO es un recuento de cero. Y si se
- * recuperan menos registros de los que hay, `records_complete` es false.
+ * Ventana de ESearch para PubMed: 9.999 registros, retstart <= 9998. Lo dice PubMed en su propio ERROR,
+ * medido el 2026-10-08 contra E-utilities: «'retstart' cannot be larger than 9998. For PubMed, ESearch
+ * can only retrieve the first 9,999 records matching the query». Con retmax=10000 no falla: recorta a
+ * 9.999 y avisa en outputmessages («Restrictions achieved…»).
+ *
+ * Historia, porque la cifra ya se discutió: la primera versión fijó 9.999 por lo observado en un
+ * conector; una revisión externa objetó que NCBI documenta 10.000 y se cambió; la medición directa
+ * dio la razón al comportamiento, no a la documentación. Lo que no depende de la cifra: un rechazo de
+ * NCBI nunca es un recuento de cero, y recuperar menos de lo que hay se declara (`records_complete`).
  */
-export const ESEARCH_DOCUMENTED_WINDOW = 10000;
-export const ESEARCH_OBSERVED_WINDOW = 9999;
+export const ESEARCH_WINDOW = 9999;
 
 const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -51,7 +51,8 @@ const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex')
  * Integridad de la consulta, en el vocabulario de provenance.operational_status:
  *   verified     PubMed devolvió su diagnóstico y no hay nada descartado, roto ni dudoso.
  *   failed       PubMed devolvió su diagnóstico y muestra que la consulta NO se ejecutó como se
- *                escribió (término descartado, error, recuento inservible...).
+ *                escribió (término descartado, error, recuento inservible, o una etiqueta de
+ *                campo que no existe y que PubMed descarta sin avisar).
  *   unsupported  No se puede saber: falta querytranslation, así que el diagnóstico no es verificable.
  */
 export function queryIntegrity(inspection) {
@@ -62,16 +63,15 @@ export function queryIntegrity(inspection) {
 /** Ejecuta `term` tal cual y devuelve el recibo. Un 413/414 lanza TransportError: nunca hay recibo con recuento. */
 export async function runExact(term, { retmax = 0, apiKey = '', fetcher, now = () => new Date() } = {}) {
   if (typeof term !== 'string' || term.trim() === '') throw new Error('La consulta está vacía.');
-  // retstart es siempre 0 aquí, así que retstart + retmax <= 10000 se reduce a retmax <= 10000.
-  if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_DOCUMENTED_WINDOW) {
-    throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_DOCUMENTED_WINDOW}.`);
+  if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_WINDOW) {
+    throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_WINDOW}.`);
   }
   const params = { retmax: String(retmax), tool: 'pubmed-filters-exact', ...(apiKey ? { api_key: apiKey } : {}) };
   const executedAt = now().toISOString();
   const { transport, esearchresult, raw } = await esearch(term, { params, ...(fetcher ? { fetcher } : {}) });
 
   const r = esearchresult ?? {};
-  const inspection = inspectResponse(esearchresult);
+  const inspection = inspectResponse(esearchresult, { sentQuery: term });
   const count = inspection.countIsValid ? Number(r.count) : null;
   const pmids = Array.isArray(r.idlist) ? r.idlist.map(String) : [];
 
@@ -87,9 +87,9 @@ export async function runExact(term, { retmax = 0, apiKey = '', fetcher, now = (
     count_raw: r.count ?? null,
     records_retrieved: pmids.length,
     records_complete: count !== null && pmids.length === count,
-    window_limit: count !== null && count > ESEARCH_OBSERVED_WINDOW
-      ? `ESearch solo sirve una ventana inicial de ${count} registros: ${ESEARCH_DOCUMENTED_WINDOW} según `
-        + `NCBI, ${ESEARCH_OBSERVED_WINDOW} observados el 2026-10-08. El resto no es accesible por esta vía.`
+    window_limit: count !== null && count > ESEARCH_WINDOW
+      ? `De ${count} registros, ESearch solo sirve los primeros ${ESEARCH_WINDOW}: el resto no es `
+        + `accesible por esta vía (EFetch con historial, o particionar por fechas).`
       : null,
     pmids,
     pmid_list_sha256: sha256(pmids.join('\n')),
@@ -98,6 +98,7 @@ export async function runExact(term, { retmax = 0, apiKey = '', fetcher, now = (
     errorlist: r.errorlist ?? null,
     fatal_error: r.ERROR ?? null,
     raw_response_sha256: sha256(raw),
+    pagination_notices: inspection.pagination,
     status: { query_integrity: queryIntegrity(inspection) },
     problems: inspection.problems,
   };
