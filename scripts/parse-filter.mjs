@@ -203,7 +203,7 @@ export function inspectResponse(esearchresult, { sentQuery } = {}) {
 /**
  * Caracteres que parecen sintaxis de PubMed y no lo son. Llegan al copiar estrategias de un PDF: el
  * asterisco matemático `∗` (U+2217) de las tipografías científicas. Medido el 2026-10-08 en
- * `filters/methodology/horizon.txt`, que lo trae en seis términos copiados del artículo.
+ * `filters/methodology/horizon.txt`, que lo traía en seis términos copiados del artículo (corregido en V.1.2).
  */
 const LOOKALIKES = { '∗': 'U+2217 (asterisco matemático)', '＊': 'U+FF0A (asterisco de ancho completo)',
   '⁎': 'U+204E (asterisco bajo)', '✱': 'U+2731 (asterisco grueso)', '﹡': 'U+FE61 (asterisco pequeño)' };

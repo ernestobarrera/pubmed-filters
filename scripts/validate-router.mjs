@@ -331,8 +331,9 @@ check('R16', etiquetasDesconocidas.length === 0 && PUBMED_FIELD_TAGS.has('tiab')
     ? 'todas reconocidas por PubMed' : JSON.stringify(etiquetasDesconocidas)}`);
 
 // Asteriscos que no lo son. Encontrado el 2026-10-08 al rehacer la heurística de etiquetas: horizon.txt
-// trae `∗` (U+2217, copiado del PDF del artículo) en seis términos, y PubMed busca la raíz exacta sin
-// avisar. Ninguna barrida lo vio, porque PubMed no lo reporta. Un caso declarado pasa; uno nuevo, no.
+// traía `∗` (U+2217, copiado del PDF del artículo) en seis términos, y PubMed buscaba la raíz exacta sin
+// avisar. Ninguna barrida lo vio, porque PubMed no lo reporta. Corregido en V.1.2 (2026-10-09). Un caso
+// declarado pasa; uno nuevo, no.
 const tipograficos = router.registry_validation?.terms_pubmed_drops?.typographic_truncation ?? {};
 const declaradosTipo = new Set(Object.keys(tipograficos.cases ?? {}));
 const conFalsoAsterisco = todosLosFiltros.filter((f) => lookalikeCharacters(query(f)).length > 0);

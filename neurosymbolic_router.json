@@ -366,12 +366,9 @@
       "how_this_was_found": "By applying the router's own query_execution_contract to the repository's own filters. The rule written for a model's invented MeSH heading found four cases inside curated filters.",
       "typographic_truncation": {
         "what": "A character that looks like the truncation asterisk but is not one, usually copied from a PDF. PubMed searches the bare stem and reports nothing, so no sweep sees it.",
-        "cases": {
-          "filters/methodology/horizon.txt": {
-            "terms": "emergente∗[ti], intervent∗[ti], surger∗[ti], tool∗[ti], transplant∗[ti] and, inside the exclusion block, VACCIN∗[ti]; U+2217 instead of *.",
-            "measured_impact": "2026-10-08: intervent∗[ti] = 9 records against 269,566 for intervent*[ti]; VACCIN∗[ti] = 20 against 264,448, so the vaccine exclusion barely excludes. Whole filter: 356,107 as written, 420,561 with * (+18%); last 5 years 93,074 against 113,429.",
-            "status": "Declared, not corrected: correcting it changes the recall of a published, referenced filter, which is the owner's decision."
-          }
+        "cases": {},
+        "resolved": {
+          "filters/methodology/horizon.txt": "Six terms carried U+2217 instead of * (emergente, intervent, surger, tool, transplant and, in the exclusion block, VACCIN). Measured 2026-10-08: 356,107 records as written against 420,561 corrected (+18%). Corrected by the owner on 2026-10-09 as V.1.2, after checking the source article's Table 1, which prints every asterisk with that glyph, including obvious truncations."
         },
         "completeness_rule": "Every filter carrying such a character must be listed here. The suite fails otherwise (R17), and also fails if a listed filter no longer has it, so a correction removes the entry."
       }

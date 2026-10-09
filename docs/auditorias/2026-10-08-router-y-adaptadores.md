@@ -29,7 +29,7 @@ Situación actual:
 - **Ejecutor y juicio:** corregidos tras dos rondas de Codex (§0quater, §0quinquies). Detectan todo lo que PubMed ignora en silencio y se ha medido: etiquetas inexistentes, también con espacio; etiquetas sobre grupos con AND, OR o NOT; modificadores fuera de sitio; proximidad que no va sobre una frase válida; y asteriscos tipográficos, también dentro de frases.
 - **Contrato:** 1.9.0.
 - **MCP:** endurecido, pero **sin desplegar y sin probar en ningún chat real**.
-- **Pendiente de decisión del propietario:** corregir los asteriscos tipográficos de `filters/methodology/horizon.txt` (§0quater).
+- **`filters/methodology/horizon.txt`:** corregido el 2026-10-09 como V.1.2, por decisión del propietario tras contrastarlo con la Tabla 1 del artículo (§0quater).
 
 ---
 
@@ -155,7 +155,7 @@ Codex revisó la cabeza `8e1e5e0` con las suites, 15 peticiones a PubMed y el MC
 **Lo que Codex no vio y salió al rehacer la heurística:**
 
 1. **Etiqueta sobre grupo.** `(asthma OR copd)[tiab]` → 351.416 registros por ATM en todos los campos, frente a 257.958 de `asthma[tiab] OR copd[tiab]`. Ningún aviso. Un paréntesis sin operadores sí funciona (`Front Endocrinol (Lausanne)[JO]`).
-2. **Asteriscos tipográficos en un filtro curado.** `filters/methodology/horizon.txt` lleva `∗` (U+2217, copiado del PDF del artículo) en seis términos: `emergente∗`, `intervent∗`, `surger∗`, `tool∗`, `transplant∗` y, dentro del bloque de exclusión, `VACCIN∗`. PubMed busca la raíz exacta sin avisar: `intervent∗[ti]` = 9 registros frente a 269.566; `VACCIN∗[ti]` = 20 frente a 264.448, así que la exclusión de vacunas casi no excluye. El filtro entero da 356.107 registros tal cual y 420.561 corregido (+18 %). Ninguna barrida lo había visto, porque PubMed no lo reporta. **No se ha corregido:** cambia el recall de un filtro publicado y es decisión del propietario. Queda declarado en `registry_validation.terms_pubmed_drops.typographic_truncation`, y R17 falla si aparece otro caso.
+2. **Asteriscos tipográficos en un filtro curado.** `filters/methodology/horizon.txt` lleva `∗` (U+2217, copiado del PDF del artículo) en seis términos: `emergente∗`, `intervent∗`, `surger∗`, `tool∗`, `transplant∗` y, dentro del bloque de exclusión, `VACCIN∗`. PubMed busca la raíz exacta sin avisar: `intervent∗[ti]` = 9 registros frente a 269.566; `VACCIN∗[ti]` = 20 frente a 264.448, así que la exclusión de vacunas casi no excluye. El filtro entero da 356.107 registros tal cual y 420.561 corregido (+18 %). Ninguna barrida lo había visto, porque PubMed no lo reporta. **Corregido el 2026-10-09 (V.1.2), por decisión del propietario.** Antes se comprobó en la Tabla 1 de Varela-Lema 2012: el PDF imprime todos los asteriscos con U+2217, incluidos truncamientos evidentes del bloque de exclusión (`Pharmacolog`, `Chemotherap`, `Veterinar`), así que la intención era truncar. Queda anotado en `registry_validation.terms_pubmed_drops.typographic_truncation.resolved`, y R17 falla si aparece otro caso.
 3. **`[author identifier]`** no es una etiqueta (PubMed la ignora; la buena es `[auid]`). Se quitó de la lista. Las demás se verificaron una a una con un término de su campo.
 
 **En qué no estoy de acuerdo con Codex:**
