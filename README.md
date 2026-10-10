@@ -68,6 +68,52 @@ La salida conserva la consulta literal, el recuento y el juicio de integridad. P
 auditable añade el commit del repositorio y conserva la respuesta o su SHA-256 según
 `provenance` en `neurosymbolic_router.json`.
 
+### Ejecutor de referencia con recibo
+
+Cualquier superficie con shell y red puede ejecutar una consulta PubMed **literal** y quedarse con
+su recibo, sin otro motor ni MCP intermedio:
+
+```
+node scripts/pubmed-exact.mjs '(asthma[tiab]) AND (systematic[sb])' --retmax 200
+node scripts/pubmed-exact.mjs --file consulta.txt
+```
+
+El recibo guarda la consulta enviada y su SHA-256, el transporte (POST), `querytranslation`,
+`warninglist`, `errorlist` y `ERROR` **tal como los devolvió PubMed**, el recuento crudo y el
+interpretado (`null`, nunca 0, si no es un recuento), los PMIDs y su hash, el SHA-256 del cuerpo
+crudo de la respuesta, el commit y el hash del router. `status.query_integrity` es `verified`
+(diagnóstico limpio), `failed` (el diagnóstico muestra que la consulta no se ejecutó como se
+escribió) o `unsupported` (no hay diagnóstico verificable). No reescribe, sanea ni trocea la
+consulta, y si recupera menos registros de los que hay, o el resultado supera la ventana de 9.999
+de ESearch, lo dice. Con `NCBI_API_KEY` en el entorno la usa sin escribirla: da cuota, no integridad.
+
+Lo que PubMed **no** avisa y el ejecutor sí, todo medido contra E-utilities el 2026-10-08. En
+cada caso PubMed devuelve un recuento plausible con el diagnóstico limpio:
+
+- una etiqueta de campo que no existe, también con un espacio delante (`asthma [tiabb]`: 246.024
+  registros, porque PubMed tira la etiqueta y reinterpreta el término);
+- una etiqueta sobre un grupo con operadores: `(asthma OR copd)[tiab]` busca en todos los campos;
+- un modificador en un campo que no lo admite: `asthma[mh:~3]` se busca como MeSH normal;
+- una proximidad que no va sobre una frase entrecomillada de dos o más palabras sin comodines:
+  `"asthma* control"[tiab:~2]` pierde la proximidad;
+- un asterisco tipográfico copiado de un PDF, también dentro de una frase: `intervent∗[ti]` da 9
+  registros, e `intervent*[ti]` da 269.566;
+- una página fuera de la ventana de 9.999 registros, cuyo ERROR llega como JSON inválido y que un
+  adaptador descuidado convierte en cero.
+
+Detrás de un proxy (como en los entornos cloud), `fetch` de Node no lo usa por defecto:
+
+```
+NODE_USE_ENV_PROXY=1 node scripts/pubmed-exact.mjs '…'
+```
+
+### Desde un chat sin terminal: MCP
+
+`mcp/` envuelve este mismo ejecutor en un servidor MCP de una sola herramienta, `pubmed_search_exact`,
+que devuelve el mismo recibo. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
+Workers, y en ese caso claude.ai o ChatGPT se conectan con una URL. Instrucciones paso a paso en
+[`mcp/README.md`](mcp/README.md). No forma parte del router: es un adaptador más.
+
 ### Conformidad
 
 ```

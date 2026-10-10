@@ -1,0 +1,5 @@
+
+# MCP: generado al desplegar y dependencias de despliegue
+mcp/build-info.mjs
+mcp/node_modules/
+mcp/.wrangler/

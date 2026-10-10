@@ -27,3 +27,7 @@ jobs:
       # presente, y las tres las encontro una persona leyendo el codigo, no el banco.
       - name: Puerta de mutacion
         run: node scripts/validate-mutations.mjs
+
+      # El MCP (mcp/) comparte el ejecutor de referencia; sus pruebas no usan red ni dependencias.
+      - name: Pruebas del MCP
+        run: node mcp/test.mjs

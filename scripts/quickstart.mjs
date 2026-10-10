@@ -9,6 +9,6 @@ const term = compose('metformin[tiab]', filter);
 const { transport, esearchresult } = await esearch(term, {
   params: { retmax: '0', tool: 'pubmed_filters_quickstart' },
 });
-const inspection = inspectResponse(esearchresult);
+const inspection = inspectResponse(esearchresult, { sentQuery: term });
 console.log(JSON.stringify({ term, transport, count: esearchresult?.count, inspection }, null, 2));
 if (!inspection.usable) process.exitCode = 1;

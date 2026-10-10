@@ -50,7 +50,7 @@ const MUTACIONES = [
     // escribiria —y que `fetch` ni siquiera acepta—. Caia T1 igual, porque la suite usa un fetcher
     // de prueba y veia el metodo entregado; pero una mutacion debe parecerse al fallo que vigila,
     // no bastarle con tumbar la comprobacion. Lo senalo Codex el 2026-10-01.
-    de: 'const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });',
+    de: 'const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body, ...(signal ? { signal } : {}) });',
     a: "const response = await fetcher(`${ESEARCH_URL}?${body}`, { method: 'GET' });",
     rompe: 'T1',
   },
@@ -132,6 +132,256 @@ const MUTACIONES = [
     rompe: 'Q7',
   },
   {
+    id: 'M7',
+    porque: 'el recuento vuelve a juzgarse con Number(): «0x10» pasa como 16 y «1e3» como 1000',
+    fichero: 'scripts/parse-filter.mjs',
+    de: '? /^[0-9]+$/.test(rawCount)',
+    a: "? String(rawCount).trim() !== '' && Number.isInteger(count) && count >= 0",
+    rompe: 'Q7',
+  },
+  {
+    id: 'E-COERCION',
+    porque: 'el recibo vuelve a convertir un recuento ausente o malformado en un cero plausible: el `parseInt(count) || 0` de los adaptadores',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'const count = inspection.countIsValid ? Number(r.count) : null;',
+    a: 'const count = parseInt(r.count, 10) || 0;',
+    rompe: 'E3',
+  },
+  {
+    id: 'E-COLAPSO',
+    porque: 'una consulta que PubMed muestra rota se declara «no verificable»: un defecto conocido escondido detrás de un desconocido',
+    fichero: 'scripts/exact-core.mjs',
+    de: "if (inspection.anomalies.length > 0) return 'failed';",
+    a: "if (inspection.anomalies.length > 0) return 'unsupported';",
+    rompe: 'E2',
+  },
+  {
+    id: 'E-REHASH',
+    porque: 'el hash se calcula sobre el JSON re-serializado, que es lo que el código entendió y no lo que PubMed respondió',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'raw_response_sha256: await sha256(raw),',
+    a: 'raw_response_sha256: await sha256(JSON.stringify(esearchresult)),',
+    rompe: 'E1',
+  },
+  {
+    id: 'E-VENTANA',
+    porque: 'la ventana sube a 10.000 por la documentación, cuando PubMed mismo declara 9.999 en su ERROR',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'export const ESEARCH_WINDOW = 9999;',
+    a: 'export const ESEARCH_WINDOW = 10000;',
+    rompe: 'E4',
+  },
+  {
+    id: 'R15-ESTADO',
+    porque: 'un filtro empieza a usar medline[sb] como proxy de «indexado» y pierde las citas NotIndexed sin avisar',
+    fichero: 'filters/clinical/mortality.txt',
+    de: 'homicid*[tiab] OR murder*[tiab]',
+    a: 'homicid*[tiab] OR murder*[tiab] OR (death[ti] AND medline[sb])',
+    rompe: 'R15',
+  },
+  {
+    id: 'C13-POLISEMIA',
+    porque: 'failed se extiende a coverage por analogía, sin significado propio',
+    fichero: 'neurosymbolic_router.json',
+    de: '"coverage": [\n          "verified",',
+    a: '"coverage": [\n          "failed",\n          "verified",',
+    rompe: 'C13',
+  },
+  {
+    id: 'Q8-SIN-ETIQUETAS',
+    porque: 'el juicio deja de mirar las etiquetas de la consulta enviada, y una etiqueta inexistente, que PubMed calla, pasa por verificada',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "const fieldTagsChecked = typeof sentQuery === 'string';",
+    a: 'const fieldTagsChecked = true;',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q9-PAGINACION',
+    porque: 'el recorte de página vuelve a tratarse como aviso sobre la consulta y una búsqueda íntegra se declara rota',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'const pagination = outputmessages.filter((m) => /^Restrictions achieved\\b/i.test(m));',
+    a: 'const pagination = [];',
+    rompe: 'Q9',
+  },
+  {
+    id: 'E7-CERO',
+    porque: 'el ERROR ilegible de PubMed se convierte en un cero: el fallo exacto del conector que lo inspiró',
+    fichero: 'scripts/esearch.mjs',
+    de: 'const fatal = /',
+    a: "return { transport: TRANSPORT, esearchresult: { count: '0', querytranslation: term }, raw };\n    const fatal = /",
+    rompe: 'E7',
+  },
+  {
+    id: 'R16-ERRATA',
+    porque: 'una errata en una etiqueta de un filtro curado, [tiabb], que PubMed descarta sin avisar',
+    fichero: 'filters/clinical/mortality.txt',
+    de: 'murder*[tiab]',
+    a: 'murder*[tiabb]',
+    rompe: 'R16',
+  },
+  {
+    id: 'Q8-ESPACIO',
+    porque: 'una etiqueta con un espacio delante vuelve a tratarse como texto, y asthma [tiabb] pasa por verificada (el hallazgo F1 de Codex)',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "const next = q[close + 1] ?? '';",
+    a: "const next = q[close + 1] ?? ''; if (j !== i - 1) { i = close; continue; }",
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-GRUPO',
+    porque: 'una etiqueta sobre un grupo con operadores, que PubMed ignora, deja de vigilarse',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "if (prev === ')' && groupHasOperator(q, j))",
+    a: "if (false && groupHasOperator(q, j))",
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-MODIFICADOR',
+    porque: 'la proximidad en un campo que no la admite, que PubMed tira sin avisar, vuelve a pasar',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "else if (modifier && modifier !== 'noexp' && !PROXIMITY_TAGS.has(field)) add(raw, 'modificador');",
+    a: '',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-COMILLAS',
+    porque: 'los corchetes dentro de una frase vuelven a leerse como etiqueta: "[18F]FDG"[tiab] sale roto',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'if (OPEN_QUOTES.has(c)) { inQuote = true; continue; }',
+    a: 'if (false) { inQuote = true; continue; }',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-ASTERISCO',
+    porque: 'un asterisco tipográfico deja de invalidar la consulta, y PubMed busca la raíz exacta en silencio',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'if (lookalikes.length > 0) {',
+    a: 'if (false) {',
+    rompe: 'Q8',
+  },
+  {
+    id: 'R17-ASTERISCO',
+    porque: 'un filtro curado gana un asterisco tipográfico sin declararlo, como horizon.txt',
+    fichero: 'filters/clinical/mortality.txt',
+    de: 'murder*[tiab]',
+    a: 'murder∗[tiab]',
+    rompe: 'R17',
+  },
+  {
+    id: 'E8-PRIORIDAD',
+    porque: 'la falta de diagnóstico vuelve a mirarse antes que la anomalía, y un ERROR sin traducción sale unsupported',
+    fichero: 'scripts/exact-core.mjs',
+    de: "if (inspection.anomalies.length > 0) return 'failed';",
+    a: "if (!inspection.verifiable) return 'unsupported';\n  if (inspection.anomalies.length > 0) return 'failed';",
+    rompe: 'E8',
+  },
+  {
+    id: 'E9-PMIDHASH',
+    porque: 'el hash de la lista de PMIDs es fijo y no el de lo recibido: sobrevivía a las dos suites (Codex)',
+    fichero: 'scripts/exact-core.mjs',
+    de: "pmid_list_sha256: await sha256(pmids.join('\\n')),",
+    a: "pmid_list_sha256: await sha256(''),",
+    rompe: 'E9',
+  },
+  {
+    id: 'W-ORIGIN',
+    porque: 'un origen de navegador no admitido vuelve a atenderse, con CORS abierto',
+    fichero: 'mcp/worker.mjs',
+    de: "if (origin !== null && !list(env.ALLOWED_ORIGINS).includes(origin)) {",
+    a: 'if (false) {',
+    rompe: 'W4',
+  },
+  {
+    id: 'W-VERSION',
+    porque: 'una MCP-Protocol-Version que no se soporta vuelve a aceptarse',
+    fichero: 'mcp/worker.mjs',
+    de: "if (version !== null && !PROTOCOL_VERSIONS.includes(version)) {",
+    a: 'if (false) {',
+    rompe: 'W5',
+  },
+  {
+    id: 'W-LOTE',
+    porque: 'vuelven los lotes JSON-RPC, que la 2025-06-18 no admite y que multiplican las llamadas a NCBI',
+    fichero: 'mcp/worker.mjs',
+    de: 'if (Array.isArray(message)) {',
+    a: 'if (false) {',
+    rompe: 'W2',
+  },
+  {
+    id: 'W-BYTES',
+    porque: 'vuelve el código de antes: leer el cuerpo entero y luego contar caracteres, no bytes; 80.053 bytes de «é» pasaban por 40.053',
+    fichero: 'mcp/worker.mjs',
+    // Reproduce el defecto tal como era. La primera versión de esta mutación contaba caracteres dentro
+    // del lector acotado y rompía el ensamblado del buffer: la suite moría por un RangeError, no por W6.
+    de: 'const text = await readBounded(request, MAX_BODY_BYTES);\n    if (text === null) return',
+    a: 'const text = await request.text();\n    if (text.length > MAX_BODY_BYTES) return',
+    rompe: 'W6',
+  },
+  {
+    id: 'W-CLAVE-DEBIL',
+    porque: 'una clave de acceso corta, adivinable, vuelve a abrir el servicio',
+    fichero: 'mcp/worker.mjs',
+    de: 'keys.some((k) => k.length < MIN_ACCESS_KEY_LENGTH)',
+    a: 'false',
+    rompe: 'W3',
+  },
+  {
+    id: 'M-COLA',
+    porque: 'la cola vuelve a no tener fondo y una ráfaga acumula promesas en memoria',
+    fichero: 'mcp/protocol.mjs',
+    de: 'if (wait > maxQueueMs) return false;',
+    a: '',
+    rompe: 'M10',
+  },
+  {
+    id: 'M-TIEMPO',
+    porque: 'una petición colgada vuelve a esperar sin fin',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'params, signal: AbortSignal.timeout(timeoutMs),',
+    a: 'params,',
+    rompe: 'M10',
+  },
+  {
+    id: 'M-EMAIL',
+    porque: 'el email de contacto se cuela en el recibo',
+    fichero: 'scripts/exact-core.mjs',
+    de: 'email_used: Boolean(email) },',
+    a: 'email_used: Boolean(email), email },',
+    rompe: 'M9',
+  },
+  {
+    id: 'Q8-NOT',
+    porque: 'una etiqueta sobre un grupo con NOT deja de vigilarse: sobrevivía en la segunda ronda de Codex',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'return /\\b(AND|OR|NOT)\\b|\\|/.test(inside);',
+    a: 'return /\\b(AND|OR)\\b|\\|/.test(inside);',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-PROXIMIDAD',
+    porque: 'la proximidad sobre una frase con comodín, o sin comillas, vuelve a pasar por verificada',
+    fichero: 'scripts/parse-filter.mjs',
+    de: "else if (modifier && modifier !== 'noexp' && !proximityPhraseOk(q, j)) add(raw, 'proximidad');",
+    a: '',
+    rompe: 'Q8',
+  },
+  {
+    id: 'Q8-ASTERISCO-FRASE',
+    porque: 'las frases vuelven a vaciarse antes de buscar asteriscos tipográficos, y "randomized trial∗" pasa',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'for (const m of String(query).matchAll(',
+    a: "for (const m of String(query).replace(/[\"“][^\"”]*[\"”]/g, '\"\"').matchAll(",
+    rompe: 'Q8',
+  },
+  {
+    id: 'W-CLAVE-31',
+    porque: 'el mínimo de la clave de acceso baja de 32 a 8: sobrevivía en la segunda ronda de Codex',
+    fichero: 'mcp/worker.mjs',
+    de: 'export const MIN_ACCESS_KEY_LENGTH = 32;',
+    a: 'export const MIN_ACCESS_KEY_LENGTH = 8;',
+    rompe: 'W3',
+  },
+  {
     id: 'M4',
     porque: 'un término descartado deja de invalidar el recuento cuando la consulta devuelve resultados',
     fichero: 'scripts/parse-filter.mjs',
@@ -174,10 +424,18 @@ const arbolSucio = () => {
 
 const fallosDe = (salida) => [...salida.matchAll(/^\s*(?:FAIL|fail)\s+(\S+)/gm)].map((m) => m[1]);
 
+// Las dos suites: la de conformidad y la del MCP. La puerta solo corría la primera, así que una
+// mutación del Worker o del protocolo no podía caer nunca (lo dejó ver la revisión de Codex).
+const SUITES = [['scripts', 'validate-router.mjs'], ['mcp', 'test.mjs']];
 const correrSuite = () => {
-  const r = spawnSync(process.execPath, [join(RAIZ, 'scripts', 'validate-router.mjs')],
-    { cwd: RAIZ, encoding: 'utf8' });
-  return { status: r.status, salida: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  let status = 0;
+  let salida = '';
+  for (const ruta of SUITES) {
+    const r = spawnSync(process.execPath, [join(RAIZ, ...ruta)], { cwd: RAIZ, encoding: 'utf8' });
+    if (r.status !== 0) status = r.status ?? 1;
+    salida += `${r.stdout ?? ''}${r.stderr ?? ''}`;
+  }
+  return { status, salida };
 };
 
 // DÓNDE SE MUTA, y por qué no siempre aquí.

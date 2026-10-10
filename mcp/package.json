@@ -1,0 +1,15 @@
+{
+  "name": "pubmed-filters-mcp",
+  "private": true,
+  "type": "module",
+  "description": "MCP mínimo sobre el ejecutor de referencia de pubmed-filters: local (stdio) o Cloudflare Workers.",
+  "scripts": {
+    "test": "node test.mjs",
+    "stdio": "node stdio.mjs",
+    "dev": "node stamp.mjs && wrangler dev",
+    "deploy": "node stamp.mjs --deploy && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.135.0"
+  }
+}

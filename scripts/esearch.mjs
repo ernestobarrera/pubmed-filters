@@ -20,12 +20,29 @@ export class TransportError extends Error {
   }
 }
 
-/** Ejecuta ESearch y devuelve { transport, esearchresult }. `term` nunca puede sobrescribirse. */
-export async function esearch(term, { params = {}, fetcher = fetch } = {}) {
+/**
+ * Ejecuta ESearch y devuelve { transport, esearchresult, raw }. `term` nunca puede sobrescribirse.
+ *
+ * `raw` es el cuerpo tal como llegó, antes de parsearlo: su SHA-256 es la instantánea de la ejecución
+ * (provenance.execution_snapshot_rule). Un hash del JSON re-serializado sería el hash de lo que este
+ * código entendió, no de lo que PubMed respondió. Un cuerpo que no es JSON lanza: no es un cero.
+ */
+export async function esearch(term, { params = {}, fetcher = fetch, signal } = {}) {
   const body = new URLSearchParams({ db: 'pubmed', retmode: 'json', ...params, term });
-  const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body });
+  const response = await fetcher(ESEARCH_URL, { method: TRANSPORT, body, ...(signal ? { signal } : {}) });
   if (response.status === 413 || response.status === 414) throw new TransportError(response.status);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const payload = await response.json();
-  return { transport: TRANSPORT, esearchresult: payload.esearchresult };
+  const raw = await response.text();
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    // PubMed devuelve así algunos de sus propios errores: medido el 2026-10-08, el ERROR de retstart
+    // fuera de ventana trae un salto de línea crudo dentro de la cadena y no es JSON válido. Un
+    // adaptador que caiga a 0 aquí fabrica un cero falso; esto lanza con el mensaje legible.
+    const fatal = /"ERROR"\s*:\s*"([\s\S]*?)"\s*[,}]/.exec(raw)?.[1];
+    throw new Error(`RESPUESTA_ILEGIBLE: PubMed no devolvió JSON válido${
+      fatal ? ` (ERROR: ${fatal.replace(/\s+/g, ' ')})` : ''}. No es un cero ni un resultado vacío.`);
+  }
+  return { transport: TRANSPORT, esearchresult: payload?.esearchresult, raw };
 }

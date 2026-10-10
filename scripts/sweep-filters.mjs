@@ -81,8 +81,11 @@ for (const f of files) {
   const r = await esearch(term);
   if (r._transporte) { falloTransporte.push([f, r._error]); continue; }
   if (r._error) { noEvaluables.push([f, r._error]); continue; }
-  const juicio = inspectResponse(r);
-  if (juicio.dropped.length > 0) sucios.push([f, Number(r.count), juicio.dropped]);
+  // Con la consulta enviada: lo que PubMed descarta sin avisar (etiquetas ignoradas, asteriscos
+  // tipográficos) no sale en `dropped`, y sin ella esta barrida lo llamaba limpio (Codex, 2026-10-08).
+  const juicio = inspectResponse(r, { sentQuery: term });
+  const descartes = [...juicio.dropped, ...juicio.unknownTags, ...juicio.lookalikes];
+  if (descartes.length > 0) sucios.push([f, Number(r.count), descartes]);
   else limpios += 1;
 }
 

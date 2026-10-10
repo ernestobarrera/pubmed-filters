@@ -18,7 +18,8 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER }
+import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER,
+  unknownFieldTags, lookalikeCharacters, PUBMED_FIELD_TAGS }
   from './parse-filter.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -69,7 +70,7 @@ check('D2', !hasEmbeddedDateLimit(parseFilter(fixture('multilinea.txt'))),
 
 // Juicio de una respuesta de PubMed, contra respuestas REALES capturadas de E-utilities.
 const respuestas = JSON.parse(readFileSync(join(FIXTURES, 'respuestas-pubmed.json'), 'utf8'));
-const juicio = (k) => inspectResponse(respuestas[k].esearchresult);
+const juicio = (k) => inspectResponse(respuestas[k].esearchresult, { sentQuery: respuestas[k].term });
 
 const roto = juicio('mesh-inexistente');
 check('Q1', !roto.usable && roto.dropped.length === 1
@@ -88,7 +89,8 @@ check('Q4', ciego.verifiable === false && !ciego.usable
   && ciego.problems.some((p) => p.startsWith('NO_VERIFICABLE')),
   'pedida con rettype=count, la misma consulta rota se declara NO VERIFICABLE en vez de limpia');
 
-const fatal = inspectResponse({ count: '0', querytranslation: 'cancer', ERROR: 'Invalid database name' });
+const fatal = inspectResponse({ count: '0', querytranslation: 'cancer', ERROR: 'Invalid database name' },
+  { sentQuery: 'cancer' });
 check('Q5', fatal.usable === false && fatal.problems.some((p) => p.startsWith('ERROR_FATAL')),
   'esearchresult.ERROR invalida la respuesta aunque haya count y querytranslation');
 
@@ -112,14 +114,65 @@ const recuentos = [
   ['negativo', { count: '-3', querytranslation: 'x' }, false],
   ['prefijo numérico', { count: '12abc', querytranslation: 'x' }, false],
   ['solo espacios', { count: '  ', querytranslation: 'x' }, false],
+  // `Number()` no es un parser de recuentos: acepta hexadecimal, notación científica, decimales con
+  // cero, signo y menos cero. «0x10» pasaba como 16 y «1e3» como 1000. Medido el 2026-10-08.
+  ['hexadecimal', { count: '0x10', querytranslation: 'x' }, false],
+  ['notación científica', { count: '1e3', querytranslation: 'x' }, false],
+  ['decimal con cero', { count: '12.0', querytranslation: 'x' }, false],
+  ['con signo', { count: '+5', querytranslation: 'x' }, false],
+  ['menos cero', { count: '-0', querytranslation: 'x' }, false],
+  ['número no entero', { count: 1.5, querytranslation: 'x' }, false],
   ['válido', { count: '1234', querytranslation: 'x' }, true],
+  ['válido como número', { count: 1234, querytranslation: 'x' }, true],
   ['cero legítimo', { count: '0', querytranslation: 'x' }, true],
 ];
-const malos = recuentos.filter(([, r, esperado]) => inspectResponse(r).usable !== esperado);
+const malos = recuentos.filter(([, r, esperado]) => inspectResponse(r, { sentQuery: 'x' }).usable !== esperado);
 check('Q7', malos.length === 0,
   `recuentos malformados (${recuentos.length} casos): ${malos.length === 0
     ? 'ninguno pasa como utilizable y los válidos siguen pasando'
     : JSON.stringify(malos.map(([n]) => n))}`);
+
+// Q8. Lo que PubMed tira SIN NINGÚN AVISO y solo delata la consulta enviada. Todas son respuestas
+// reales del 2026-10-08, y en todas PubMed devuelve un recuento plausible con el diagnóstico limpio:
+// etiqueta inexistente, la misma con un espacio delante, etiqueta sobre un grupo con operadores,
+// modificador en un campo que no lo admite y asterisco tipográfico. Sin la consulta enviada, el juicio
+// NO da nada por bueno: la primera versión daba `usable: true` y Q8 lo exigía (Codex, 2026-10-08).
+// Segunda ronda de Codex (2026-10-08): asterisco tipográfico dentro de una frase, proximidad sobre una
+// frase con comodín y grupo con NOT, más la proximidad sin comillas que salió al corregirlas.
+const ignoradas = ['campo-invalido', 'etiqueta-desconocida-con-espacio', 'etiqueta-sobre-grupo',
+  'modificador-ignorado', 'asterisco-tipografico', 'asterisco-tipografico-en-frase', 'proximidad-con-comodin',
+  'proximidad-sin-comillas', 'etiqueta-sobre-grupo-not'];
+const ignoradaComoBuena = ignoradas.filter((k) => juicio(k).usable || juicio(k).anomalies.length === 0);
+const sinConsulta = inspectResponse(respuestas['campo-invalido'].esearchresult);
+// Y no se marca lo que no es etiqueta. Cada caso «sí» se comprobó contra PubMed el 2026-10-08.
+const noSonProblema = ['[18F]FDG[tiab]', '"[18F]FDG"[tiab]', '"asthma control"[tiab:~2]', 'asthma [tiab]',
+  'asthma[mesh:noexp]', 'review[pt:noexp]', 'therapy[sh:noexp]', '(asthma)[tiab]', 'Front Endocrinol (Lausanne)[JO]',
+  '“mini-mental state”[tiab]', 'alzheimer’s[tiab]', 'asthma[Title/Abstract]', 'asthma/therapy[mh]', 'lancet[jo]',
+  '("a OR b")[tiab]', '"asthma control"[ad:~2]', '“asthma control”[Title/Abstract:~3]',
+  'asthma[tiab] NOT copd[tiab]'].filter((q) => unknownFieldTags(q).length > 0 || lookalikeCharacters(q).length > 0);
+const siSonProblema = ['asthma [tiabb]', 'asthma\t[foo]', '(asthma OR copd)[tiab]', '(asthma|copd) [tiab]',
+  'asthma[mh:~3]', 'asthma[ti:noexp]', '"asthma control"[tw:~2]', 'asthma OR [tiab]', 'asthma [author identifier]',
+  '(asthma AND copd)[tiab]', '(asthma NOT copd)[tiab]', '"asthma"[tiab:~2]', 'asthma control[tiab:~2]',
+  '"asthma* control"[tiab:~2]']
+  .filter((q) => unknownFieldTags(q).length === 0)
+  .concat(['"randomized trial∗"[tiab]'].filter((q) => lookalikeCharacters(q).length === 0));
+check('Q8', juicio('corchete-en-frase').usable === true && ignoradaComoBuena.length === 0
+  && sinConsulta.usable === false && sinConsulta.problems.some((p) => p.startsWith('ETIQUETAS_NO_COMPROBADAS'))
+  && noSonProblema.length === 0 && siSonProblema.length === 0,
+  `lo que PubMed ignora en silencio se caza por la consulta enviada, y sin ella no se da por bueno${
+    ignoradaComoBuena.length ? ` — dadas por buenas: ${JSON.stringify(ignoradaComoBuena)}` : ''}${
+    noSonProblema.length ? ` — falsos positivos: ${JSON.stringify(noSonProblema)}` : ''}${
+    siSonProblema.length ? ` — no detectadas: ${JSON.stringify(siSonProblema)}` : ''}`);
+
+// Q9. «Restrictions achieved» es PubMed recortando la página a su ventana, no un aviso sobre la
+// consulta: se informa como paginación y no invalida la integridad. Respuesta real del 2026-10-08.
+const recorte = inspectResponse(respuestas['restricciones-ajustadas'].esearchresult,
+  { sentQuery: respuestas['restricciones-ajustadas'].term });
+const vacia = inspectResponse(respuestas['frase-ignorada-the'].esearchresult);
+check('Q9', recorte.usable === true && recorte.pagination.length === 1
+  && !recorte.problems.some((p) => p.startsWith('AVISO_SEMANTICO'))
+  && vacia.usable === false && vacia.problems.some((p) => p.startsWith('ERRORLIST')),
+  'el recorte de página se declara como paginación sin invalidar la consulta; un errorlist real sí la invalida');
 
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
@@ -255,6 +308,42 @@ check('R14', malEscritos.length === 0,
   `sintaxis booleana de los ${allFilters.length} filtros: ${
     malEscritos.length === 0 ? 'sin anomalías' : JSON.stringify(malEscritos)}`);
 
+// Estado de indexación no es MeSH (baseline PubMed 2027, IndexingMethod="NotIndexed"). Un subconjunto
+// de estado usado como proxy de «indexado» deja fuera, en silencio, citas MEDLINE sin MeSH. Ningún
+// filtro lo hace hoy; esto impide que empiece a hacerlo sin declararse.
+const indexado = router.composition.indexing_status_is_not_mesh ?? {};
+const declaradosEstado = new Set(indexado.declared_status_subset_filters ?? []);
+const conSubconjuntoDeEstado = [...allFilters,
+  ...readdirSync(join(ROOT, 'filters', 'journals')).filter((f) => f.endsWith('.txt')).map((f) => `filters/journals/${f}`)]
+  .filter((f) => /\b(medline|inprocess|pubmednotmedline|publisher)\s*\[\s*(sb|subset|filter)\s*\]/i.test(query(f)) && !declaradosEstado.has(f));
+check('R15', typeof indexado.rule === 'string' && indexado.rule.includes('NotIndexed')
+  && conSubconjuntoDeEstado.length === 0,
+  `subconjuntos de estado como proxy de indexación MeSH: ${conSubconjuntoDeEstado.length === 0
+    ? 'ningún filtro sin declarar, y la regla NotIndexed está escrita' : JSON.stringify(conSubconjuntoDeEstado)}`);
+
+// Toda etiqueta de campo usada por un filtro del repositorio está en la lista comprobada contra
+// E-utilities. Si un filtro trae una errata en una etiqueta, PubMed no lo dirá nunca: lo dice esto.
+const todosLosFiltros = [...allFilters, ...readdirSync(join(ROOT, 'filters', 'journals'))
+  .filter((f) => f.endsWith('.txt')).map((f) => `filters/journals/${f}`)];
+const etiquetasDesconocidas = todosLosFiltros.flatMap((f) => unknownFieldTags(query(f)).map((t) => `${f}: ${t}`));
+check('R16', etiquetasDesconocidas.length === 0 && PUBMED_FIELD_TAGS.has('tiab'),
+  `etiquetas de campo de los ${todosLosFiltros.length} filtros: ${etiquetasDesconocidas.length === 0
+    ? 'todas reconocidas por PubMed' : JSON.stringify(etiquetasDesconocidas)}`);
+
+// Asteriscos que no lo son. Encontrado el 2026-10-08 al rehacer la heurística de etiquetas: horizon.txt
+// traía `∗` (U+2217, copiado del PDF del artículo) en seis términos, y PubMed buscaba la raíz exacta sin
+// avisar. Ninguna barrida lo vio, porque PubMed no lo reporta. Corregido en V.1.2 (2026-10-09). Un caso
+// declarado pasa; uno nuevo, no.
+const tipograficos = router.registry_validation?.terms_pubmed_drops?.typographic_truncation ?? {};
+const declaradosTipo = new Set(Object.keys(tipograficos.cases ?? {}));
+const conFalsoAsterisco = todosLosFiltros.filter((f) => lookalikeCharacters(query(f)).length > 0);
+const sinDeclarar = conFalsoAsterisco.filter((f) => !declaradosTipo.has(f));
+const declaradoSinCaso = [...declaradosTipo].filter((f) => !conFalsoAsterisco.includes(f));
+check('R17', sinDeclarar.length === 0 && declaradoSinCaso.length === 0,
+  `asteriscos tipográficos en los filtros: ${sinDeclarar.length === 0 && declaradoSinCaso.length === 0
+    ? `ninguno sin declarar (${declaradosTipo.size} declarado${declaradosTipo.size === 1 ? '' : 's'})`
+    : `sin declarar ${JSON.stringify(sinDeclarar)} / declarados que ya no lo tienen ${JSON.stringify(declaradoSinCaso)}`}`);
+
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
 check('R12', undeclaredDates.length === 0,
@@ -312,14 +401,32 @@ check('C5', typeof router.composition.precision_hints?.rule === 'string'
 
 check('C2', typeof router.conformance?.contract_version === 'string'
   && existsSync(join(ROOT, router.conformance.reference_parser))
-  && existsSync(join(ROOT, router.conformance.test_suite)),
-  'el router declara versión de contrato, parser de referencia y suite, y ambos ficheros existen');
+  && existsSync(join(ROOT, router.conformance.test_suite))
+  && existsSync(join(ROOT, router.conformance.reference_executor ?? '')),
+  'el router declara versión de contrato, parser y ejecutor de referencia y suite, y los tres ficheros existen');
 
 check('C6', ['query_integrity', 'coverage', 'reading_depth']
   .every((d) => (router.provenance.operational_status?.dimensions ?? []).includes(d))
-  && ['verified', 'planned', 'unsupported']
-    .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)),
-  'el estado operativo es semántico y separa integridad, cobertura y profundidad de lectura');
+  && ['verified', 'failed', 'planned', 'unsupported']
+    .every((s) => (router.provenance.operational_status?.semantic_values ?? []).includes(s)
+      && typeof router.provenance.operational_status?.value_meanings?.[s] === 'string'),
+  'el estado operativo es semántico, separa integridad, cobertura y lectura, y define cada valor (comprobado y roto ≠ no comprobable)');
+
+// Un vocabulario compartido por tres dimensiones invita a usar un valor donde no significa nada:
+// `failed` está definido para la integridad de una consulta, no para «cobertura fallida» ni «lectura
+// fallida». Cada dimensión declara sus valores, todos existen en el vocabulario, y `failed` no se
+// extiende a otra dimensión sin su propio significado. Lo señaló una revisión externa el 2026-10-08.
+const os = router.provenance.operational_status ?? {};
+const porDimension = os.values_by_dimension ?? {};
+const dimensionesSinLista = (os.dimensions ?? []).filter((d) => !Array.isArray(porDimension[d]));
+const valoresHuerfanos = (os.dimensions ?? []).flatMap((d) => (porDimension[d] ?? [])
+  .filter((v) => !(os.semantic_values ?? []).includes(v)).map((v) => `${d}:${v}`));
+const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed'));
+check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
+  && (porDimension.query_integrity ?? []).includes('failed'),
+  `valores por dimensión: ${dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
+    ? 'cada dimensión declara los suyos y failed solo vale para query_integrity'
+    : `sin lista ${JSON.stringify(dimensionesSinLista)} / inexistentes ${JSON.stringify(valoresHuerfanos)} / failed fuera de sitio ${JSON.stringify(failedFuera)}`}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')
@@ -389,7 +496,7 @@ const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.en
   .map((f) => `scripts/${f}`)
   .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE
     && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi/.test(read(f)));
-const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs']
+const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/exact-core.mjs']
   .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)));
 check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0,
   `ESearch solo se llama desde ${ESEARCH_MODULE}: ${scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0
@@ -399,7 +506,7 @@ const { esearch, TransportError } = await import('./esearch.mjs');
 const entregadas = [];
 const fetcherDePrueba = (status = 200) => async (url, init = {}) => {
   entregadas.push({ url: String(url), method: init.method ?? 'GET', body: init.body?.toString() ?? '' });
-  return { ok: status === 200, status, json: async () => ({ esearchresult: { count: '1', querytranslation: 'x' } }) };
+  return { ok: status === 200, status, text: async () => JSON.stringify({ esearchresult: { count: '1', querytranslation: 'x' } }) };
 };
 const temaLargo = `(${Array.from({ length: 60 }, (_, i) => `"termino clinico ${i}"[tiab]`).join(' OR ')})`.slice(0, 950);
 const consultas = {
@@ -432,6 +539,128 @@ try {
 }
 check('T2', resultado414 instanceof TransportError,
   'un HTTP 414 acaba en fallo de transporte declarado, no en un recuento ni en «no evaluable»');
+
+// ---------------------------------------------------------------------------------------------
+// E. El ejecutor de referencia y su recibo (scripts/pubmed-exact.mjs).
+//    Se alimenta con las respuestas REALES de fixtures/respuestas-pubmed.json, servidas byte a byte
+//    por un fetcher de prueba: lo que se mira es el recibo que saldría de cada una.
+// ---------------------------------------------------------------------------------------------
+
+const { runExact, ESEARCH_WINDOW } = await import('./pubmed-exact.mjs');
+const { createHash } = await import('node:crypto');
+const sha = (t) => createHash('sha256').update(t, 'utf8').digest('hex');
+const sirve = (cuerpo, status = 200) => async (url, init = {}) => {
+  entregadas.push({ url: String(url), method: init.method ?? 'GET', body: init.body?.toString() ?? '' });
+  return { ok: status === 200, status, text: async () => cuerpo };
+};
+const recibo = async (cuerpo, term = 'consulta[tiab]', opciones = {}) => {
+  entregadas.length = 0;
+  return runExact(term, { fetcher: sirve(cuerpo), now: () => new Date(0), ...opciones });
+};
+const valoresDeEstado = router.provenance.operational_status?.values_by_dimension?.query_integrity ?? [];
+
+// E1. Lo que se registra es lo que se envió y lo que llegó, no una reconstrucción.
+const cuerpoValido = JSON.stringify(respuestas['consulta-valida'], null, 1);
+const rv = await recibo(cuerpoValido, respuestas['consulta-valida'].term);
+check('E1', rv.sent_query === respuestas['consulta-valida'].term
+  && new URLSearchParams(entregadas[0].body).get('term') === rv.sent_query
+  && rv.sent_query_sha256 === sha(rv.sent_query)
+  && rv.transport === 'POST'
+  && rv.raw_response_sha256 === sha(cuerpoValido)
+  && rv.querytranslation === respuestas['consulta-valida'].esearchresult.querytranslation
+  && rv.count_raw === '67408' && rv.result_count === 67408,
+  'el recibo guarda la consulta enviada (y su hash), el transporte, el hash del cuerpo crudo y el diagnóstico tal como llegó');
+
+// E2. La integridad se deriva de la respuesta, con un valor para cada cosa distinta.
+const integridad = {};
+for (const k of ['consulta-valida', 'cero-legitimo', 'mesh-inexistente', 'termino-descartado-con-resultados',
+  'aviso-perdido-por-rettype-count']) {
+  integridad[k] = (await recibo(JSON.stringify(respuestas[k]), respuestas[k].term)).status.query_integrity;
+}
+const integridadEsperada = {
+  'consulta-valida': 'verified',
+  'cero-legitimo': 'verified',
+  'mesh-inexistente': 'failed',
+  'termino-descartado-con-resultados': 'failed',
+  'aviso-perdido-por-rettype-count': 'unsupported',
+};
+const integridadMal = Object.keys(integridadEsperada).filter((k) => integridad[k] !== integridadEsperada[k]);
+const fueraDelContrato = Object.values(integridad).filter((v) => !valoresDeEstado.includes(v));
+check('E2', integridadMal.length === 0 && fueraDelContrato.length === 0,
+  `integridad: verificada y limpia, verificada y rota, y no verificable no se confunden${
+    integridadMal.length ? ` — mal: ${JSON.stringify(integridadMal)}` : ''}${
+    fueraDelContrato.length ? ` — valores fuera de operational_status: ${JSON.stringify(fueraDelContrato)}` : ''}`);
+
+// E3. Un recuento inservible es null en el recibo, nunca un cero plausible (el `parseInt(...) || 0`).
+const malos3 = [];
+for (const raw of [{ querytranslation: 'x' }, { count: '12abc', querytranslation: 'x' }, { count: '', querytranslation: 'x' }]) {
+  const r = await recibo(JSON.stringify({ esearchresult: raw }));
+  if (r.result_count !== null || r.status.query_integrity === 'verified') malos3.push(raw);
+}
+check('E3', malos3.length === 0,
+  `recuento ausente o malformado: ${malos3.length === 0 ? 'result_count null y no verificado' : JSON.stringify(malos3)}`);
+
+// E4. Recuperar menos registros de los que hay se dice, y la ventana de ESearch también.
+const parcial = await recibo(JSON.stringify({ esearchresult: {
+  count: '12000', retmax: '2', idlist: ['1', '2'], querytranslation: 'x[tiab]' } }), 'x[tiab]', { retmax: 2 });
+// La frontera es la que PubMed declara en su propio ERROR (medido el 2026-10-08): 9.999 registros.
+// Historia: se fijó en 9.999 por un conector, se subió a 10.000 por la documentación de NCBI y la
+// medición directa la devolvió a 9.999. retmax=9999 se envía; 10000 no.
+let ventanaRechazada = false;
+try { await recibo('{}', 'x[tiab]', { retmax: ESEARCH_WINDOW + 1 }); } catch { ventanaRechazada = entregadas.length === 0; }
+await recibo(JSON.stringify({ esearchresult: { count: '0', querytranslation: 'x[tiab]' } }), 'x[tiab]',
+  { retmax: ESEARCH_WINDOW });
+const fronteraEnviada = entregadas.length === 1
+  && new URLSearchParams(entregadas[0].body).get('retmax') === String(ESEARCH_WINDOW);
+check('E4', parcial.records_retrieved === 2 && parcial.records_complete === false
+  && typeof parcial.window_limit === 'string' && parcial.window_limit.startsWith('De 12000 registros')
+  && parcial.result_count === 12000 && ventanaRechazada && fronteraEnviada && ESEARCH_WINDOW === 9999,
+  'result_count y records_retrieved no se confunden, la ventana se declara bien, retmax=9999 se envía y 10000 no');
+
+// E5. Un 414 no produce recibo con recuento: el ejecutor lanza fallo de transporte.
+let e5;
+try { e5 = await runExact('x[tiab]', { fetcher: sirve('', 414) }); } catch (e) { e5 = e; }
+check('E5', e5 instanceof TransportError, 'el ejecutor convierte un 414 en fallo de transporte, nunca en un recibo');
+
+// E6. El ejecutor ve la etiqueta que PubMed calla, y el «&amp;» que deja un saneador HTML. Reales.
+const e6campo = await recibo(JSON.stringify(respuestas['campo-invalido']), respuestas['campo-invalido'].term);
+const e6amp = await recibo(JSON.stringify(respuestas['amp-como-entidad']), respuestas['amp-como-entidad'].term);
+check('E6', e6campo.status.query_integrity === 'failed' && e6campo.result_count === 246024
+  && e6amp.status.query_integrity === 'failed',
+  'etiqueta inexistente y «&amp;» saneado acaban en failed, con su recuento intacto');
+
+// E7. El ERROR de ventana de PubMed no es JSON válido (salto de línea crudo). Respuesta real: el
+// ejecutor lanza con el mensaje de PubMed, nunca devuelve un recibo con recuento.
+let e7;
+try { e7 = await recibo(respuestas['ventana-superada']._raw); } catch (e) { e7 = e; }
+check('E7', e7 instanceof Error && /RESPUESTA_ILEGIBLE/.test(e7.message) && /9,999/.test(e7.message),
+  'el ERROR ilegible de PubMed (retstart fuera de ventana) acaba en error explícito, no en un cero');
+
+// E8. Un defecto conocido refuta la integridad aunque falte querytranslation: un descarte o un ERROR
+// sin traducción es `failed`, no `unsupported`. Y la falta de diagnóstico sin anomalía sigue siendo
+// `unsupported`, nunca `verified`. La primera versión miraba antes `verifiable` (Codex, 2026-10-08).
+const e8 = {
+  descarteSinTraduccion: await recibo(JSON.stringify({ esearchresult: { count: '1',
+    warninglist: { quotedphrasesnotfound: ['"inventado"[tiab]'] } } }), '"inventado"[tiab]'),
+  errorSinTraduccion: await recibo(JSON.stringify({ esearchresult: { count: '0', ERROR: 'database failure' } })),
+  etiquetaSinTraduccion: await recibo(JSON.stringify({ esearchresult: { count: '5' } }), 'asthma [tiabb]'),
+  ciegoLimpio: await recibo(JSON.stringify({ esearchresult: { count: '5' } }), 'asthma[tiab]'),
+};
+check('E8', e8.descarteSinTraduccion.status.query_integrity === 'failed'
+  && e8.errorSinTraduccion.status.query_integrity === 'failed'
+  && e8.etiquetaSinTraduccion.status.query_integrity === 'failed'
+  && e8.ciegoLimpio.status.query_integrity === 'unsupported',
+  `un defecto conocido es failed aunque falte el diagnóstico; sin anomalía y sin diagnóstico, unsupported: ${
+    JSON.stringify(Object.fromEntries(Object.entries(e8).map(([k, v]) => [k, v.status.query_integrity])))}`);
+
+// E9. El hash de la lista de PMIDs se comprueba contra uno calculado aparte, con varios PMIDs y en el
+// orden en que llegan: un hash fijo (`sha256('')`) pasaba las dos suites (Codex, 2026-10-08).
+const idsEnOrden = ['41626901', '36321557', '20734512'];
+const e9 = await recibo(JSON.stringify({ esearchresult: { count: '3', idlist: idsEnOrden,
+  querytranslation: 'x[tiab]' } }), 'x[tiab]', { retmax: 3 });
+check('E9', e9.pmid_list_sha256 === createHash('sha256').update('41626901\n36321557\n20734512', 'utf8').digest('hex')
+  && e9.pmids.join() === idsEnOrden.join() && e9.records_complete === true,
+  'el hash de PMIDs es el de la lista recibida, en su orden, comprobado contra un cálculo independiente');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.
