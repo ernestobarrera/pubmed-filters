@@ -102,11 +102,6 @@ export default {
       return new Response('Method not allowed', { status: 405, headers: { allow: 'POST, OPTIONS', ...cors } });
     }
 
-    const version = request.headers.get('mcp-protocol-version');
-    if (version !== null && !PROTOCOL_VERSIONS.includes(version)) {
-      return rpcError(-32600, `MCP-Protocol-Version no soportada: ${version}. Soportadas: ${PROTOCOL_VERSIONS.join(', ')}`, 400, cors);
-    }
-
     const text = await readBounded(request, MAX_BODY_BYTES);
     if (text === null) return rpcError(-32600, 'Petición demasiado grande', 413, cors);
     let message;
@@ -117,6 +112,14 @@ export default {
     }
     if (Array.isArray(message)) {
       return rpcError(-32600, 'Lotes JSON-RPC no admitidos: un mensaje por petición (MCP 2025-06-18)', 400, cors);
+    }
+
+    // La versión se negocia en `initialize` (params.protocolVersion): un cliente que saluda con una
+    // versión más nueva recibe la nuestra y decide si sigue. La cabecera solo obliga después; rechazar
+    // el saludo con 400 impedía conectar a clientes que ya envían versiones posteriores.
+    const version = request.headers.get('mcp-protocol-version');
+    if (version !== null && message?.method !== 'initialize' && !PROTOCOL_VERSIONS.includes(version)) {
+      return rpcError(-32600, `MCP-Protocol-Version no soportada: ${version}. Soportadas: ${PROTOCOL_VERSIONS.join(', ')}`, 400, cors);
     }
 
     const response = await getHandler(env)(message);

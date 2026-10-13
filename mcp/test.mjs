@@ -231,6 +231,15 @@ try {
   check('W5', vMala.status === 400 && vBuena.status === 200,
     'MCP-Protocol-Version no soportada 400; la soportada se atiende');
 
+  // El saludo negocia: con cabecera y versión posteriores, `initialize` responde con la nuestra.
+  const saludo = await worker.fetch(new Request(`https://w.example/mcp/${K1}`, { method: 'POST',
+    headers: { 'mcp-protocol-version': '2025-11-25' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25' } }) }), env);
+  const saludoBody = saludo.status === 200 ? await saludo.json() : null;
+  const despues = await conVersion('2025-11-25');
+  check('W7', saludo.status === 200 && saludoBody?.result?.protocolVersion === '2025-06-18' && despues.status === 400,
+    'initialize con una versión posterior negocia la soportada (200); después, esa cabecera sigue siendo 400');
+
   // El límite es de BYTES: 40.000 «é» son 40.053 caracteres y 80.053 bytes (el caso de Codex).
   const enBytes = await post(`/mcp/${K1}`, JSON.stringify(llamada(1, 'é'.repeat(40000))));
   const declarado = await worker.fetch(new Request(`https://w.example/mcp/${K1}`, { method: 'POST',
