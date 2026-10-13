@@ -96,23 +96,29 @@ cualquier otro proyecto (por ejemplo, MedCheck) intacto, pase lo que pase aquí.
 
 ### B2. Desplegar (desde el terminal de VS Code, en tu copia del repositorio)
 
-Pon el token solo en esa ventana de terminal; desaparece al cerrarla:
+Instala primero las dependencias **sin el token cargado**. Después carga el token solo en la ventana
+de despliegue mediante una entrada protegida, sin escribir su valor en una orden ni en el repositorio.
+Fija también `CLOUDFLARE_ACCOUNT_ID` en ese proceso con el ID verificado de la cuenta dedicada; no
+incluyas tu ID personal en `wrangler.toml`. El despliegue se niega si falta cualquiera de las dos
+variables, si el ID no tiene formato válido o si el árbol está sucio. Esto evita usar una sesión OAuth
+de respaldo, pero **no sustituye** comprobar que la cuenta y el alcance del token son los correctos.
 
 ```
-# macOS / Linux
-export CLOUDFLARE_API_TOKEN=pega-aquí-el-token
+# macOS / Linux: identificador de cuenta, no una credencial
+export CLOUDFLARE_ACCOUNT_ID="<ID_DE_LA_CUENTA_DEDICADA>"
 
-# Windows (PowerShell)
-$env:CLOUDFLARE_API_TOKEN="pega-aquí-el-token"
+# Windows (PowerShell): identificador de cuenta, no una credencial
+$env:CLOUDFLARE_ACCOUNT_ID="<ID_DE_LA_CUENTA_DEDICADA>"
 ```
 
 Después:
 
 ```
 cd mcp
-npm ci                         # instala wrangler 4.135.0, la versión fijada
-npx wrangler whoami            # COMPRUEBA que sale el correo de la cuenta NUEVA
-npm run deploy                 # sella commit, contrato y código, y despliega (se niega con cambios sin commit)
+npm ci                         # instala wrangler 4.150.0, la versión fijada; sin token cargado
+# Carga ahora el token por entrada protegida y fija CLOUDFLARE_ACCOUNT_ID.
+npx wrangler whoami            # COMPRUEBA el ID de cuenta y el alcance del token, no solo el correo
+npm run deploy                 # exige token + ID explícitos y árbol limpio; después sella y despliega
 ```
 
 Al terminar te dice la URL base, del tipo `https://pubmed-filters-exact.tunombre-pubmed.workers.dev`.

@@ -129,7 +129,7 @@ export function inspectResponse(esearchresult, { sentQuery } = {}) {
   // porque no hay nada que avisar. Lo que distingue una respuesta diagnosticable de una ciega es
   // `querytranslation`, que viene siempre salvo cuando se pidió con `rettype=count`. Medido sobre
   // respuestas reales: la misma consulta rota devuelve el mismo 0 con y sin avisos según cómo se pida.
-  const verifiable = typeof r.querytranslation === 'string' && r.querytranslation.length > 0;
+  const verifiable = typeof r.querytranslation === 'string' && r.querytranslation.trim().length > 0;
 
   if (!verifiable) {
     problems.push('NO_VERIFICABLE: la respuesta no trae querytranslation, así que no se puede saber '
@@ -150,7 +150,8 @@ export function inspectResponse(esearchresult, { sentQuery } = {}) {
   // su ventana de 9.999 registros: dice cuántos PMIDs vienen, no qué se buscó. Se informa aparte, como
   // paginación; la integridad de la consulta no depende de ello. Medido el 2026-10-08.
   const outputmessages = warn?.outputmessages ?? [];
-  const pagination = outputmessages.filter((m) => /^Restrictions achieved\b/i.test(m));
+  // Solo la forma completa observada: un prefijo de paginación no puede ocultar otro diagnóstico.
+  const pagination = outputmessages.filter((m) => /^Restrictions achieved\. start and count adjusted to [0-9]+, [0-9]+\.?$/i.test(m));
   const messages = outputmessages
     .filter((m) => !/^No items found\.?$/i.test(m) && !pagination.includes(m));
   if (messages.length > 0) problems.push(`AVISO_SEMANTICO: ${JSON.stringify(messages)}`);

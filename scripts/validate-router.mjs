@@ -174,6 +174,22 @@ check('Q9', recorte.usable === true && recorte.pagination.length === 1
   && vacia.usable === false && vacia.problems.some((p) => p.startsWith('ERRORLIST')),
   'el recorte de página se declara como paginación sin invalidar la consulta; un errorlist real sí la invalida');
 
+// Casos adversariales sintéticos: no se presentan como respuestas observadas de NCBI.
+check('Q10', ['', ' ', '\t\n '].every((translation) => {
+  const result = inspectResponse({ count: '7', querytranslation: translation }, { sentQuery: 'asthma[tiab]' });
+  return result.verifiable === false && result.usable === false
+    && result.anomalies.length === 0 && result.problems.some((p) => p.startsWith('NO_VERIFICABLE'));
+}), 'una traducción vacía o en blanco no acredita integridad');
+
+const pageNotice = respuestas['restricciones-ajustadas'].esearchresult.warninglist.outputmessages[0];
+check('Q11', [pageNotice + '. A term was ignored.', 'Restrictions achieved',
+  'Restrictions achieved. start and count adjusted to 9990, 9\nA term was ignored.'].every((message) => {
+  const result = inspectResponse({ count: '7', querytranslation: 'asthma[tiab]',
+    warninglist: { outputmessages: [message] } }, { sentQuery: 'asthma[tiab]' });
+  return result.usable === false && result.pagination.length === 0
+    && result.anomalies.some((p) => p.startsWith('AVISO_SEMANTICO'));
+}), 'solo un aviso de paginación completo se separa del diagnóstico semántico');
+
 // ---------------------------------------------------------------------------------------------
 // B. Coherencia del router con el repositorio
 // ---------------------------------------------------------------------------------------------
