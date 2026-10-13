@@ -6,7 +6,7 @@
  * selle aquí no podrá aparecer en sus recibos.
  *
  *   node stamp.mjs            sella (lo usan las pruebas y `wrangler dev`)
- *   node stamp.mjs --deploy   sella para desplegar: se NIEGA si el árbol tiene cambios sin commit
+ *   node stamp.mjs --deploy   exige token y cuenta explícitos, y se NIEGA con cambios sin commit
  *
  * Por qué se niega: un commit con el árbol sucio no identifica el código desplegado, y el hash del
  * router tampoco cubre protocol.mjs, worker.mjs ni el ejecutor (revisión de Codex, 2026-10-08). Los
@@ -21,6 +21,25 @@ import { runContext } from '../scripts/pubmed-exact.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const DEPLOYED_CODE = ['mcp/worker.mjs', 'mcp/protocol.mjs', 'scripts/exact-core.mjs',
   'scripts/parse-filter.mjs', 'scripts/esearch.mjs'];
+
+/** Exige un destino explícito; nunca deja que Wrangler use una sesión OAuth de respaldo. */
+export function deploymentEnvironmentError(env = process.env) {
+  if (!String(env.CLOUDFLARE_API_TOKEN ?? '').trim()) {
+    return 'falta CLOUDFLARE_API_TOKEN; no se usa la sesión OAuth de Wrangler como respaldo.';
+  }
+  if (!/^[a-f0-9]{32}$/i.test(env.CLOUDFLARE_ACCOUNT_ID ?? '')) {
+    return 'falta CLOUDFLARE_ACCOUNT_ID o no es un identificador de cuenta válido.';
+  }
+  return null;
+}
+
+if (process.argv.includes('--deploy')) {
+  const environmentError = deploymentEnvironmentError();
+  if (environmentError) {
+    console.error(`NO SE DESPLIEGA: ${environmentError}`);
+    process.exit(1);
+  }
+}
 
 const run = await runContext();
 if (process.argv.includes('--deploy') && run.repository_dirty !== false) {

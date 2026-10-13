@@ -42,6 +42,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
  */
 const MUTACIONES = [
   {
+    id: 'D1-SIN-ENTORNO',
+    porque: 'el despliegue vuelve a permitir una sesión OAuth de respaldo cuando faltan token o cuenta explícitos',
+    fichero: 'mcp/stamp.mjs',
+    de: 'if (environmentError) {',
+    a: 'if (false && environmentError) {',
+    rompe: 'D1',
+  },
+  {
     id: 'T1-GET',
     porque: 'la consulta vuelve a viajar por GET, con term en la URL: el fallo que la 1.8.0 cerro',
     fichero: 'scripts/esearch.mjs',
@@ -199,9 +207,25 @@ const MUTACIONES = [
     id: 'Q9-PAGINACION',
     porque: 'el recorte de página vuelve a tratarse como aviso sobre la consulta y una búsqueda íntegra se declara rota',
     fichero: 'scripts/parse-filter.mjs',
-    de: 'const pagination = outputmessages.filter((m) => /^Restrictions achieved\\b/i.test(m));',
+    de: 'const pagination = outputmessages.filter((m) => /^Restrictions achieved\\. start and count adjusted to [0-9]+, [0-9]+\\.?$/i.test(m));',
     a: 'const pagination = [];',
     rompe: 'Q9',
+  },
+  {
+    id: 'Q10-TRADUCCION-BLANCA',
+    porque: 'una traducción con espacios vuelve a acreditar integridad sin diagnóstico legible',
+    fichero: 'scripts/parse-filter.mjs',
+    de: 'r.querytranslation.trim().length > 0',
+    a: 'r.querytranslation.length > 0',
+    rompe: 'Q10',
+  },
+  {
+    id: 'Q11-PREFIJO-PAGINACION',
+    porque: 'el prefijo de paginación vuelve a esconder un diagnóstico semántico añadido',
+    fichero: 'scripts/parse-filter.mjs',
+    de: '/^Restrictions achieved\\. start and count adjusted to [0-9]+, [0-9]+\\.?$/i',
+    a: '/^Restrictions achieved\\b/i',
+    rompe: 'Q11',
   },
   {
     id: 'E7-CERO',

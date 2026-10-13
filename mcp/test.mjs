@@ -12,11 +12,12 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-await import('./stamp.mjs'); // el Worker importa build-info.mjs, que se genera al desplegar
+const { deploymentEnvironmentError } = await import('./stamp.mjs'); // genera el sello local
 const { createMcpHandler, TOOL, PROTOCOL_VERSIONS, MCP_MAX_RETMAX } = await import('./protocol.mjs');
 const { default: worker } = await import('./worker.mjs');
 
@@ -32,6 +33,32 @@ const sirve = (cuerpo, status = 200) => async (url, init = {}) => {
 };
 const llamada = (id, query, extra = {}) => ({ jsonrpc: '2.0', id, method: 'tools/call',
   params: { name: TOOL.name, arguments: { query, ...extra } } });
+
+// El comando público empieza por el sellador. Se prueba la negativa en procesos reales sin
+// ejecutar Wrangler ni utilizar credenciales: ni siquiera debe escribir el sello existente.
+const deployScript = JSON.parse(readFileSync(join(HERE, 'package.json'), 'utf8')).scripts.deploy;
+const cleanEnv = { ...process.env };
+delete cleanEnv.CLOUDFLARE_API_TOKEN;
+delete cleanEnv.CLOUDFLARE_ACCOUNT_ID;
+const fixtureAccount = 'a'.repeat(32);
+const stampBefore = readFileSync(join(HERE, 'build-info.mjs'));
+const deniedDeploys = [
+  [cleanEnv, 'CLOUDFLARE_API_TOKEN'],
+  [{ ...cleanEnv, CLOUDFLARE_ACCOUNT_ID: fixtureAccount }, 'CLOUDFLARE_API_TOKEN'],
+  [{ ...cleanEnv, CLOUDFLARE_API_TOKEN: 'fixture-not-a-real-token' }, 'CLOUDFLARE_ACCOUNT_ID'],
+  [{ ...cleanEnv, CLOUDFLARE_API_TOKEN: 'fixture-not-a-real-token', CLOUDFLARE_ACCOUNT_ID: 'invalid' },
+    'CLOUDFLARE_ACCOUNT_ID'],
+].map(([env, field]) => {
+  const child = spawnSync(process.execPath, [join(HERE, 'stamp.mjs'), '--deploy'],
+    { cwd: HERE, env, encoding: 'utf8' });
+  return child.status === 1 && child.stderr.includes(field) && !child.stdout.includes('sellado:')
+    && !`${child.stdout}${child.stderr}`.includes('fixture-not-a-real-token');
+});
+check('D1', /^node stamp\.mjs --deploy\s*&&\s*wrangler deploy$/.test(deployScript)
+  && deniedDeploys.every(Boolean) && stampBefore.equals(readFileSync(join(HERE, 'build-info.mjs')))
+  && deploymentEnvironmentError({ CLOUDFLARE_API_TOKEN: 'fixture-not-a-real-token',
+    CLOUDFLARE_ACCOUNT_ID: fixtureAccount }) === null,
+  'sin token e ID explícitos se rechaza antes del sellado y Wrangler; sin valores secretos en la salida');
 
 // --- Protocolo ---------------------------------------------------------------------------------
 
@@ -81,6 +108,22 @@ const recibo = (await h(llamada(11, '"Atherosclerosis"[Mesh]'))).result;
 check('M5', recibo.isError === false && recibo.structuredContent.run.contract_version === 'x'
   && JSON.parse(recibo.content[0].text).raw_response_sha256 === recibo.structuredContent.raw_response_sha256,
   'el recibo va en structuredContent y, idéntico, como texto; lleva el sello del despliegue');
+
+const pageResponse = respuestas['restricciones-ajustadas'].esearchresult;
+const hardenedCases = [
+  [{ count: '7', querytranslation: ' \t\n ' }, 'unsupported'],
+  [{ ...pageResponse, warninglist: { outputmessages: [
+    pageResponse.warninglist.outputmessages[0] + '. A term was ignored.'] } }, 'failed'],
+  [pageResponse, 'verified'],
+];
+const hardenedReceipts = await Promise.all(hardenedCases.map(async ([response, expectedStatus]) => {
+  const handler = createMcpHandler({ fetcher: sirve(JSON.stringify({ esearchresult: response })) });
+  const result = (await handler(llamada(22, 'asthma[tiab]'))).result.structuredContent;
+  return result.status.query_integrity === expectedStatus && result.querytranslation === response.querytranslation
+    && JSON.stringify(result.warninglist) === JSON.stringify(response.warninglist ?? null);
+}));
+check('M11', hardenedReceipts.every(Boolean),
+  'los casos sintéticos endurecidos llegan al recibo sin alterar los diagnósticos; la paginación real sigue verificada');
 
 // Fallos: nunca un recuento de cero.
 const e414 = (await createMcpHandler({ fetcher: sirve('', 414) })(llamada(12, 'x[tiab]'))).result;
