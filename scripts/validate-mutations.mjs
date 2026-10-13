@@ -319,9 +319,17 @@ const MUTACIONES = [
     id: 'W-VERSION',
     porque: 'una MCP-Protocol-Version que no se soporta vuelve a aceptarse',
     fichero: 'mcp/worker.mjs',
-    de: "if (version !== null && !PROTOCOL_VERSIONS.includes(version)) {",
+    de: "if (version !== null && message?.method !== 'initialize' && !PROTOCOL_VERSIONS.includes(version)) {",
     a: 'if (false) {',
     rompe: 'W5',
+  },
+  {
+    id: 'W-VERSION-SALUDO',
+    porque: 'la cabecera vuelve a rechazar el saludo `initialize`, y un cliente con una versión posterior no puede negociar',
+    fichero: 'mcp/worker.mjs',
+    de: "message?.method !== 'initialize' && !PROTOCOL_VERSIONS",
+    a: '!PROTOCOL_VERSIONS',
+    rompe: 'W7',
   },
   {
     id: 'W-LOTE',
