@@ -437,12 +437,44 @@ const porDimension = os.values_by_dimension ?? {};
 const dimensionesSinLista = (os.dimensions ?? []).filter((d) => !Array.isArray(porDimension[d]));
 const valoresHuerfanos = (os.dimensions ?? []).flatMap((d) => (porDimension[d] ?? [])
   .filter((v) => !(os.semantic_values ?? []).includes(v)).map((v) => `${d}:${v}`));
-const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed'));
+// Desde la 1.10.0, `coverage` también admite failed, pero con significado propio en failed_by_dimension:
+// una comprobación de cobertura que encuentra omisiones relevantes no tenía valor, y llamarla planned o
+// unsupported escondía un defecto conocido detrás de un desconocido (el mismo argumento de why_failed_exists).
+const failedSignificado = os.failed_by_dimension ?? {};
+const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed')
+  && !(typeof failedSignificado[d] === 'string' && failedSignificado[d].length > 40));
 check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
   && (porDimension.query_integrity ?? []).includes('failed'),
   `valores por dimensión: ${dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
-    ? 'cada dimensión declara los suyos y failed solo vale para query_integrity'
+    ? 'cada dimensión declara los suyos y failed solo aparece donde tiene significado propio'
     : `sin lista ${JSON.stringify(dimensionesSinLista)} / inexistentes ${JSON.stringify(valoresHuerfanos)} / failed fuera de sitio ${JSON.stringify(failedFuera)}`}`);
+
+// Cobertura y corpus definido (1.10.0). Medido el 2026-10-14: una bibliometría con query_integrity
+// verified perdía al menos un 31 % de lo pertinente, y nada en el contrato obligaba a mirarlo; las
+// comprobaciones existían solo dentro de skills locales que otras superficies no leen. Y las reglas por
+// defecto empujaban en contra: adaptation recorta con filtros y saturation_policy no busca exhaustividad,
+// dos cosas que en un corpus definido cambian la población. Se comprueba en campos, no en prosa.
+const cc = router.coverage_check ?? {};
+const cd = router.routing?.corpus_definition ?? {};
+const ccFallos = [
+  !(cc.required_when ?? []).includes('routing.corpus_definition') && 'coverage_check no es obligatorio para corpus_definition',
+  !(typeof cc.method?.sensitivity_minus_main === 'string' && typeof cc.method?.independent_pearls === 'string')
+    && 'falta el método: sensibilidad menos principal y perlas independientes',
+  !['relevant_outside_pmids', 'pearls_with_source', 'coverage_status'].every((f) => (cc.record ?? []).includes(f))
+    && 'el registro no conserva omisiones, perlas y estado',
+  cd.coverage_check !== 'required' && 'corpus_definition no exige coverage_check',
+  !String(cd.adaptation ?? '').startsWith('not_applicable') && 'corpus_definition permite la adaptación que cambia la población',
+  !String(cd.saturation_policy ?? '').startsWith('not_applicable') && 'corpus_definition acepta saturación en vez de recuperación completa',
+  !String(router.adaptation?.not_applicable_to ?? '').includes('routing.corpus_definition')
+    && 'adaptation no declara su excepción',
+  !String(router.saturation_policy?.not_applicable_to ?? '').includes('routing.corpus_definition')
+    && 'saturation_policy no declara su excepción',
+  !(porDimension.coverage ?? []).includes('failed') && 'coverage no puede registrar una omisión encontrada',
+].filter(Boolean);
+check('C14', ccFallos.length === 0,
+  `cobertura y corpus definido: ${ccFallos.length === 0
+    ? 'la cobertura se comprueba, un corpus no se recorta ni se satura, y una omisión tiene valor propio'
+    : ccFallos.join('; ')}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')

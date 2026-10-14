@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.9.0",
+  "schema_version": "1.10.0",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -30,6 +30,7 @@
       "routing",
       "primary_care_policy",
       "saturation_policy",
+      "coverage_check",
       "adaptation",
       "reading_and_drilldown",
       "provenance",
@@ -44,7 +45,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.9.0",
+    "contract_version": "1.10.0",
     "reference_parser": "scripts/parse-filter.mjs",
     "reference_executor": "scripts/pubmed-exact.mjs",
     "test_suite": "scripts/validate-router.mjs",
@@ -486,6 +487,17 @@
       "date_filter": "none_by_default",
       "if_user_says_last_week": "Run two lanes: trending without a date restriction and publications from the requested recent window.",
       "interpretation": "attention_signal_not_quality_signal"
+    },
+    "corpus_definition": {
+      "use_when": "The product describes or analyses a defined population of records (bibliometrics, production or collaboration mapping, evidence-map counts, an inventory for management or teaching) rather than answering a clinical question.",
+      "population": "Declared before analysis: query, period with its date field, document types, languages and eligibility. The query defines what can enter; eligibility decides what stays.",
+      "adaptation": "not_applicable: narrowing with methodology, journal or date filters to make results readable changes the population. If narrowing is needed, it is an amendment recorded with date, reason and whether results were already known.",
+      "saturation_policy": "not_applicable: the declared population is retrieved completely. records_retrieved equals result_count, or every date tranche does.",
+      "coverage_check": "required",
+      "screening": "Every excluded record keeps its PMID, reason and reading level (title, abstract or full text). A record that cannot be decided stays unclear; it is never excluded silently.",
+      "external_index_search": "A thematic search in another index is a discovery lane. Its records enter only through a recorded corpus revision; they never enrich the existing corpus.",
+      "enrichment": "By identifier (PMID, DOI). Provider, date and match status per record. A missing value is not zero, and counts from different providers are neither mixed nor averaged.",
+      "scope_statement": "Results describe the PubMed subset reached by the declared query. Claims about a multidisciplinary field as a whole need other indexes."
     }
   },
   "journal_routing": {
@@ -542,7 +554,37 @@
       "important_disagreements_have_been_identified",
       "additional_retrieval_has_low_expected_information_gain"
     ],
-    "never_use_fixed_article_count_as_saturation": true
+    "never_use_fixed_article_count_as_saturation": true,
+    "not_applicable_to": "routing.corpus_definition, which needs complete retrieval of a declared population, not conceptual saturation."
+  },
+  "coverage_check": {
+    "purpose": "query_integrity verified says the query ran as written. It says nothing about whether the query reaches what the question needs. This section is how the coverage dimension gets a value.",
+    "required_when": [
+      "routing.corpus_definition",
+      "a report, review, decision or publication rests on the result set",
+      "a count, a trend or an absence of evidence is reported"
+    ],
+    "optional_when": "Quick orientation answers that claim nothing about how much exists. Say that coverage was not checked.",
+    "method": {
+      "sensitivity_minus_main": "Build a broader query (synonyms, spelling variants, wider field tags, the vocabulary of earlier periods), run it NOT the main query, and screen what comes back. Report how many records outside are relevant, with their PMIDs.",
+      "independent_pearls": "2 to 4 records known to be relevant that did not come from the main results (a guideline, a reference list, a citation supplied by the user, a lateral search with different vocabulary). Check each with (<main query>) AND <PMID>[pmid] at retmax 0. A pearl drawn from the main results approves the query it is meant to test and does not count.",
+      "same_issue_signal": "Missed records published next to included ones (same special issue, adjacent PMIDs) are strong evidence of a lexical gap.",
+      "field_check": "A title-only strategy for a corpus says why, and reports the count of its [tiab] variant."
+    },
+    "status": "Recorded in provenance.operational_status under the coverage dimension. verified: the check ran and found no relevant records outside, or only isolated ones that cannot change the product (they are listed anyway); it does not mean nothing is missing. failed: it found relevant records outside in a number or of a kind that can change counts, trends or conclusions (a share of the set, a period, a core record). unsupported: it could not run (no literal engine, no independent pearls). planned: not run yet.",
+    "on_failed": "Revise the query and run it again, or narrow the declared scope explicitly so that the missed records fall outside it. Counts, trends or shares from a corpus whose coverage is failed are never reported without saying so next to the numbers.",
+    "screening_basis": "Relevance of the records outside is the agent's judgement. State whether it was made on titles or abstracts.",
+    "record": [
+      "sensitivity_query",
+      "sensitivity_minus_main_count",
+      "candidates_screened",
+      "relevant_outside",
+      "relevant_outside_pmids",
+      "pearls_with_source",
+      "pearls_found",
+      "coverage_status"
+    ],
+    "measured": "2026-10-14: a title-only bibliometric query on artificial consciousness returned query_integrity verified with 115 records, 77 kept. Its sensitivity query minus the main one returned 183 records, 34 of them relevant by title, so at least 31% of the relevant set was missing. The query had the phrase \"machine consciousness\" but not machines or robots, and it caught the clinical sense of conscious. For 2017-2022 it kept 4 records and missed 18, so the reported trend was an artefact of vocabulary. Several missed records were published in the same issues as included ones."
   },
   "provenance": {
     "record_per_run": [
@@ -598,7 +640,7 @@
         "why_failed_exists": "Until 1.8 a pass whose diagnostics showed a dropped term had no value of its own: calling it unsupported hid a known defect behind an unknown, and nothing else fitted. Measured 2026-10-08 with the reference executor against the repository's real fixtures."
       },
       "values_by_dimension": {
-        "rule": "Each dimension accepts only the values listed for it. failed is defined for query_integrity only; extending it to another dimension needs its own meaning and its own test, not reuse by analogy.",
+        "rule": "Each dimension accepts only the values listed for it. failed exists for a dimension only with its own meaning in failed_by_dimension; extending it to another dimension needs that meaning and its own test, not reuse by analogy.",
         "query_integrity": [
           "verified",
           "failed",
@@ -607,6 +649,7 @@
         ],
         "coverage": [
           "verified",
+          "failed",
           "planned",
           "unsupported"
         ],
@@ -615,6 +658,10 @@
           "planned",
           "unsupported"
         ]
+      },
+      "failed_by_dimension": {
+        "query_integrity": "value_meanings.failed",
+        "coverage": "A coverage check found relevant records outside the main query in a number or of a kind that can change counts, trends or conclusions. Isolated omissions that cannot change the product are listed under verified instead. Until 1.10 this state had no value, so a corpus missing a third of its subject could only be called planned or unsupported."
       },
       "dimensions": [
         "query_integrity",
@@ -730,7 +777,8 @@
       "relax_methodology_filter",
       "run_topic_only_pubmed_pass"
     ],
-    "merge_policy": "Deduplicate by PMID and then prioritize relevance, quality, recency and applicability."
+    "merge_policy": "Deduplicate by PMID and then prioritize relevance, quality, recency and applicability.",
+    "not_applicable_to": "routing.corpus_definition: there, narrowing changes the population instead of making it readable."
   },
   "tool_requirements": {
     "filter_source": "GitHub",
@@ -771,7 +819,8 @@
           "saturation_policy",
           "provenance",
           "adaptation.merge_policy",
-          "evidence_landscape_policy"
+          "evidence_landscape_policy",
+          "coverage_check"
         ]
       },
       "conversational_surface_with_literal_pubmed": {
