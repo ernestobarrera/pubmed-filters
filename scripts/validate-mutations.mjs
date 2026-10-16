@@ -467,6 +467,22 @@ const MUTACIONES = [
     rompe: 'N3',
   },
   {
+    id: 'R18-DECLARACION-VIEJA',
+    porque: 'el router vuelve a declarar un término caído que el filtro ya no contiene: lo que pasó del 01/10 al 16/10',
+    fichero: 'neurosymbolic_router.json',
+    de: '"matched nothing.",\n        "cases": {}',
+    a: '"matched nothing.",\n        "cases": {"filters/methodology/clinical_rules_ap.txt": ["\\"AUDIT rule\\"[tiab]"]}',
+    rompe: 'R18',
+  },
+  {
+    id: 'R19-SEGURIDAD-PACIENTE',
+    porque: 'la ruta de seguridad farmacológica vuelve a abrir con el filtro de errores médicos, por el nombre de su clave',
+    fichero: 'neurosymbolic_router.json',
+    de: '"first_passes": [\n        "clinical.drug_adverse_events"\n      ],',
+    a: '"first_passes": [\n        "clinical.drug_adverse_events",\n        "scope.safety_specific"\n      ],',
+    rompe: 'R19',
+  },
+  {
     id: 'M6',
     porque: 'el parser vuelve a quedarse con una sola línea y trunca los filtros multilínea',
     fichero: 'scripts/parse-filter.mjs',

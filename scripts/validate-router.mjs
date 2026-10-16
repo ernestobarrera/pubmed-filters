@@ -360,6 +360,28 @@ check('R17', sinDeclarar.length === 0 && declaradoSinCaso.length === 0,
     ? `ninguno sin declarar (${declaradosTipo.size} declarado${declaradosTipo.size === 1 ? '' : 's'})`
     : `sin declarar ${JSON.stringify(sinDeclarar)} / declarados que ya no lo tienen ${JSON.stringify(declaradoSinCaso)}`}`);
 
+// Una declaración que sobrevive a su defecto describe un repositorio que ya no existe. Pasó: los
+// términos caídos de cuatro filtros se corrigieron el 2026-10-01 (a7bd7c8) y el router siguió
+// declarándolos hasta que una auditoría lo vio el 2026-10-16. R17 vigilaba los asteriscos; esto no.
+const caidos = router.registry_validation?.terms_pubmed_drops ?? {};
+const declaracionesCaidas = [
+  ...Object.entries(caidos.benign?.cases ?? {}).flatMap(([f, ts]) => (Array.isArray(ts) ? ts : [null]).map((t) => [f, t])),
+  ...Object.entries(caidos.dead_field_tags?.cases ?? {}).flatMap(([f, c]) => (Array.isArray(c?.terms) ? c.terms : [null]).map((t) => [f, t])),
+];
+const caducadas = declaracionesCaidas.filter(([f, t]) => typeof t !== 'string' || !existsSync(join(ROOT, f)) || !query(f).includes(t))
+  .map(([f, t]) => `${f}: ${t}`);
+check('R18', caducadas.length === 0 && typeof caidos.declaration_rule === 'string',
+  `términos caídos declarados (${declaracionesCaidas.length}): ${caducadas.length === 0
+    ? 'cada uno sigue, literal, en su filtro' : `declarados que el filtro ya no contiene ${JSON.stringify(caducadas)}`}`);
+
+// La seguridad farmacológica no se busca con filtros de seguridad del paciente. Medido el 2026-10-16:
+// scope.safety_* (errores médicos, Tanon 2010) estaban en routing.safety por el nombre de su clave y,
+// en una pregunta de fármaco, daban 1 registro y 0 de 18 estudios de referencia.
+const rutaSeguridad = JSON.stringify(router.routing?.safety ?? {});
+check('R19', !/scope\.safety_/.test(rutaSeguridad.replace(/"not_this":"[^"]*"/, ''))
+  && /scope\.safety_specific/.test(JSON.stringify(router.routing?.patient_safety ?? {})),
+  'la ruta de seguridad farmacológica no usa los filtros de seguridad del paciente, que tienen su propia ruta');
+
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
 check('R12', undeclaredDates.length === 0,

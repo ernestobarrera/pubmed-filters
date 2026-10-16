@@ -333,36 +333,18 @@
     "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository. Absence from the registry does not mean no filter exists; read the repository index before concluding there is none.",
     "terms_pubmed_drops": {
       "rule": "Curated filters are the source of methodological intent, not an authority on today's PubMed syntax. A term inside a validated filter can still be dropped by the engine.",
-      "swept": "49 retrieval filters executed against E-utilities on 2026-09-16: 45 clean, 4 with terms PubMed reports as not found.",
+      "swept": "122 filters (48 retrieval filters and the journal lists) executed against E-utilities with scripts/sweep-filters.mjs on 2026-10-16: 118 clean; 4 journal lists carry abbreviations of journals PubMed does not index, accepted in scripts/sweep-baseline.json. No retrieval filter has a term PubMed drops.",
       "benign": {
         "what": "A quoted free-text phrase that simply does not occur in the literature. The syntax is fine and the filter works; PubMed only says the phrase matched nothing.",
-        "cases": {
-          "filters/methodology/clinical_rules_ap.txt": [
-            "\"AUDIT rule\"[tiab]",
-            "\"two question screener\"[tiab]"
-          ]
-        }
+        "cases": {}
       },
       "dead_field_tags": {
         "what": "A term addressed to a field where it does not exist. It contributes nothing and looks as if it did.",
-        "cases": {
-          "filters/methodology/indirect_comparison.txt": {
-            "term": "\"network meta-analysis\"[mh]",
-            "problem": "Not a MeSH descriptor. It exists as a publication type and as free text.",
-            "measured_impact": "+28 records out of 155,311 (+0.02%) if changed to [pt]."
-          },
-          "filters/methodology/gpc.txt": {
-            "term": "\"Consensus development conferences as topic\"[MESH] and \"consensus development conference\"[pt]",
-            "problem": "Both return zero and are reported as not found.",
-            "measured_impact": "0 records. Other terms in the same OR block already cover them."
-          },
-          "filters/scope/pearls.txt": {
-            "term": "same two consensus terms as gpc.txt",
-            "problem": "Same.",
-            "measured_impact": "Not separately quantified; same OR structure."
-          }
-        },
-        "why_not_fixed_here": "The measured impact is between zero and 0.02%, and editing a published, referenced filter is a methodological decision with its own provenance, not a cleanup. Declared so it is visible and can be decided on."
+        "cases": {}
+      },
+      "declaration_rule": "Every term listed under benign.cases or dead_field_tags.cases is written literally as it appears in the filter, and the suite fails if the filter no longer contains it. A declaration that outlives its defect describes a repository that no longer exists (R18).",
+      "resolved": {
+        "2026-10-01": "Four filters had terms PubMed dropped, found on 2026-09-16: two benign phrases in filters/methodology/clinical_rules_ap.txt, \"network meta-analysis\"[mh] in filters/methodology/indirect_comparison.txt (not a MeSH descriptor; +0.02% as [pt]) and two consensus terms in filters/methodology/gpc.txt and filters/scope/pearls.txt. Revived or replaced by the owner in commit a7bd7c8. This section kept describing them until 2026-10-16, when an audit noticed; R18 makes that impossible now."
       },
       "how_this_was_found": "By applying the router's own query_execution_contract to the repository's own filters. The rule written for a model's invented MeSH heading found four cases inside curated filters.",
       "typographic_truncation": {
@@ -455,18 +437,24 @@
       "recall_fallback": "clinical.etiology_sensitive"
     },
     "safety": {
+      "means": "Harm from a drug, device or procedure: adverse events, toxicity, rare or late harms. Most of this evidence is observational; a therapy filter tuned to trials loses it (measured 2026-10-16: 0 of 18 cited observational studies on fluoroquinolones and aortic aneurysm with Therapy/Narrow, 18 of 18 with clinical.drug_adverse_events).",
       "first_passes": [
-        "clinical.drug_adverse_events",
-        "scope.safety_specific"
+        "clinical.drug_adverse_events"
       ],
       "fallback": [
-        "scope.safety_sensitive",
         "clinical.etiology_sensitive"
       ],
+      "devices_and_procedures": "clinical.device_adverse_events for devices; filters/clinical/surgery_ae.txt for surgical procedures (see the catalog).",
+      "not_this": "scope.safety_specific and scope.safety_sensitive are PATIENT SAFETY filters (medical errors, safety management; Tanon 2010), not drug safety. They belong to routing.patient_safety. Until 1.10 they sat in this route because of their key name; on a drug question they returned 1 record and 0 of 18 reference studies.",
       "external_sources": [
         "AEMPS",
         "EMA_PRAC"
       ]
+    },
+    "patient_safety": {
+      "means": "Safety of care: medical errors, adverse events of care, safety management, incident reporting.",
+      "precision_first": "scope.safety_specific",
+      "recall_fallback": "scope.safety_sensitive"
     },
     "prediction": {
       "primary_care": "methodology.clinical_prediction_rules_primary_care",
