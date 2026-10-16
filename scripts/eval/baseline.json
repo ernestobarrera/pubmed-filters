@@ -1,12 +1,21 @@
 {
   "medido_el": "2026-10-16",
-  "contract_version": "1.10.0",
+  "evaluated_tree": {
+    "contract_version": "1.11.0",
+    "repository": "ernestobarrera/pubmed-filters",
+    "repository_commit": "02251c760e3683da1117c4455ff8e2ce80f774b2",
+    "repository_dirty": true,
+    "router_sha256": "3efff195d102fd4a8e04c95db5adc5d04789a7f58f44cb03fe9bcec77bbdaa57",
+    "catalog_sha256": "001797833217f42177d42ca4412993a4682c663657b58f13e2551f8521a3299f",
+    "cases_sha256": "3ee949d0f228989baae8717b584b4dcb5e0304eebd182ebb96c6348a6d80a97e"
+  },
+  "note": "Strategy keys (risk_under_1_10, conformant_1_10, contract_1_11, forbidden_1_11) are hand-composed readings of each contract version, all run against this tree.",
   "cases": {
     "A": {
       "reference_size": 11,
       "reference_complete": false,
       "versions": {
-        "contract_1_10": {
+        "risk_under_1_10": {
           "passes": [
             {
               "id": "core",
@@ -38,6 +47,36 @@
           "unnecessary_activations": [
             "core:filters/scope/spanish.txt"
           ]
+        },
+        "conformant_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 268,
+              "hits": 11,
+              "integrity": "verified",
+              "query_sha256": "69e7a3dd54557fc1bee1a10dd8180f4855f10c4ae72e0a6c0b4a79ae1710c480"
+            }
+          ],
+          "unit_hits": [
+            "12848631",
+            "14535875",
+            "15836716",
+            "16040284",
+            "17241304",
+            "17565490",
+            "18001404",
+            "19246508",
+            "21512411",
+            "26832653",
+            "27175657"
+          ],
+          "integrity": "verified",
+          "unit_retention": "11/11",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
         },
         "contract_1_11": {
           "passes": [
@@ -83,12 +122,12 @@
       "reference_size": 8,
       "reference_complete": false,
       "versions": {
-        "contract_1_10": {
+        "risk_under_1_10": {
           "passes": [
             {
               "id": "core",
               "unit": true,
-              "result_count": 3313,
+              "result_count": 3314,
               "hits": 6,
               "integrity": "verified",
               "query_sha256": "666e623557bcb2094ec5a731ec53a2df4c2b72c03d4209aa905d5acc16af7728"
@@ -106,6 +145,34 @@
           "unit_retention": "6/8",
           "missed": [
             "29492957",
+            "31523732"
+          ],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "conformant_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 16580,
+              "hits": 7,
+              "integrity": "verified",
+              "query_sha256": "3dc9b52f0093049f0727aadb4514873e70b65ef845fe29d9bcc55abee51d7854"
+            }
+          ],
+          "unit_hits": [
+            "24733354",
+            "28143413",
+            "29492957",
+            "30422193",
+            "30545435",
+            "30624198",
+            "8312045"
+          ],
+          "integrity": "verified",
+          "unit_retention": "7/8",
+          "missed": [
             "31523732"
           ],
           "passes_run": 1,
@@ -144,7 +211,7 @@
       "reference_size": 13,
       "reference_complete": true,
       "versions": {
-        "contract_1_10": {
+        "conformant_1_10": {
           "passes": [
             {
               "id": "drug_ae",
@@ -262,7 +329,7 @@
       "reference_size": 5,
       "reference_complete": true,
       "versions": {
-        "contract_1_10": {
+        "conformant_1_10": {
           "passes": [
             {
               "id": "core",
@@ -342,7 +409,7 @@
       "reference_size": 11,
       "reference_complete": false,
       "versions": {
-        "contract_1_10": {
+        "conformant_1_10": {
           "passes": [
             {
               "id": "core",

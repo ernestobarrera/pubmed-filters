@@ -26,7 +26,9 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseFilter, compose } from '../parse-filter.mjs';
-import { runExact } from '../exact-core.mjs';
+import { runExact, sha256 } from '../exact-core.mjs';
+import { runContext } from '../pubmed-exact.mjs';
+import { roleConformance } from './conformance.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
@@ -72,8 +74,23 @@ async function run(term, retmax) {
   }
 }
 
-const results = { medido_el: new Date().toISOString().slice(0, 10), contract_version: router.conformance?.contract_version, cases: {} };
+// Qué se evaluó, sin ambigüedad: el contrato del ÁRBOL (no el de las estrategias, que llevan cada una su
+// versión en su nombre), el commit y los hashes del router, el catálogo y la especificación de casos.
+const run0 = await runContext();
+const results = {
+  medido_el: new Date().toISOString().slice(0, 10),
+  evaluated_tree: { ...run0, cases_sha256: await sha256(readFileSync(join(HERE, 'cases.json'), 'utf8').replace(/\r\n/g, '\n')) },
+  note: 'Strategy keys (risk_under_1_10, conformant_1_10, contract_1_11, forbidden_1_11) are hand-composed readings of each contract version, all run against this tree.',
+  cases: {},
+};
 process.on('exit', () => { if (reintentos) console.log(`(reintentos por 5xx de NCBI: ${reintentos})`); });
+
+// Antes de gastar una sola consulta: ¿respetan las estrategias 1.11 el papel declarado de cada faceta?
+const conformidad = roleConformance(spec, roleOf);
+if (conformidad.length) {
+  console.error(`ESPECIFICACIÓN INCOHERENTE con los papeles declarados:\n  ${conformidad.join('\n  ')}`);
+  process.exit(1);
+}
 for (const kase of spec.cases) {
   const ref = kase.reference.pmids;
   const refClause = ref.map((p) => `${p}[pmid]`).join(' OR ');
@@ -107,16 +124,42 @@ for (const [id, c] of Object.entries(results.cases)) {
   }
 }
 
+// Una medida sin integridad verificada no se interpreta, ni se aprueba, ni se fija como base. Revisión de
+// Codex del 2026-10-16: la versión anterior marcaba not_verified y seguía, y el comparador acababa en 0.
+const sinVerificar = Object.entries(results.cases).flatMap(([id, c]) => Object.entries(c.versions)
+  .filter(([, o]) => o.integrity !== 'verified').map(([v]) => `${id}.${v}`));
+if (sinVerificar.length) {
+  console.error(`\nINTEGRIDAD NO VERIFICADA en ${sinVerificar.join(', ')}: estas medidas no valen, ni para aprobar ni como base.`);
+  process.exit(1);
+}
+
+// Lo que no puede cambiar sin que se diga: retención, activaciones, número de pasadas y la CONSULTA de
+// cada pasada (su hash). Retirar la restricción de P conservaba 11/11 y el comparador anterior no lo veía.
 const essential = (r) => Object.fromEntries(Object.entries(r.cases).map(([id, c]) => [id,
-  Object.fromEntries(Object.entries(c.versions).map(([v, o]) => [v, { unit_retention: o.unit_retention, unnecessary: o.unnecessary_activations.length }]))]));
+  Object.fromEntries(Object.entries(c.versions).map(([v, o]) => [v, {
+    unit_retention: o.unit_retention, unnecessary: o.unnecessary_activations.length, passes_run: o.passes_run,
+    queries: o.passes.map((p) => `${p.id}:${p.query_sha256}`) }]))]));
+// El coste (registros) cambia cada día con la indexación: se muestra siempre y solo falla si se dobla o
+// se reduce a la mitad, que ya no es indexación sino otra consulta u otro PubMed.
+const counts = (r) => Object.entries(r.cases).flatMap(([id, c]) => Object.entries(c.versions)
+  .flatMap(([v, o]) => o.passes.map((p) => [`${id}.${v}.${p.id}`, p.result_count])));
 
 if (process.argv.includes('--fijar-base')) {
   writeFileSync(BASE, `${JSON.stringify({ ...results }, null, 2)}\n`);
   console.log(`\nlínea base fijada en ${BASE}`);
 } else if (existsSync(BASE)) {
-  const before = essential(JSON.parse(readFileSync(BASE, 'utf8')));
+  const baseRaw = JSON.parse(readFileSync(BASE, 'utf8'));
+  const before = essential(baseRaw);
   const now = essential(results);
-  const changed = Object.keys(now).filter((id) => JSON.stringify(now[id]) !== JSON.stringify(before[id]));
-  console.log(changed.length ? `\nCAMBIOS respecto a la línea base: ${changed.join(', ')}` : '\nsin cambios respecto a la línea base.');
-  process.exit(changed.length ? 1 : 0);
+  const changed = [...new Set([...Object.keys(now), ...Object.keys(before)])]
+    .filter((id) => JSON.stringify(now[id]) !== JSON.stringify(before[id]));
+  const prev = Object.fromEntries(counts(baseRaw));
+  const costes = counts(results).filter(([k, n]) => prev[k] != null && n !== prev[k]).map(([k, n]) => {
+    const ratio = prev[k] === 0 ? (n === 0 ? 1 : Infinity) : n / prev[k];
+    return { k, de: prev[k], a: n, grave: ratio > 2 || ratio < 0.5 };
+  });
+  if (costes.length) console.log(`\nregistros que cambian: ${costes.map((c) => `${c.k} ${c.de}→${c.a}${c.grave ? ' (GRAVE)' : ''}`).join(' · ')}`);
+  const graves = costes.filter((c) => c.grave);
+  console.log(changed.length ? `\nCAMBIOS respecto a la línea base: ${changed.join(', ')}` : '\nsin cambios de retención, activaciones ni consultas.');
+  process.exit(changed.length || graves.length ? 1 : 0);
 }

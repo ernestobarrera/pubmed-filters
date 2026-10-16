@@ -22,6 +22,7 @@ import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, 
   unknownFieldTags, lookalikeCharacters, PUBMED_FIELD_TAGS }
   from './parse-filter.mjs';
 import { buildCatalog, serialize as serializeCatalog, CATALOG_PATH } from './catalog.mjs';
+import { roleConformance } from './eval/conformance.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURES = join(ROOT, 'scripts', 'fixtures');
@@ -581,6 +582,15 @@ check('K5', ['catalog_ref', 'facets', 'filters', 'passes', 'compensations'].ever
   && (router.provenance?.record_per_pass ?? []).includes('pass_id')
   && !(router.provenance?.operational_status?.dimensions ?? []).includes('applicability'),
   'registro de selección: facetas, filtros usados y descartados con motivo, pasadas con su afirmación y compensaciones; sin dimensión de aplicabilidad');
+
+// La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
+const casosEval = JSON.parse(read('scripts/eval/cases.json'));
+const conformidadEval = roleConformance(casosEval, roleOf);
+check('K6', conformidadEval.length === 0 && casosEval.cases.some((c) => (c.facets ?? []).some((f) => f.expected_role === 'core' && (f.filters ?? []).length))
+  && casosEval.cases.some((c) => (c.facets ?? []).some((f) => f.expected_role === 'context')),
+  `batería: ${conformidadEval.length === 0
+    ? 'las estrategias 1.11 respetan el papel de cada faceta, con al menos un control positivo y uno negativo'
+    : conformidadEval.join('; ')}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')

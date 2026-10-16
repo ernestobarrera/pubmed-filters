@@ -240,6 +240,32 @@ check('M15', sinTermino !== qT && qT.includes(' ') && literal.status.filter_fide
   && sinFuente.isError === true && enviadas.length === 0,
   'filter_fidelity: literal o con saltos de línea, verified; un término quitado, una exclusión con AND o un filtro inexistente, failed; sin catálogo no se finge');
 
+// Los vectores de la revisión de Codex del 2026-10-16: nombres heredados del prototipo que daban
+// verified a un filtro inexistente, y exclusiones mal compuestas que pasaban por anidamiento o porque
+// una aparición correcta tapaba otra incorrecta.
+const HEREDADOS = ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'];
+const heredadosBusqueda = await Promise.all(HEREDADOS.map((n, i) => fid(60 + i, 'asthma[tiab] OR undefined[tiab]', [n])));
+const heredadosExtraccion = await Promise.all(HEREDADOS.map((n, i) => usar(70 + i, GET_FILTER_TOOL.name, { path: n })));
+check('M16', heredadosBusqueda.every((r) => r.status.filter_fidelity === 'failed' && r.filter_fidelity[0].found_literal === false)
+  && heredadosExtraccion.every((r) => r.result?.isError === true && /no lo reconstruyas/.test(r.result.structuredContent.error)),
+  `nombres heredados (${HEREDADOS.join(', ')}): ni se dan por presentes ni rompen la extracción`);
+
+const qPearls = paquete.filters['filters/scope/pearls.txt'].query;
+const excl = {
+  correcta: await fid(80, `(asthma[tiab]) ${qH}`, ['filters/scope/humans.txt']),
+  conSalto: await fid(81, `(asthma[tiab]) AND\n(${qH})`, ['filters/scope/humans.txt']),
+  dosParentesis: await fid(82, `(asthma[tiab]) AND ((${qH}))`, ['filters/scope/humans.txt']),
+  tresParentesis: await fid(83, `(asthma[tiab]) AND (((${qH})))`, ['filters/scope/humans.txt']),
+  correctaTapaMala: await fid(84, `((asthma[tiab]) ${qH}) OR ((asthma[tiab]) AND (${qH}))`, ['filters/scope/humans.txt']),
+  conOR: await fid(85, `(asthma[tiab]) OR (${qH})`, ['filters/scope/humans.txt']),
+  alPrincipio: await fid(86, `${qH}`, ['filters/scope/humans.txt']),
+  dentroDePerlas: await fid(87, `(asthma[tiab]) AND (${qPearls})`, ['filters/scope/pearls.txt', 'filters/scope/humans.txt']),
+};
+const malas = ['conSalto', 'dosParentesis', 'tresParentesis', 'correctaTapaMala', 'conOR', 'alPrincipio'];
+check('M17', excl.correcta.status.filter_fidelity === 'verified' && excl.dentroDePerlas.status.filter_fidelity === 'verified'
+  && qPearls.includes(qH) && malas.every((k) => excl[k].status.filter_fidelity === 'failed'),
+  `exclusión: literal tras un operando, verified (también dentro de pearls); tras AND u OR con saltos o paréntesis anidados, al inicio, o mal compuesta después de una buena, failed — estados: ${JSON.stringify(Object.fromEntries(Object.entries(excl).map(([k, v]) => [k, v.status.filter_fidelity])))}`);
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;

@@ -179,11 +179,14 @@ node scripts/eval/run-eval.mjs --fijar-base    # la reescribe
 
 La suite comprueba que las reglas están escritas; esto mide **qué recuperan**. Cada caso de
 `scripts/eval/cases.json` fija antes de ejecutar la pregunta, el papel esperado de cada faceta y los
-estudios **incluidos** por una revisión sistemática independiente, y compara la retención de la
-estrategia que prescribe cada versión del contrato. Incluye un control negativo (no activar filtros por
-quién pregunta) y uno positivo (activar la geografía cuando define la población). Necesita red, así que
-no corre en la CI. No mide lo que hace una superficie conversacional: las estrategias se componen a
-mano desde el texto del contrato.
+estudios **incluidos** por una revisión sistemática independiente, y compara la retención de tres
+lecturas: el riesgo que una ambigüedad de 1.10 permitía, lo que haría un lector cuidadoso de 1.10 y lo
+que prescribe 1.11. Incluye un control negativo (no activar filtros por quién pregunta) y uno positivo
+(activar la geografía cuando define la población). Falla si una pasada no está verificada, si cambia
+una consulta, la retención o las activaciones, o si los registros se doblan o se reducen a la mitad. Que
+las estrategias 1.11 respeten el papel declarado de cada faceta lo comprueba la suite sin red (K6).
+Necesita red, así que no corre en la CI. No mide lo que hace una superficie conversacional: las
+estrategias se componen a mano desde el texto del contrato.
 
 La suite **no** puede decidir si un filtro nuevo merece entrar en el registry del router, porque eso
 es una decisión editorial. Para ver qué hay en el repositorio que el router todavía no conoce:

@@ -9,9 +9,11 @@ mano ni pueda reconstruirlos de memoria:
   por papel del router. No llama a PubMed.
 - `pubmed_get_filter`: la consulta de un filtro tal como la extrae el parser de referencia (todas las
   líneas, sin el bloque de metadatos), con su SHA-256, su papel y cómo componerla. No llama a PubMed.
-- `pubmed_search_exact` admite `filters_used`: el recibo comprueba que cada filtro declarado va
-  **literal** en la consulta y que ninguna exclusión sigue a un `AND`, y lo dice en
-  `status.filter_fidelity` (`verified` | `failed`).
+- `pubmed_search_exact` admite `filters_used`: el recibo comprueba que cada filtro declarado está en
+  el catálogo y va **literal** en la consulta (espacios aparte), y que **ninguna** aparición de una
+  exclusión sigue a `AND`, `OR` o `NOT` ni abre la consulta, por muchos paréntesis que haya en medio. Lo
+  dice en `status.filter_fidelity` (`verified` | `failed`). `verified` no certifica que el filtro sea el
+  adecuado para la pregunta, ni sustituye a `query_integrity`: son garantías distintas.
 
 El catálogo y los filtros los construye `scripts/filter-source.mjs`: el MCP local los lee del disco al
 arrancar y `stamp.mjs` los sella en `mcp/filters-bundle.mjs` para el Worker, que no tiene disco (su
@@ -228,7 +230,7 @@ Envía a cada uno **su** URL. Solo tienen que hacer B4. No necesitan Cloudflare,
 node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en la CI y en la puerta de mutación)
 ```
 
-La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M15 y W8, también
+La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M17 y W8, también
 sin red. Sin probar todavía desde claude.ai o ChatGPT: requiere desplegar el Worker.
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,

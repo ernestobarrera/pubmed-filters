@@ -136,13 +136,46 @@ export const GET_FILTER_TOOL = {
 };
 
 const flat = (s) => String(s).replace(/\s+/g, ' ').trim();
-const resolvePath = (bundle, p) => (bundle.filters[p] ? p
-  : /^jnl_[a-z0-9_]+$/.test(p) && bundle.filters[`filters/journals/${p}.txt`] ? `filters/journals/${p}.txt` : null);
+
+/**
+ * Solo claves PROPIAS que el catálogo lista, con una consulta canónica no vacía. Revisión de Codex del
+ * 2026-10-16: `bundle.filters['__proto__']` (o `constructor`, `toString`…) es un valor heredado; su
+ * `.query` era undefined, `flat()` lo convertía en la cadena "undefined", y una consulta que la
+ * contuviera daba filter_fidelity verified para un filtro que no existe.
+ */
+const catalogPaths = new WeakMap();
+function resolvePath(bundle, p) {
+  if (!catalogPaths.has(bundle)) {
+    catalogPaths.set(bundle, new Set([...bundle.catalog.filters, ...bundle.catalog.journal_lists].map((e) => e.path)));
+  }
+  const known = catalogPaths.get(bundle);
+  const candidate = known.has(p) ? p : /^jnl_[a-z0-9_]+$/.test(p) ? `filters/journals/${p}.txt` : null;
+  if (!candidate || !known.has(candidate) || !Object.hasOwn(bundle.filters, candidate)) return null;
+  const query = bundle.filters[candidate]?.query;
+  return typeof query === 'string' && query.trim() !== '' ? candidate : null;
+}
+
+/**
+ * ¿Qué precede a una aparición, saltando espacios y CUALQUIER número de paréntesis de apertura? Una
+ * exclusión (empieza por NOT) solo está bien compuesta si la precede un operando —un término o un
+ * paréntesis de cierre—: `(tema) NOT (...)`. Precedida por AND, OR o NOT, o al principio de la consulta,
+ * PubMed no la lee como exclusión (`AND (NOT X)` = `AND X`). Revisión de Codex del 2026-10-16: mirar solo
+ * ocho caracteres y un paréntesis dejaba pasar `AND ((NOT X))`.
+ */
+function precedingToken(sent, at) {
+  let i = at - 1;
+  while (i >= 0 && (sent[i] === ' ' || sent[i] === '(')) i--;
+  if (i < 0) return '';
+  const word = sent.slice(0, i + 1).match(/([A-Za-z]+)$/);
+  return word ? word[1] : sent[i];
+}
 
 /**
  * ¿Lleva la consulta enviada cada filtro declarado, literal? Se compara con los espacios colapsados:
- * un salto de línea de más no cambia lo que PubMed ejecuta, una palabra cambiada sí. Una exclusión
- * compuesta con AND se marca aparte: es la inversión silenciosa de composition.negation_filters.
+ * un salto de línea de más no cambia lo que PubMed ejecuta, una palabra cambiada sí. En una exclusión se
+ * inspeccionan TODAS sus apariciones: una bien compuesta no tapa otra mal compuesta más adelante.
+ * Qué certifica `verified`: que cada filtro declarado está literal y que ninguna aparición de una
+ * exclusión sigue a un operador. No certifica que el filtro sea el adecuado para la pregunta.
  */
 export function filterFidelity(bundle, query, declared) {
   const sent = flat(query);
@@ -150,14 +183,17 @@ export function filterFidelity(bundle, query, declared) {
     const path = resolvePath(bundle, p);
     if (!path) return { declared: p, found_literal: false, problem: 'no está en el catálogo' };
     const canonical = flat(bundle.filters[path].query);
-    const at = sent.indexOf(canonical);
-    if (at === -1) {
+    const positions = [];
+    for (let at = sent.indexOf(canonical); at !== -1; at = sent.indexOf(canonical, at + 1)) positions.push(at);
+    if (positions.length === 0) {
       return { declared: p, path, found_literal: false, problem: 'la consulta no contiene el filtro literal: modificado o reconstruido' };
     }
-    const exclusion = /^NOT\b/i.test(canonical);
-    const before = sent.slice(Math.max(0, at - 8), at);
-    if (exclusion && /\bAND\s*\(?\s*$/i.test(before)) {
-      return { declared: p, path, found_literal: true, problem: 'filtro de exclusión compuesto con AND: PubMed lo traduce como inclusión' };
+    if (/^NOT\b/i.test(canonical)) {
+      const bad = positions.map((at) => precedingToken(sent, at)).filter((t) => t === '' || /^(AND|OR|NOT)$/i.test(t));
+      if (bad.length) {
+        return { declared: p, path, found_literal: true,
+          problem: `filtro de exclusión precedido de ${bad[0] === '' ? 'nada (inicio de la consulta)' : bad[0].toUpperCase()}: PubMed no lo lee como exclusión (AND (NOT X) = AND X)` };
+      }
     }
     return { declared: p, path, found_literal: true, problem: null };
   });

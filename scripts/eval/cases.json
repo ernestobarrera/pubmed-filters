@@ -1,10 +1,11 @@
 {
   "what": "Evaluation battery for filter selection and composition. Each case fixes, BEFORE any query is run: the question, its facets with the role the contract expects for each one, and a reference set of studies INCLUDED by an independent systematic review (read in its full text, resolved to PMIDs by first author and year against the review's own linked citations). Retention is measured mechanically: a reference PMID is in the result or it is not.",
-  "what_it_does_not_measure": "What a conversational surface actually does. The strategies below are composed by hand from the text of each contract version: they measure what the contract prescribes, not whether a model follows it. Precision is reported only as result counts.",
+  "what_it_does_not_measure": "What a conversational surface actually does. The strategies are composed by hand from the text of each contract version: they measure what the contract prescribes or permits, not whether a model follows it. Comparing risk_under_1_10 with contract_1_11 shows what an ambiguity could cost, not a causal superiority of one contract; conformant_1_10 is the fairer comparison. Precision is reported only as result counts.",
   "strategy_versions": {
-    "contract_1_10": "A literal reading of contract 1.10.0: registry only (31 filters), topic_plus_scope_filter 'AND only when scope is genuinely part of the question', routing.safety with scope.safety_*, precision_first falling back only on too few results.",
+    "risk_under_1_10": "A composition that contract 1.10.0 PERMITTED through an ambiguity, without prescribing it: AND with a scope that is \"part of the question\" (A), or a precision-first pass relied on without running the coverage reaction 1.10 already required for reports and decisions (B). It measures the risk the ambiguity left open, not what every 1.10-conformant agent would do.",
+    "conformant_1_10": "A composition a careful reader of 1.10.0 would make: the ambiguity read in the favourable direction (A), or the coverage check run and its on_failed applied by falling back to the sensitive version (B). For D, J and P it is simply what 1.10 routed to.",
     "contract_1_11": "Contract 1.11.0: catalog with roles, facet roles, scope_roles (population_defining vs applicability), catalog_check, coverage_check.unit and adaptation.if_pearls_lost.",
-    "forbidden_1_11": "A composition that 1.11 explicitly forbids, run to show the loss the rule prevents. Absent when 1.11 forbids nothing new for the case."
+    "forbidden_1_11": "A composition that 1.11 explicitly forbids, run to show the loss the rule prevents."
   },
   "unnecessary_activation": "A pass in the claim unit that ANDs a population_setting or editorial filter for a facet whose expected role is not core.",
   "topics": {
@@ -24,9 +25,25 @@
       "question": "¿Qué tratamiento de rescate usar en España tras fracaso de la triple terapia con claritromicina (OCA)?",
       "tests": "Scope that conditions applicability, not population (scope_roles.applicability).",
       "facets": [
-        { "facet": "H. pylori after failed triple therapy", "expected_role": "core" },
-        { "facet": "therapy question", "expected_role": "core", "filters": ["filters/clinical/treatment_especifico.txt", "filters/clinical/treatment_sensible.txt"] },
-        { "facet": "Spain", "expected_role": "lane", "filters": ["filters/scope/spanish.txt"] }
+        {
+          "facet": "H. pylori after failed triple therapy",
+          "expected_role": "core"
+        },
+        {
+          "facet": "therapy question",
+          "expected_role": "core",
+          "filters": [
+            "filters/clinical/treatment_especifico.txt",
+            "filters/clinical/treatment_sensible.txt"
+          ]
+        },
+        {
+          "facet": "Spain",
+          "expected_role": "lane",
+          "filters": [
+            "filters/scope/spanish.txt"
+          ]
+        }
       ],
       "reference": {
         "source_pmid": "39868753",
@@ -34,15 +51,63 @@
         "kind": "included_studies",
         "complete": false,
         "note": "Mori et al. 2025: 13 RCTs of second-line therapy after failure of standard triple therapy. 11 resolved; Kawai 2006 (abstract only) and Hung 2015 have no linked citation. Fits rescue after triple therapy; it is not specific to Spain (one Spanish trial, Gisbert 2007).",
-        "pmids": ["12848631", "16040284", "17565490", "14535875", "15836716", "17241304", "18001404", "19246508", "21512411", "27175657", "26832653"]
+        "pmids": [
+          "12848631",
+          "16040284",
+          "17565490",
+          "14535875",
+          "15836716",
+          "17241304",
+          "18001404",
+          "19246508",
+          "21512411",
+          "27175657",
+          "26832653"
+        ]
       },
       "strategies": {
-        "contract_1_10": [
-          { "id": "core", "purpose": "efficacy, scope ANDed as part of the question", "topic": "hpylori_rescue", "and": ["filters/clinical/treatment_especifico.txt", "filters/scope/spanish.txt"], "unit": true }
+        "risk_under_1_10": [
+          {
+            "id": "core",
+            "purpose": "efficacy, scope ANDed as part of the question",
+            "topic": "hpylori_rescue",
+            "and": [
+              "filters/clinical/treatment_especifico.txt",
+              "filters/scope/spanish.txt"
+            ],
+            "unit": true
+          }
+        ],
+        "conformant_1_10": [
+          {
+            "id": "core",
+            "purpose": "efficacy; \"part of the question\" read as not restricting the efficacy core",
+            "topic": "hpylori_rescue",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          }
         ],
         "contract_1_11": [
-          { "id": "core", "purpose": "efficacy, no geography", "topic": "hpylori_rescue", "and": ["filters/clinical/treatment_especifico.txt"], "unit": true },
-          { "id": "applicability", "purpose": "local resistance in Spain (own sub-question)", "topic": "hpylori_resistance", "and": ["filters/scope/spanish.txt"], "unit": false }
+          {
+            "id": "core",
+            "purpose": "efficacy, no geography",
+            "topic": "hpylori_rescue",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          },
+          {
+            "id": "applicability",
+            "purpose": "local resistance in Spain (own sub-question)",
+            "topic": "hpylori_resistance",
+            "and": [
+              "filters/scope/spanish.txt"
+            ],
+            "unit": false
+          }
         ]
       }
     },
@@ -51,9 +116,21 @@
       "question": "¿Qué evidencia hay sobre retirar benzodiacepinas en personas mayores?",
       "tests": "A concept filter outside the registry (concept role) and a specific filter that replaces the core (coverage_check.replacing_pass).",
       "facets": [
-        { "facet": "benzodiazepine receptor agonists", "expected_role": "core" },
-        { "facet": "older people", "expected_role": "core" },
-        { "facet": "deprescribing", "expected_role": "concept", "filters": ["filters/clinical/deprescription.txt"] }
+        {
+          "facet": "benzodiazepine receptor agonists",
+          "expected_role": "core"
+        },
+        {
+          "facet": "older people",
+          "expected_role": "core"
+        },
+        {
+          "facet": "deprescribing",
+          "expected_role": "concept",
+          "filters": [
+            "filters/clinical/deprescription.txt"
+          ]
+        }
       ],
       "reference": {
         "source_pmid": "40342014",
@@ -61,14 +138,53 @@
         "kind": "included_studies",
         "complete": false,
         "note": "McEvoy et al. 2025: 17 reports of 16 studies of patient-directed deprescribing interventions. The list is in a supplement the full text does not carry; these 8 are the ones identifiable from the text (EMPOWER, its hospital and pharmacist variants, Kuntz, Navy, the UK GP letter) plus two identified by Codex's review.",
-        "pmids": ["24733354", "28143413", "30422193", "30624198", "30545435", "8312045", "29492957", "31523732"]
+        "pmids": [
+          "24733354",
+          "28143413",
+          "30422193",
+          "30624198",
+          "30545435",
+          "8312045",
+          "29492957",
+          "31523732"
+        ]
       },
       "strategies": {
-        "contract_1_10": [
-          { "id": "core", "purpose": "therapy, precision first (registry has no deprescribing filter)", "topic": "bzra_older", "and": ["filters/clinical/treatment_especifico.txt"], "unit": true }
+        "risk_under_1_10": [
+          {
+            "id": "core",
+            "purpose": "therapy, precision first (registry has no deprescribing filter)",
+            "topic": "bzra_older",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          }
+        ],
+        "conformant_1_10": [
+          {
+            "id": "core",
+            "purpose": "therapy after coverage_check failed and on_failed applied: fallback to the sensitive version",
+            "topic": "bzra_older",
+            "and": [
+              "filters/clinical/treatment_sensible.txt"
+            ],
+            "unit": true
+          }
         ],
         "contract_1_11": [
-          { "id": "core", "purpose": "deprescribing as a concept: agent vocabulary OR the catalog filter", "topic": "bzra_older", "or_concept": { "vocabulary": "deprescribing", "filters": ["filters/clinical/deprescription.txt"] }, "unit": true }
+          {
+            "id": "core",
+            "purpose": "deprescribing as a concept: agent vocabulary OR the catalog filter",
+            "topic": "bzra_older",
+            "or_concept": {
+              "vocabulary": "deprescribing",
+              "filters": [
+                "filters/clinical/deprescription.txt"
+              ]
+            },
+            "unit": true
+          }
         ]
       }
     },
@@ -77,9 +193,22 @@
       "question": "¿Aumentan las fluoroquinolonas el riesgo de aneurisma o disección aórtica?",
       "tests": "Harm routed through harm filters, not a therapy filter; patient-safety filters out of the drug-safety route.",
       "facets": [
-        { "facet": "fluoroquinolones", "expected_role": "core" },
-        { "facet": "aortic aneurysm or dissection", "expected_role": "core" },
-        { "facet": "drug harm", "expected_role": "lane", "filters": ["filters/clinical/drugs_ae.txt", "filters/clinical/etiology_sensible.txt"] }
+        {
+          "facet": "fluoroquinolones",
+          "expected_role": "core"
+        },
+        {
+          "facet": "aortic aneurysm or dissection",
+          "expected_role": "core"
+        },
+        {
+          "facet": "drug harm",
+          "expected_role": "lane",
+          "filters": [
+            "filters/clinical/drugs_ae.txt",
+            "filters/clinical/etiology_sensible.txt"
+          ]
+        }
       ],
       "reference": {
         "source_pmid": "36017083",
@@ -87,19 +216,73 @@
         "kind": "included_studies",
         "complete": true,
         "note": "Chen et al. 2022: 13 observational studies, search to March 2022. All 13 resolved.",
-        "pmids": ["33404647", "32897307", "29519881", "26582407", "32897358", "26436523", "33887112", "33047487", "30784681", "30213330", "35152888", "35229623", "33858624"]
+        "pmids": [
+          "33404647",
+          "32897307",
+          "29519881",
+          "26582407",
+          "32897358",
+          "26436523",
+          "33887112",
+          "33047487",
+          "30784681",
+          "30213330",
+          "35152888",
+          "35229623",
+          "33858624"
+        ]
       },
       "strategies": {
-        "contract_1_10": [
-          { "id": "drug_ae", "purpose": "routing.safety first pass", "topic": "fq_aortic", "and": ["filters/clinical/drugs_ae.txt"], "unit": true },
-          { "id": "safety_specific", "purpose": "routing.safety first pass (patient safety filter)", "topic": "fq_aortic", "and": ["filters/scope/safety_especifico.txt"], "unit": true }
+        "conformant_1_10": [
+          {
+            "id": "drug_ae",
+            "purpose": "routing.safety first pass",
+            "topic": "fq_aortic",
+            "and": [
+              "filters/clinical/drugs_ae.txt"
+            ],
+            "unit": true
+          },
+          {
+            "id": "safety_specific",
+            "purpose": "routing.safety first pass (patient safety filter)",
+            "topic": "fq_aortic",
+            "and": [
+              "filters/scope/safety_especifico.txt"
+            ],
+            "unit": true
+          }
         ],
         "contract_1_11": [
-          { "id": "drug_ae", "purpose": "routing.safety first pass", "topic": "fq_aortic", "and": ["filters/clinical/drugs_ae.txt"], "unit": true },
-          { "id": "etiology", "purpose": "routing.safety fallback", "topic": "fq_aortic", "and": ["filters/clinical/etiology_sensible.txt"], "unit": true }
+          {
+            "id": "drug_ae",
+            "purpose": "routing.safety first pass",
+            "topic": "fq_aortic",
+            "and": [
+              "filters/clinical/drugs_ae.txt"
+            ],
+            "unit": true
+          },
+          {
+            "id": "etiology",
+            "purpose": "routing.safety fallback, run in parallel in this plan; its cost is that of this manual plan",
+            "topic": "fq_aortic",
+            "and": [
+              "filters/clinical/etiology_sensible.txt"
+            ],
+            "unit": true
+          }
         ],
         "forbidden_1_11": [
-          { "id": "as_therapy", "purpose": "harm routed as a therapy question", "topic": "fq_aortic", "and": ["filters/clinical/treatment_especifico.txt"], "unit": true }
+          {
+            "id": "as_therapy",
+            "purpose": "harm routed as a therapy question",
+            "topic": "fq_aortic",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          }
         ]
       }
     },
@@ -108,10 +291,29 @@
       "question": "Soy médico de familia: ¿reducen los iSGLT2 hospitalizaciones o muerte en insuficiencia cardiaca?",
       "tests": "Negative control: who asks is context, not scope.",
       "facets": [
-        { "facet": "SGLT2 inhibitors", "expected_role": "core" },
-        { "facet": "heart failure", "expected_role": "core" },
-        { "facet": "therapy question", "expected_role": "core", "filters": ["filters/clinical/treatment_especifico.txt"] },
-        { "facet": "primary care (the asker)", "expected_role": "context", "filters": ["filters/scope/primary_especifico.txt", "filters/scope/primary_sensible.txt"] }
+        {
+          "facet": "SGLT2 inhibitors",
+          "expected_role": "core"
+        },
+        {
+          "facet": "heart failure",
+          "expected_role": "core"
+        },
+        {
+          "facet": "therapy question",
+          "expected_role": "core",
+          "filters": [
+            "filters/clinical/treatment_especifico.txt"
+          ]
+        },
+        {
+          "facet": "primary care (the asker)",
+          "expected_role": "context",
+          "filters": [
+            "filters/scope/primary_especifico.txt",
+            "filters/scope/primary_sensible.txt"
+          ]
+        }
       ],
       "reference": {
         "source_pmid": "36041474",
@@ -119,17 +321,48 @@
         "kind": "included_studies",
         "complete": true,
         "note": "Vaduganathan et al. 2022 (Lancet): five trials named in its abstract, PMIDs resolved and read by Codex on 2026-10-16. The question is heart failure in general; the original Phase 0 reference cited mostly other studies.",
-        "pmids": ["36027570", "34449189", "31535829", "32865377", "33200892"]
+        "pmids": [
+          "36027570",
+          "34449189",
+          "31535829",
+          "32865377",
+          "33200892"
+        ]
       },
       "strategies": {
-        "contract_1_10": [
-          { "id": "core", "purpose": "therapy; primary_care_policy already said the asker is not a constraint", "topic": "sglt2_hf", "and": ["filters/clinical/treatment_especifico.txt"], "unit": true }
+        "conformant_1_10": [
+          {
+            "id": "core",
+            "purpose": "therapy; primary_care_policy already said the asker is not a constraint",
+            "topic": "sglt2_hf",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          }
         ],
         "contract_1_11": [
-          { "id": "core", "purpose": "therapy; primary care is context", "topic": "sglt2_hf", "and": ["filters/clinical/treatment_especifico.txt"], "unit": true }
+          {
+            "id": "core",
+            "purpose": "therapy; primary care is context",
+            "topic": "sglt2_hf",
+            "and": [
+              "filters/clinical/treatment_especifico.txt"
+            ],
+            "unit": true
+          }
         ],
         "forbidden_1_11": [
-          { "id": "core_primary_care", "purpose": "the asker's setting ANDed into the core", "topic": "sglt2_hf", "and": ["filters/clinical/treatment_especifico.txt", "filters/scope/primary_especifico.txt"], "unit": true }
+          {
+            "id": "core_primary_care",
+            "purpose": "the asker's setting ANDed into the core",
+            "topic": "sglt2_hf",
+            "and": [
+              "filters/clinical/treatment_especifico.txt",
+              "filters/scope/primary_especifico.txt"
+            ],
+            "unit": true
+          }
         ]
       }
     },
@@ -138,10 +371,25 @@
       "question": "¿Cuál es la prevalencia de obesidad infantil (2-13 años) en España?",
       "tests": "Positive control: geography that DEFINES the population is core (scope_roles.population_defining). Three of the included studies are multinational with Spanish data.",
       "facets": [
-        { "facet": "obesity or overweight", "expected_role": "core" },
-        { "facet": "children", "expected_role": "core" },
-        { "facet": "prevalence", "expected_role": "core" },
-        { "facet": "Spain", "expected_role": "core", "filters": ["filters/scope/spanish.txt"] }
+        {
+          "facet": "obesity or overweight",
+          "expected_role": "core"
+        },
+        {
+          "facet": "children",
+          "expected_role": "core"
+        },
+        {
+          "facet": "prevalence",
+          "expected_role": "core"
+        },
+        {
+          "facet": "Spain",
+          "expected_role": "core",
+          "filters": [
+            "filters/scope/spanish.txt"
+          ]
+        }
       ],
       "reference": {
         "source_pmid": "35564634",
@@ -149,17 +397,51 @@
         "kind": "included_studies",
         "complete": false,
         "note": "Systematic review of 13 representative studies of Spanish children, 1999-2021. 11 resolved; García-García 2013 has no linked citation and the linked Wijnhoven record is the 2013 COSI report, not the 2014 one in the table, so it is left out.",
-        "pmids": ["16923254", "18752696", "17712107", "25376223", "22558098", "24326383", "34304573", "24775819", "30309338", "29882524", "31987815"]
+        "pmids": [
+          "16923254",
+          "18752696",
+          "17712107",
+          "25376223",
+          "22558098",
+          "24326383",
+          "34304573",
+          "24775819",
+          "30309338",
+          "29882524",
+          "31987815"
+        ]
       },
       "strategies": {
-        "contract_1_10": [
-          { "id": "core", "purpose": "Spain ANDed as part of the question", "topic": "child_obesity_prevalence", "and": ["filters/scope/spanish.txt"], "unit": true }
+        "conformant_1_10": [
+          {
+            "id": "core",
+            "purpose": "Spain ANDed as part of the question",
+            "topic": "child_obesity_prevalence",
+            "and": [
+              "filters/scope/spanish.txt"
+            ],
+            "unit": true
+          }
         ],
         "contract_1_11": [
-          { "id": "core", "purpose": "Spain defines the population: core", "topic": "child_obesity_prevalence", "and": ["filters/scope/spanish.txt"], "unit": true }
+          {
+            "id": "core",
+            "purpose": "Spain defines the population: core",
+            "topic": "child_obesity_prevalence",
+            "and": [
+              "filters/scope/spanish.txt"
+            ],
+            "unit": true
+          }
         ],
         "forbidden_1_11": [
-          { "id": "core_without_spain", "purpose": "population-defining geography treated as a mere lane (core left unrestricted)", "topic": "child_obesity_prevalence", "and": [], "unit": true }
+          {
+            "id": "core_without_spain",
+            "purpose": "population-defining geography treated as a mere lane (core left unrestricted)",
+            "topic": "child_obesity_prevalence",
+            "and": [],
+            "unit": true
+          }
         ]
       }
     }

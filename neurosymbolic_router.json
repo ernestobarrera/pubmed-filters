@@ -299,11 +299,11 @@
       "filters/methodology/gpc.txt": "design",
       "filters/methodology/horizon.txt": "design",
       "filters/methodology/indirect_comparison.txt": "design",
-      "filters/methodology/mbe.txt": "design",
+      "filters/methodology/mbe.txt": "concept",
       "filters/methodology/metaanalysis.txt": "design",
       "filters/methodology/qualitative.txt": "design",
       "filters/clinical/car_t.txt": "concept",
-      "filters/clinical/clinical_examination.txt": "concept",
+      "filters/clinical/clinical_examination.txt": "question_type",
       "filters/clinical/deprescription.txt": "concept",
       "filters/clinical/devices_ae.txt": "harm",
       "filters/clinical/diagnosis_especifico.txt": "question_type",
@@ -432,18 +432,18 @@
     "roles": {
       "rule": "Every filter in the catalog has one default role (filter_catalog.role_of). The role says how the filter enters a search by default; the question can override it (facet_roles), and the override is recorded in provenance.selection_record.",
       "concept": {
-        "means": "Encodes a concept of the question (deprescribing, palliative care, generative AI, CAR-T, clinical examination, simulation, patient safety).",
+        "means": "Encodes a concept of the question (deprescribing, palliative care, generative AI, CAR-T, simulation, patient safety, evidence-based practice as a topic).",
         "default_composition": "or_within_concept",
         "how": "OR it inside the block of that concept, together with the agent's own vocabulary for the same concept (within_same_concept). Do not stack it as an extra AND layer on top of terms that already express the concept.",
         "measured": "2026-10-16, deprescribing benzodiazepines in older people, retention of 24 cited studies: the deprescription filter alone 22, the agent's own deprescribing terms 22, both ORed 23."
       },
       "question_type": {
-        "means": "Clinical question type (therapy, diagnosis, prognosis, etiology, predictors, prediction rules), mostly Haynes hedges with sensitive and specific versions.",
+        "means": "Clinical question type (therapy, diagnosis, prognosis, etiology, predictors, prediction rules, diagnostic value of a sign or manoeuvre), mostly Haynes hedges with sensitive and specific versions. The clinical examination filter is a diagnostic hedge: AND it with the disease and the sign, never OR it with the sign, or its diagnostic terms replace the sign (Shaikh 2011).",
         "default_composition": "and",
         "how": "AND with the topic. A specific version that replaces the core is subject to coverage_check.unit: if it loses eligible pearls, fall back (adaptation.if_pearls_lost)."
       },
       "design": {
-        "means": "Type of evidence or publication (syntheses, guidelines, qualitative, indirect comparison, economic evaluation, patient perspective, horizon scanning, EBM resources).",
+        "means": "Type of evidence or publication (syntheses, guidelines, qualitative, indirect comparison, economic evaluation, patient knowledge, views and values, horizon scanning).",
         "default_composition": "parallel_lane_and",
         "how": "One lane per design, ANDed within its lane; lanes run in parallel and are merged by PMID."
       },
@@ -696,7 +696,7 @@
     "optional_when": "Quick orientation answers that claim nothing about how much exists. Say that coverage was not checked.",
     "unit": "What is checked is a claim together with the query or union of passes that supports it, not each pass on its own. Wherever this section says 'main query', it means that unit. A synthesis lane need not retrieve a trial, and an applicability lane need not retrieve international trials; demanding it would force fallbacks for omissions that were expected.",
     "eligible_pearls": "Pearls are eligible for the purpose of the unit they test: a trial for an efficacy claim, an observational study for a harm claim, a national study for a local-applicability claim. Citations in a review are not its included studies; take pearls from the included studies, a guideline's evidence table or the user, and record their source.",
-    "replacing_pass": "A pass that replaces the core instead of running beside it (a specific version where the topic or the sensitive version would have run) is checked against the core's eligible pearls before anything rests on it. If it loses any, adaptation.if_pearls_lost applies. A large result count is not evidence of coverage.",
+    "replacing_pass": "A pass that replaces the core instead of running beside it (a specific version where the topic or the sensitive version would have run) is checked against the core's eligible pearls before anything rests on it. If it loses eligible pearls that no other pass of the unit recovers (compensation), adaptation.if_pearls_lost applies; a loss compensated within the unit is recorded, not reacted to. A large result count is not evidence of coverage.",
     "compensation": "If another pass in the same unit recovers what one pass lost, record which pass compensated: the unit is then the union, and the loss is not a coverage failure.",
     "method": {
       "sensitivity_minus_main": "Build a broader query (synonyms, spelling variants, wider field tags, the vocabulary of earlier periods), run it NOT the main query, and screen what comes back. Report how many records outside are relevant, with their PMIDs.",
@@ -920,7 +920,7 @@
       "prefer_specific_over_sensitive_filter",
       "apply_relevant_methodology_filter",
       "use_current_5y_window_if_appropriate",
-      "use_scope_filter_only_if_scope_is_part_of_the_question"
+      "use_scope_filter_only_if_it_defines_the_population (composition.scope_roles.population_defining)"
     ],
     "if_too_few_results": [
       "remove_journal_constraint",
