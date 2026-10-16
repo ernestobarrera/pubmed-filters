@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER,
   unknownFieldTags, lookalikeCharacters, PUBMED_FIELD_TAGS }
   from './parse-filter.mjs';
+import { buildCatalog, serialize as serializeCatalog, CATALOG_PATH } from './catalog.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURES = join(ROOT, 'scripts', 'fixtures');
@@ -497,6 +498,62 @@ check('C14', ccFallos.length === 0,
   `cobertura y corpus definido: ${ccFallos.length === 0
     ? 'la cobertura se comprueba, un corpus no se recorta ni se satura, y una omisión tiene valor propio'
     : ccFallos.join('; ')}`);
+
+// ---------------------------------------------------------------------------------------------
+// Catálogo y composición por papel (1.11.0). Medido el 2026-10-16: desde ChatGPT, 17 de 48 filtros eran
+// inencontrables (Pages no lista carpetas y el «índice del repositorio» que citaba el router no
+// existía), y la carpeta de un filtro no decía cómo componerlo: AND con un filtro geográfico perdía 24
+// de 26 ensayos, y la ruta de seguridad farmacológica abría con un filtro de errores médicos.
+// ---------------------------------------------------------------------------------------------
+
+const fc = router.filter_catalog ?? {};
+const catalogoEnDisco = existsSync(join(ROOT, fc.path ?? '_')) ? read(fc.path).replace(/\r\n/g, '\n') : '';
+let catalogoFresco = '';
+try { catalogoFresco = serializeCatalog(buildCatalog(ROOT)); } catch (err) { catalogoFresco = `ERROR ${err.message}`; }
+check('K1', fc.path === CATALOG_PATH && catalogoEnDisco !== '' && catalogoEnDisco === catalogoFresco,
+  `catálogo ${fc.path}: ${catalogoEnDisco === catalogoFresco && catalogoEnDisco !== ''
+    ? 'coincide con lo que generan los ficheros' : 'no coincide con lo generado: node scripts/catalog.mjs'}`);
+
+const recuperacion = allFilters.filter((f) => !f.startsWith('filters/candidates/'));
+const papeles = router.composition?.roles ?? {};
+const papelesValidos = Object.keys(papeles).filter((k) => typeof papeles[k] === 'object' && papeles[k]?.default_composition);
+const roleOf = fc.role_of ?? {};
+const sinPapel = recuperacion.filter((f) => !(f in roleOf));
+const papelFantasma = Object.keys(roleOf).filter((f) => !recuperacion.includes(f));
+const papelInexistente = Object.entries(roleOf).filter(([, r]) => !papelesValidos.includes(r)).map(([f, r]) => `${f}:${r}`);
+check('K2', sinPapel.length === 0 && papelFantasma.length === 0 && papelInexistente.length === 0
+  && papelesValidos.includes(fc.journal_lists_role),
+  `papel de los ${recuperacion.length} filtros: ${sinPapel.length + papelFantasma.length + papelInexistente.length === 0
+    ? `todos con uno de los ${papelesValidos.length} papeles definidos`
+    : `sin papel ${JSON.stringify(sinPapel)} / fuera del repositorio ${JSON.stringify(papelFantasma)} / papel sin definir ${JSON.stringify(papelInexistente)}`}`);
+
+const exclusionSinNot = recuperacion.filter((f) => roleOf[f] === 'exclusion' && !isNegation(query(f)));
+const notSinExclusion = recuperacion.filter((f) => isNegation(query(f)) && roleOf[f] !== 'exclusion');
+check('K3', exclusionSinNot.length === 0 && notSinExclusion.length === 0 && papeles.exclusion?.default_composition === 'not',
+  `papel exclusión y NOT inicial coinciden: ${exclusionSinNot.length + notSinExclusion.length === 0
+    ? 'sí' : `exclusión sin NOT ${JSON.stringify(exclusionSinNot)} / NOT sin exclusión ${JSON.stringify(notSinExclusion)}`}`);
+
+// Lo que hace que el papel signifique algo: ni el ámbito ni lo editorial restringen el núcleo por
+// defecto, y un concepto entra con OR. Si alguien cambia esto, cambia el comportamiento medido.
+const defectos = Object.fromEntries(papelesValidos.map((k) => [k, papeles[k].default_composition]));
+const sr = router.composition?.scope_roles ?? {};
+const kFallos = [
+  defectos.population_setting !== 'parallel_lane' && 'población/ámbito ya no es pasada paralela por defecto',
+  defectos.editorial !== 'parallel_lane' && 'lo editorial puede restringir el núcleo',
+  defectos.concept !== 'or_within_concept' && 'un concepto ya no entra con OR en su bloque',
+  !(typeof sr.population_defining?.rule === 'string' && typeof sr.applicability?.rule === 'string')
+    && 'falta distinguir ámbito que define la población de ámbito de aplicabilidad',
+  !['core', 'concept', 'lane', 'context', 'interpretation'].every((k) => typeof router.composition?.facet_roles?.[k] === 'string')
+    && 'faltan papeles de faceta',
+  !String(router.composition?.catalog_check?.rule ?? '').includes('selection_record')
+    && 'la regla push no exige motivo registrado',
+  !String(router.registry_validation?.registry_is_a_subset ?? '').includes('filter_catalog')
+    && 'registry_is_a_subset no remite al catálogo',
+].filter(Boolean);
+check('K4', kFallos.length === 0,
+  `composición por papel: ${kFallos.length === 0
+    ? 'ámbito y revistas son pasadas por defecto, un concepto entra con OR y toda faceta se contrasta con el catálogo'
+    : kFallos.join('; ')}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')

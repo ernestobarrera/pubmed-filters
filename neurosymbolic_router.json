@@ -14,6 +14,7 @@
     "dependency_direction": "router -> adapters. A surface that cannot resolve the contract version it requires degrades explicitly instead of improvising.",
     "mechanical_contract": [
       "filter_registry",
+      "filter_catalog",
       "filter_file_contract",
       "query_execution_contract",
       "registry_validation",
@@ -282,6 +283,67 @@
       "adults": "filters/scope/adults.txt"
     }
   },
+  "filter_catalog": {
+    "purpose": "What exists and what role each filter plays. The registry names routes; the catalog is how a surface discovers every filter, including those no route mentions. Measured 2026-10-16: GitHub Pages does not list folders, so from a conversational surface a filter outside the registry could not be found at all.",
+    "path": "filters/catalog.json",
+    "pages_url": "https://ernestobarrera.github.io/pubmed-filters/filters/catalog.json",
+    "generator": "scripts/catalog.mjs",
+    "generated_fields": "path, family, title, description, role, registry_key, pair, exclusion, embedded_date_limit, validation, reference, metrics; and for journal lists id, path, name, description, journal_count, role. Everything except role comes from the files themselves.",
+    "freshness_rule": "The committed catalog must equal what the generator produces. A new filter without its entry, or a header changed without regenerating, fails the suite (K1).",
+    "role_owner": "role_of below is the only hand-declared field. Its meaning lives in composition.roles. A retrieval filter without a role fails the suite (K2).",
+    "family_is_not_role": "The folder a filter sits in does not say how to compose it: scope/ holds geography, study designs, domains, a journal list and exclusions; clinical/ holds question types and domains. Compose by role, never by folder or key name.",
+    "role_of": {
+      "filters/methodology/clinical_rules_ap.txt": "question_type",
+      "filters/methodology/clinical_rules_especifico.txt": "question_type",
+      "filters/methodology/clinical_rules_sensible.txt": "question_type",
+      "filters/methodology/gpc.txt": "design",
+      "filters/methodology/horizon.txt": "design",
+      "filters/methodology/indirect_comparison.txt": "design",
+      "filters/methodology/mbe.txt": "design",
+      "filters/methodology/metaanalysis.txt": "design",
+      "filters/methodology/qualitative.txt": "design",
+      "filters/clinical/car_t.txt": "concept",
+      "filters/clinical/clinical_examination.txt": "concept",
+      "filters/clinical/deprescription.txt": "concept",
+      "filters/clinical/devices_ae.txt": "harm",
+      "filters/clinical/diagnosis_especifico.txt": "question_type",
+      "filters/clinical/diagnosis_sensible.txt": "question_type",
+      "filters/clinical/drugs_ae.txt": "harm",
+      "filters/clinical/etiology_especifico.txt": "question_type",
+      "filters/clinical/etiology_sensible.txt": "question_type",
+      "filters/clinical/mortality.txt": "outcome",
+      "filters/clinical/NNT_NNH.txt": "outcome",
+      "filters/clinical/predictors_especifico.txt": "question_type",
+      "filters/clinical/predictors_sensible.txt": "question_type",
+      "filters/clinical/prognosis_especifico.txt": "question_type",
+      "filters/clinical/prognosis_sensible.txt": "question_type",
+      "filters/clinical/simulation_clinical.txt": "concept",
+      "filters/clinical/surgery_ae.txt": "harm",
+      "filters/clinical/treatment_especifico.txt": "question_type",
+      "filters/clinical/treatment_sensible.txt": "question_type",
+      "filters/scope/adults.txt": "exclusion",
+      "filters/scope/ai_especifico.txt": "concept",
+      "filters/scope/ai_sensible.txt": "concept",
+      "filters/scope/economic_especifico.txt": "design",
+      "filters/scope/economic_sensible.txt": "design",
+      "filters/scope/geriatrics_especifico.txt": "population_setting",
+      "filters/scope/geriatrics_sensible.txt": "population_setting",
+      "filters/scope/humans.txt": "exclusion",
+      "filters/scope/nursing.txt": "editorial",
+      "filters/scope/ocde.txt": "exclusion",
+      "filters/scope/palliative_especifico.txt": "concept",
+      "filters/scope/palliative_sensible.txt": "concept",
+      "filters/scope/pearls.txt": "editorial",
+      "filters/scope/pediatrics.txt": "population_setting",
+      "filters/scope/perspective.txt": "design",
+      "filters/scope/primary_especifico.txt": "population_setting",
+      "filters/scope/primary_sensible.txt": "population_setting",
+      "filters/scope/safety_especifico.txt": "concept",
+      "filters/scope/safety_sensible.txt": "concept",
+      "filters/scope/spanish.txt": "population_setting"
+    },
+    "journal_lists_role": "editorial"
+  },
   "filter_file_contract": {
     "structure": "Header lines starting with #, then the query (one or more lines), then a line exactly equal to @@@FILTER_METADATA@@@, then a JSON validation block.",
     "extraction": [
@@ -330,7 +392,7 @@
     "journal_lists_are_not_validated_filters": true,
     "journal_lists_bias": "Journal lists are derived from h5-index rankings; restricting by them narrows by prestige, not by method.",
     "sensitive_specific_pair_not_always_available": "Only 12 repository filters have both versions. clinical.drug_adverse_events has no specific variant; do not improvise one.",
-    "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository. Absence from the registry does not mean no filter exists; read the repository index before concluding there is none.",
+    "registry_is_a_subset": "The registry covers 31 of the 48 retrieval filters in the repository: it names the routes this router knows by question type. The catalog (filter_catalog.path) lists all 48 and every journal list, with what each one is for and its default role. Read the catalog, not the registry, to decide whether a filter exists for a facet of the question.",
     "terms_pubmed_drops": {
       "rule": "Curated filters are the source of methodological intent, not an authority on today's PubMed syntax. A term inside a validated filter can still be dropped by the engine.",
       "swept": "122 filters (48 retrieval filters and the journal lists) executed against E-utilities with scripts/sweep-filters.mjs on 2026-10-16: 118 clean; 4 journal lists carry abbreviations of journals PubMed does not index, accepted in scripts/sweep-baseline.json. No retrieval filter has a term PubMed drops.",
@@ -361,7 +423,81 @@
     "within_same_concept": "OR",
     "between_distinct_concepts": "AND",
     "topic_plus_methodology_filter": "AND",
-    "topic_plus_scope_filter": "AND only when scope is genuinely part of the question",
+    "topic_plus_scope_filter": "AND only when the scope DEFINES the population the question is about (scope_roles.population_defining). When it only conditions applicability, it is a parallel lane (scope_roles.applicability). The wording 'part of the question' was ambiguous enough to justify an AND that was measured to lose most of the evidence.",
+    "roles": {
+      "rule": "Every filter in the catalog has one default role (filter_catalog.role_of). The role says how the filter enters a search by default; the question can override it (facet_roles), and the override is recorded in provenance.selection_record.",
+      "concept": {
+        "means": "Encodes a concept of the question (deprescribing, palliative care, generative AI, CAR-T, clinical examination, simulation, patient safety).",
+        "default_composition": "or_within_concept",
+        "how": "OR it inside the block of that concept, together with the agent's own vocabulary for the same concept (within_same_concept). Do not stack it as an extra AND layer on top of terms that already express the concept.",
+        "measured": "2026-10-16, deprescribing benzodiazepines in older people, retention of 24 cited studies: the deprescription filter alone 22, the agent's own deprescribing terms 22, both ORed 23."
+      },
+      "question_type": {
+        "means": "Clinical question type (therapy, diagnosis, prognosis, etiology, predictors, prediction rules), mostly Haynes hedges with sensitive and specific versions.",
+        "default_composition": "and",
+        "how": "AND with the topic. A specific version that replaces the core is subject to coverage_check.unit: if it loses eligible pearls, fall back (adaptation.if_pearls_lost)."
+      },
+      "design": {
+        "means": "Type of evidence or publication (syntheses, guidelines, qualitative, indirect comparison, economic evaluation, patient perspective, horizon scanning, EBM resources).",
+        "default_composition": "parallel_lane_and",
+        "how": "One lane per design, ANDed within its lane; lanes run in parallel and are merged by PMID."
+      },
+      "harm": {
+        "means": "Adverse effects of drugs, devices or procedures.",
+        "default_composition": "parallel_lane_and",
+        "how": "Its own lane. Harm evidence is largely observational: do not route it through a therapy filter tuned to trials (routing.safety)."
+      },
+      "outcome": {
+        "means": "A specific outcome or effect measure (mortality, NNT/NNH). Both are author-made.",
+        "default_composition": "precision_lane",
+        "how": "AND only in a precision lane when that outcome is what is asked; never restricts the core."
+      },
+      "population_setting": {
+        "means": "Age group, care setting or geography (geriatrics, pediatrics, primary care, Spain).",
+        "default_composition": "parallel_lane",
+        "how": "A parallel lane by default. AND only when it defines the population (scope_roles.population_defining)."
+      },
+      "editorial": {
+        "means": "Journal lists and editorial formats (jnl_* lists, nursing journals, clinical pearls). Not validated retrieval filters.",
+        "default_composition": "parallel_lane",
+        "how": "Parallel enrichment lane; never a restriction of the core (journal_filters_default_role)."
+      },
+      "exclusion": {
+        "means": "A filter whose query starts with NOT.",
+        "default_composition": "not",
+        "how": "Appended with NOT, never AND (negation_filters). The suite checks that this role and a leading NOT always coincide (K3)."
+      }
+    },
+    "facet_roles": {
+      "rule": "The neural layer splits the question into facets (concepts, question type, population, setting, place, time, wanted evidence) and gives each one a role IN THIS QUESTION. The catalog role is the default; the question decides.",
+      "core": "AND. Defines what is being asked; dropping it answers a different question.",
+      "concept": "OR within its block (agent vocabulary plus any concept filter).",
+      "lane": "A parallel pass merged by PMID: evidence types, applicability, editorial enrichment.",
+      "context": "Not a search constraint: who asks or from where (primary_care_policy.user_context_is_not_a_search_constraint).",
+      "interpretation": "Looked at when reading, not when searching."
+    },
+    "scope_roles": {
+      "population_defining": {
+        "rule": "The question is about that population or setting: AND.",
+        "example": "'Prevalence of clarithromycin resistance in Spanish patients': Spain is core."
+      },
+      "applicability": {
+        "rule": "The question is about an effect or a practice and the scope is where the answer will be used: keep the core free of it and run a parallel applicability lane. That lane may need its own sub-question, often not the core's.",
+        "example": "'Rescue therapy for H. pylori in Spain': efficacy comes from international trials (core, no geography); what Spain changes is local resistance, so the applicability lane asks about resistance AND Spain.",
+        "measured": "2026-10-16: core 26 of 26 cited rescue trials; core AND filters/scope/spanish.txt 2 of 26. The applicability lane on local resistance (2021-2026) returned 53 records, 38 of them outside the core."
+      },
+      "user_context": "Who asks is context, not scope (primary_care_policy). Measured 2026-10-16 on SGLT2 inhibitors in heart failure, 5 included trials: core 5 of 5; AND primary care specific 0; AND primary care journals 0; AND geriatrics 0."
+    },
+    "geographic_filters": {
+      "rule": "A geographic filter is a broad signal built on affiliations and mentions of places, not a guarantee that the study population is from there. Confirm population and setting in each article before using it as local evidence.",
+      "measured": "2026-10-16, filters/scope/spanish.txt on H. pylori resistance: the lane brought Spanish surveillance studies and also studies from Chile, Bangladesh, Ireland and Slovenia with a Spanish affiliation or a European registry led from Spain.",
+      "date_windows": "Declare a window exactly: '2021:2026[dp]' is six calendar years and can include dates after the search; a rolling five years is a different query. A publication date is not the date the data were collected."
+    },
+    "catalog_check": {
+      "rule": "Every facet of the question is checked against the catalog (filter_catalog). A filter whose purpose matches a facet and is not used needs a reason in provenance.selection_record. This obliges consideration, never use.",
+      "replaces": "Per-dimension activation lists (geography, deprescribing, palliative care, economics...). One general rule covers every facet and every future filter; a list would cover only the dimensions someone remembered.",
+      "why": "Discovery was pull: a filter was considered only if the agent already suspected it existed, and on conversational surfaces it could not be found at all."
+    },
     "journal_filters_default_role": "parallel editorial enrichment passes, not mandatory restriction of the core search",
     "same_family_filters": "Do not AND sensitive and specific versions of the same filter; choose one or run separate passes.",
     "overconstraint_rule": "If stacking filters threatens sensitivity, split into parallel searches and merge later.",
@@ -736,6 +872,7 @@
         "measured": "2026-09-15: 71 of 72 ids match. The divergent one lists 19 journals in the .txt and 18 in the .js, with 6 present only in one and 7 only in the other."
       }
     },
+    "filter_catalog": "filters/catalog.json, served at filter_catalog.pages_url. The way to discover every filter from a surface that cannot list folders.",
     "directories": {
       "methodology": "filters/methodology/",
       "clinical": "filters/clinical/",
@@ -797,6 +934,7 @@
         ],
         "applies": [
           "filter_registry",
+          "filter_catalog",
           "filter_file_contract",
           "registry_validation",
           "composition",
