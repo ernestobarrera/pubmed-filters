@@ -244,10 +244,13 @@ check('M15', sinTermino !== qT && qT.includes(' ') && literal.status.filter_fide
 // verified a un filtro inexistente, y exclusiones mal compuestas que pasaban por anidamiento o porque
 // una aparición correcta tapaba otra incorrecta.
 const HEREDADOS = ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf'];
-const heredadosBusqueda = await Promise.all(HEREDADOS.map((n, i) => fid(60 + i, 'asthma[tiab] OR undefined[tiab]', [n])));
-const heredadosExtraccion = await Promise.all(HEREDADOS.map((n, i) => usar(70 + i, GET_FILTER_TOOL.name, { path: n })));
-check('M16', heredadosBusqueda.every((r) => r.status.filter_fidelity === 'failed' && r.filter_fidelity[0].found_literal === false)
-  && heredadosExtraccion.every((r) => r.result?.isError === true && /no lo reconstruyas/.test(r.result.structuredContent.error)),
+// allSettled: una excepción es justo el fallo que se vigila (la extracción rompía), y tiene que caer M16,
+// no el proceso entero.
+const valor = (s) => (s.status === 'fulfilled' ? s.value : null);
+const heredadosBusqueda = (await Promise.allSettled(HEREDADOS.map((n, i) => fid(60 + i, 'asthma[tiab] OR undefined[tiab]', [n])))).map(valor);
+const heredadosExtraccion = (await Promise.allSettled(HEREDADOS.map((n, i) => usar(70 + i, GET_FILTER_TOOL.name, { path: n })))).map(valor);
+check('M16', heredadosBusqueda.every((r) => r?.status?.filter_fidelity === 'failed' && r.filter_fidelity?.[0]?.found_literal === false)
+  && heredadosExtraccion.every((r) => r?.result?.isError === true && /no lo reconstruyas/.test(r.result.structuredContent.error)),
   `nombres heredados (${HEREDADOS.join(', ')}): ni se dan por presentes ni rompen la extracción`);
 
 const qPearls = paquete.filters['filters/scope/pearls.txt'].query;
