@@ -1,0 +1,438 @@
+{
+  "medido_el": "2026-10-16",
+  "contract_version": "1.10.0",
+  "cases": {
+    "A": {
+      "reference_size": 11,
+      "reference_complete": false,
+      "versions": {
+        "contract_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 7,
+              "hits": 1,
+              "integrity": "verified",
+              "query_sha256": "e4f5aaa13f2b6fc9fef314b55d52e61e07be909e7466d9ce90e00eee6845e2c7"
+            }
+          ],
+          "unit_hits": [
+            "17241304"
+          ],
+          "integrity": "verified",
+          "unit_retention": "1/11",
+          "missed": [
+            "12848631",
+            "16040284",
+            "17565490",
+            "14535875",
+            "15836716",
+            "18001404",
+            "19246508",
+            "21512411",
+            "27175657",
+            "26832653"
+          ],
+          "passes_run": 1,
+          "unnecessary_activations": [
+            "core:filters/scope/spanish.txt"
+          ]
+        },
+        "contract_1_11": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 268,
+              "hits": 11,
+              "integrity": "verified",
+              "query_sha256": "69e7a3dd54557fc1bee1a10dd8180f4855f10c4ae72e0a6c0b4a79ae1710c480"
+            },
+            {
+              "id": "applicability",
+              "unit": false,
+              "result_count": 197,
+              "hits": 0,
+              "integrity": "verified",
+              "query_sha256": "e5a8cddab1686dbef718a9b654021122b2036133ca22d887b1cc4cd0a18e3292"
+            }
+          ],
+          "unit_hits": [
+            "12848631",
+            "14535875",
+            "15836716",
+            "16040284",
+            "17241304",
+            "17565490",
+            "18001404",
+            "19246508",
+            "21512411",
+            "26832653",
+            "27175657"
+          ],
+          "integrity": "verified",
+          "unit_retention": "11/11",
+          "missed": [],
+          "passes_run": 2,
+          "unnecessary_activations": []
+        }
+      }
+    },
+    "B": {
+      "reference_size": 8,
+      "reference_complete": false,
+      "versions": {
+        "contract_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 3313,
+              "hits": 6,
+              "integrity": "verified",
+              "query_sha256": "666e623557bcb2094ec5a731ec53a2df4c2b72c03d4209aa905d5acc16af7728"
+            }
+          ],
+          "unit_hits": [
+            "24733354",
+            "28143413",
+            "30422193",
+            "30545435",
+            "30624198",
+            "8312045"
+          ],
+          "integrity": "verified",
+          "unit_retention": "6/8",
+          "missed": [
+            "29492957",
+            "31523732"
+          ],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "contract_1_11": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 4702,
+              "hits": 8,
+              "integrity": "verified",
+              "query_sha256": "1c42e81c85c971d4b5f1943d6206a28df5511eb2067f03fa02d9f17507e68279"
+            }
+          ],
+          "unit_hits": [
+            "24733354",
+            "28143413",
+            "29492957",
+            "30422193",
+            "30545435",
+            "30624198",
+            "31523732",
+            "8312045"
+          ],
+          "integrity": "verified",
+          "unit_retention": "8/8",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        }
+      }
+    },
+    "D": {
+      "reference_size": 13,
+      "reference_complete": true,
+      "versions": {
+        "contract_1_10": {
+          "passes": [
+            {
+              "id": "drug_ae",
+              "unit": true,
+              "result_count": 147,
+              "hits": 13,
+              "integrity": "verified",
+              "query_sha256": "39a3ffdcf7222c9b1815cea6756a9ebe89713117cda554567c0050a156bc9f32"
+            },
+            {
+              "id": "safety_specific",
+              "unit": true,
+              "result_count": 1,
+              "hits": 0,
+              "integrity": "verified",
+              "query_sha256": "7db56563a5c218b32a2a63301c2a81327484170a2251b1686198a2fded809881"
+            }
+          ],
+          "unit_hits": [
+            "26436523",
+            "26582407",
+            "29519881",
+            "30213330",
+            "30784681",
+            "32897307",
+            "32897358",
+            "33047487",
+            "33404647",
+            "33858624",
+            "33887112",
+            "35152888",
+            "35229623"
+          ],
+          "integrity": "verified",
+          "unit_retention": "13/13",
+          "missed": [],
+          "passes_run": 2,
+          "unnecessary_activations": []
+        },
+        "contract_1_11": {
+          "passes": [
+            {
+              "id": "drug_ae",
+              "unit": true,
+              "result_count": 147,
+              "hits": 13,
+              "integrity": "verified",
+              "query_sha256": "39a3ffdcf7222c9b1815cea6756a9ebe89713117cda554567c0050a156bc9f32"
+            },
+            {
+              "id": "etiology",
+              "unit": true,
+              "result_count": 126,
+              "hits": 13,
+              "integrity": "verified",
+              "query_sha256": "376dbf5be744ee86b8b6ea3a3db0b8cfcd048b31663011990d118991486c6eb0"
+            }
+          ],
+          "unit_hits": [
+            "26436523",
+            "26582407",
+            "29519881",
+            "30213330",
+            "30784681",
+            "32897307",
+            "32897358",
+            "33047487",
+            "33404647",
+            "33858624",
+            "33887112",
+            "35152888",
+            "35229623"
+          ],
+          "integrity": "verified",
+          "unit_retention": "13/13",
+          "missed": [],
+          "passes_run": 2,
+          "unnecessary_activations": []
+        },
+        "forbidden_1_11": {
+          "passes": [
+            {
+              "id": "as_therapy",
+              "unit": true,
+              "result_count": 1,
+              "hits": 0,
+              "integrity": "verified",
+              "query_sha256": "7c9a4a6f4e28a7de9fa60c7683276f3a504018058e200b9d828d84cfbee67ca4"
+            }
+          ],
+          "unit_hits": [],
+          "integrity": "verified",
+          "unit_retention": "0/13",
+          "missed": [
+            "33404647",
+            "32897307",
+            "29519881",
+            "26582407",
+            "32897358",
+            "26436523",
+            "33887112",
+            "33047487",
+            "30784681",
+            "30213330",
+            "35152888",
+            "35229623",
+            "33858624"
+          ],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        }
+      }
+    },
+    "J": {
+      "reference_size": 5,
+      "reference_complete": true,
+      "versions": {
+        "contract_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 648,
+              "hits": 5,
+              "integrity": "verified",
+              "query_sha256": "3b5cd567959c47b13ec2cc069ca8e987348f1d5b73a3082a0d69b0955b04359f"
+            }
+          ],
+          "unit_hits": [
+            "31535829",
+            "32865377",
+            "33200892",
+            "34449189",
+            "36027570"
+          ],
+          "integrity": "verified",
+          "unit_retention": "5/5",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "contract_1_11": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 648,
+              "hits": 5,
+              "integrity": "verified",
+              "query_sha256": "3b5cd567959c47b13ec2cc069ca8e987348f1d5b73a3082a0d69b0955b04359f"
+            }
+          ],
+          "unit_hits": [
+            "31535829",
+            "32865377",
+            "33200892",
+            "34449189",
+            "36027570"
+          ],
+          "integrity": "verified",
+          "unit_retention": "5/5",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "forbidden_1_11": {
+          "passes": [
+            {
+              "id": "core_primary_care",
+              "unit": true,
+              "result_count": 24,
+              "hits": 0,
+              "integrity": "verified",
+              "query_sha256": "ecc92460d5acde9b62db6e0664640999aa9a14c05384d79b31eb17384e6f56c2"
+            }
+          ],
+          "unit_hits": [],
+          "integrity": "verified",
+          "unit_retention": "0/5",
+          "missed": [
+            "36027570",
+            "34449189",
+            "31535829",
+            "32865377",
+            "33200892"
+          ],
+          "passes_run": 1,
+          "unnecessary_activations": [
+            "core_primary_care:filters/scope/primary_especifico.txt"
+          ]
+        }
+      }
+    },
+    "P": {
+      "reference_size": 11,
+      "reference_complete": false,
+      "versions": {
+        "contract_1_10": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 1649,
+              "hits": 11,
+              "integrity": "verified",
+              "query_sha256": "0280859a5279aa71f0766f5d56466cd8569d676dd864bc0eff3d0d3679d515f1"
+            }
+          ],
+          "unit_hits": [
+            "16923254",
+            "17712107",
+            "18752696",
+            "22558098",
+            "24326383",
+            "24775819",
+            "25376223",
+            "29882524",
+            "30309338",
+            "31987815",
+            "34304573"
+          ],
+          "integrity": "verified",
+          "unit_retention": "11/11",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "contract_1_11": {
+          "passes": [
+            {
+              "id": "core",
+              "unit": true,
+              "result_count": 1649,
+              "hits": 11,
+              "integrity": "verified",
+              "query_sha256": "0280859a5279aa71f0766f5d56466cd8569d676dd864bc0eff3d0d3679d515f1"
+            }
+          ],
+          "unit_hits": [
+            "16923254",
+            "17712107",
+            "18752696",
+            "22558098",
+            "24326383",
+            "24775819",
+            "25376223",
+            "29882524",
+            "30309338",
+            "31987815",
+            "34304573"
+          ],
+          "integrity": "verified",
+          "unit_retention": "11/11",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        },
+        "forbidden_1_11": {
+          "passes": [
+            {
+              "id": "core_without_spain",
+              "unit": true,
+              "result_count": 32074,
+              "hits": 11,
+              "integrity": "verified",
+              "query_sha256": "0d736fe79b74f24944d1c7afbde373aa88aa597d61d1d5571a086e3477de6c67"
+            }
+          ],
+          "unit_hits": [
+            "16923254",
+            "17712107",
+            "18752696",
+            "22558098",
+            "24326383",
+            "24775819",
+            "25376223",
+            "29882524",
+            "30309338",
+            "31987815",
+            "34304573"
+          ],
+          "integrity": "verified",
+          "unit_retention": "11/11",
+          "missed": [],
+          "passes_run": 1,
+          "unnecessary_activations": []
+        }
+      }
+    }
+  }
+}
