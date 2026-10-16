@@ -534,6 +534,22 @@ const MUTACIONES = [
     rompe: 'K5',
   },
   {
+    id: 'MCP-FIDELIDAD-CIEGA',
+    porque: 'filter_fidelity da por presente cualquier filtro declarado: un filtro reconstruido de memoria pasaría como literal',
+    fichero: 'mcp/protocol.mjs',
+    de: 'const at = sent.indexOf(canonical);',
+    a: 'const at = 0;',
+    rompe: 'M15',
+  },
+  {
+    id: 'MCP-EXCLUSION-CON-AND',
+    porque: 'una exclusión compuesta con AND deja de marcarse: la inversión silenciosa vuelve a pasar como fiel',
+    fichero: 'mcp/protocol.mjs',
+    de: 'if (exclusion && /\\bAND\\s*\\(?\\s*$/i.test(before)) {',
+    a: 'if (false && exclusion && /\\bAND\\s*\\(?\\s*$/i.test(before)) {',
+    rompe: 'M15',
+  },
+  {
     id: 'K1-CATALOGO-VIEJO',
     porque: 'el catálogo publicado deja de coincidir con los ficheros: una superficie descubriría un filtro que no existe',
     fichero: 'filters/catalog.json',

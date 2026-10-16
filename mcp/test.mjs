@@ -173,6 +173,73 @@ check('M10', eTiempo.isError && eTiempo.structuredContent.result_count === null
   && ocupadas.length > 0 && ocupadas.every((r) => r.result.isError && r.result.structuredContent.result_count === null),
   `tiempo agotado = error declarado sin recuento; con la cola llena se rechaza (${ocupadas.length} de 12) en vez de acumular`);
 
+// --- Fuente simbólica: catálogo, filtro canónico y fidelidad (1.11.0) ---------------------------
+// Medido el 2026-10-16: desde ChatGPT, 17 de 48 filtros no se podían encontrar, y cada filtro había
+// que extraerlo a mano del .txt, que es donde la suite documenta los fallos caros.
+
+const { buildFilterBundle } = await import('../scripts/filter-source.mjs');
+const { parseFilter } = await import('../scripts/parse-filter.mjs');
+const { CATALOG_TOOL, GET_FILTER_TOOL } = await import('./protocol.mjs');
+const RAIZ_REPO = join(HERE, '..');
+const paquete = await buildFilterBundle(RAIZ_REPO);
+const conFuente = createMcpHandler({ fetcher: sirve(JSON.stringify(respuestas['consulta-valida'])), filters: paquete });
+const usar = (id, name, args) => conFuente({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args } });
+
+const listaFuente = (await conFuente({ jsonrpc: '2.0', id: 30, method: 'tools/list' })).result.tools;
+const iniFuente = (await conFuente({ jsonrpc: '2.0', id: 31, method: 'initialize', params: { protocolVersion: '2025-06-18' } })).result;
+check('M12', listaFuente.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_filter_catalog,pubmed_get_filter'
+  && listaFuente.every((t) => t.annotations.readOnlyHint === true)
+  && /pubmed_filter_catalog/.test(iniFuente.instructions) && !/pubmed_filter_catalog/.test(ini.result.instructions),
+  'con el paquete de filtros anuncia catálogo y extracción, de solo lectura; sin él, solo ejecuta y no lo promete');
+
+enviadas.length = 0;
+const cat = (await usar(32, CATALOG_TOOL.name, {})).result.structuredContent;
+const catExcl = (await usar(33, CATALOG_TOOL.name, { role: 'exclusion' })).result.structuredContent;
+const catRev = (await usar(34, CATALOG_TOOL.name, { include_journals: true })).result.structuredContent;
+check('M13', cat.filters.length === 48 && cat.filters.every((f) => f.role && f.title && f.description)
+  && catExcl.filters.length === 3 && catExcl.filters.every((f) => f.exclusion === true)
+  && catRev.journal_lists?.length === 72 && cat.journal_lists === undefined
+  && typeof cat.guidance.roles?.population_setting?.how === 'string' && cat.catalog_sha256 === paquete.catalog_sha256
+  && enviadas.length === 0,
+  'el catálogo lista los 48 filtros con papel y la guía de composición, filtra por papel y no llama a PubMed');
+
+// Un filtro multilínea: el fallo que más caro ha salido es quedarse con la primera línea.
+const multilinea = paquete.catalog.filters.map((f) => f.path)
+  .find((p) => readFileSync(join(RAIZ_REPO, p), 'utf8').split('@@@FILTER_METADATA@@@')[0].split(/\r?\n/)
+    .filter((l) => l.trim() && !l.trim().startsWith('#')).length > 1);
+const fMulti = (await usar(35, GET_FILTER_TOOL.name, { path: multilinea })).result.structuredContent;
+const fHumans = (await usar(36, GET_FILTER_TOOL.name, { path: 'filters/scope/humans.txt' })).result.structuredContent;
+const fRevista = (await usar(37, GET_FILTER_TOOL.name, { path: 'jnl_primary_health_care' })).result.structuredContent;
+const fNada = (await usar(38, GET_FILTER_TOOL.name, { path: 'filters/scope/inventado.txt' })).result;
+const jsRev = readFileSync(join(RAIZ_REPO, 'journal_filters_data.js'), 'utf8');
+check('M14', Boolean(multilinea) && fMulti.query === parseFilter(readFileSync(join(RAIZ_REPO, multilinea), 'utf8'))
+  && !fMulti.query.includes('@@@') && !fMulti.query.includes('"validation"')
+  && fHumans.exclusion === true && /NOT/.test(fHumans.how_to_compose) && /Never with AND/.test(fHumans.how_to_compose)
+  && fRevista.source === 'journal_filters_data.js' && jsRev.includes(fRevista.query) && fRevista.role === 'editorial'
+  && fNada.isError === true && /no lo reconstruyas/.test(fNada.structuredContent.error),
+  `el filtro sale entero por el parser de referencia (${multilinea}), la exclusión dice cómo componerse, la revista sale del .js, y lo que no existe es error`);
+
+const qT = paquete.filters['filters/clinical/deprescription.txt'].query;
+const qH = paquete.filters['filters/scope/humans.txt'].query;
+const fid = async (id, query, filtersUsed) => (await conFuente(llamada(id, query, { filters_used: filtersUsed }))).result.structuredContent;
+const literal = await fid(40, `(asthma[tiab]) AND (${qT})`, ['filters/clinical/deprescription.txt']);
+// Un salto de línea donde había un espacio no cambia lo que PubMed ejecuta; quitar un término, sí.
+const conSaltos = await fid(41, `(asthma[tiab]) AND (${qT.replace(' ', '\n ')})`, ['filters/clinical/deprescription.txt']);
+const sinTermino = qT.replace(/"[^"]+"\[[A-Za-z]+\]\|/, '');
+const reconstruido = await fid(42, `(asthma[tiab]) AND (${sinTermino})`, ['filters/clinical/deprescription.txt']);
+const exclusionAnd = await fid(43, `(asthma[tiab]) AND (${qH})`, ['filters/scope/humans.txt']);
+const exclusionNot = await fid(44, `(asthma[tiab]) ${qH}`, ['filters/scope/humans.txt']);
+const inventado = await fid(45, 'asthma[tiab]', ['filters/scope/inventado.txt']);
+enviadas.length = 0;
+const sinFuente = (await h(llamada(46, 'asthma[tiab]', { filters_used: ['filters/scope/humans.txt'] }))).result;
+check('M15', sinTermino !== qT && qT.includes(' ') && literal.status.filter_fidelity === 'verified' && conSaltos.status.filter_fidelity === 'verified'
+  && reconstruido.status.filter_fidelity === 'failed' && /modificado o reconstruido/.test(reconstruido.filter_fidelity[0].problem)
+  && exclusionAnd.status.filter_fidelity === 'failed' && /AND/.test(exclusionAnd.filter_fidelity[0].problem)
+  && exclusionNot.status.filter_fidelity === 'verified' && inventado.status.filter_fidelity === 'failed'
+  && literal.status.query_integrity === 'verified' && literal.catalog_sha256 === paquete.catalog_sha256
+  && sinFuente.isError === true && enviadas.length === 0,
+  'filter_fidelity: literal o con saltos de línea, verified; un término quitado, una exclusión con AND o un filtro inexistente, failed; sin catálogo no se finge');
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;
@@ -246,6 +313,15 @@ try {
     headers: { 'content-length': String(10 * 1024 * 1024) }, body: ping }), env);
   check('W6', enBytes.status === 413 && declarado.status === 413,
     'el límite de 64 KiB cuenta bytes, no caracteres, y un Content-Length mayor se rechaza sin leer');
+
+  // El Worker sirve el MISMO paquete que se sella: catálogo y filtros sin disco en Cloudflare.
+  const wLista = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 50, method: 'tools/list' })).json();
+  const wFiltro = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 51, method: 'tools/call',
+    params: { name: 'pubmed_get_filter', arguments: { path: 'filters/scope/spanish.txt' } } })).json();
+  check('W8', wLista.result.tools.length === 3
+    && wFiltro.result.structuredContent.query === paquete.filters['filters/scope/spanish.txt'].query
+    && wFiltro.result.structuredContent.catalog_sha256 === paquete.catalog_sha256,
+    'el Worker anuncia las tres herramientas y sirve la consulta canónica sellada, idéntica a la del repositorio');
 } finally {
   globalThis.fetch = realFetch;
 }

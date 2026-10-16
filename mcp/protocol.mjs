@@ -1,5 +1,8 @@
 /**
- * Servidor MCP mínimo sobre el ejecutor de referencia. Una sola herramienta: `pubmed_search_exact`.
+ * Servidor MCP mínimo sobre el ejecutor de referencia. Ejecuta (`pubmed_search_exact`) y, si recibe el
+ * paquete de filtros (scripts/filter-source.mjs), sirve también la fuente simbólica: el catálogo
+ * (`pubmed_filter_catalog`) y la consulta canónica de cada filtro (`pubmed_get_filter`), y comprueba
+ * en cada recibo que los filtros declarados van literales en la consulta (`filter_fidelity`).
  *
  * Sin dependencias, a propósito. El protocolo que hace falta aquí son cinco métodos JSON-RPC
  * (initialize, ping, tools/list, tools/call y la notificación de inicializado), y escribirlos a mano
@@ -15,7 +18,7 @@ import { runExact, ESEARCH_WINDOW } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 
 export const SERVER_NAME = 'pubmed-filters-exact';
-export const SERVER_VERSION = '0.1.0';
+export const SERVER_VERSION = '0.2.0';
 /**
  * Versiones del protocolo MCP que este servidor cumple. Solo una, y a propósito: la primera versión
  * anunciaba también 2025-03-26 y 2024-11-05 sin cumplirlas (la 2024-11-05 ni siquiera usa este
@@ -32,6 +35,8 @@ export const PROTOCOL_VERSIONS = ['2025-06-18'];
 export const MCP_MAX_RETMAX = 1000;
 /** Tope de longitud de consulta: generoso (los filtros compuestos rondan 2-7 mil), solo contra abusos. */
 export const MCP_MAX_QUERY = 20000;
+/** Filtros declarables por consulta: más que los que una búsqueda razonable compone. */
+export const MAX_FILTERS_USED = 12;
 
 export const TOOL = {
   name: 'pubmed_search_exact',
@@ -69,6 +74,15 @@ export const TOOL = {
         default: 0,
         description: 'How many PMIDs to return (0 = count and diagnostics only).',
       },
+      filters_used: {
+        type: 'array',
+        maxItems: MAX_FILTERS_USED,
+        items: { type: 'string', minLength: 1, maxLength: 200 },
+        description: 'Paths or jnl_ ids of the catalog filters this query contains, as returned by'
+          + ' pubmed_get_filter. The receipt then checks that each one is present literally'
+          + ' (status.filter_fidelity). Leave out a filter you modified on purpose and declare the'
+          + ' modification in your provenance instead.',
+      },
     },
     required: ['query'],
     additionalProperties: false,
@@ -76,9 +90,133 @@ export const TOOL = {
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
 };
 
+export const CATALOG_TOOL = {
+  name: 'pubmed_filter_catalog',
+  title: 'Catalog of curated PubMed filters, with the role of each one',
+  description: [
+    'List every curated filter in pubmed-filters (48 retrieval filters; journal lists on request) with',
+    'what it is for, its validation status as stated in its header, and its default ROLE, plus the',
+    'guidance on how each role is composed. Use it BEFORE composing a search: split the question into',
+    'facets, check every facet against this catalog, and record why a matching filter is not used.',
+    'The role is a default: concept filters are ORed inside their concept; population, setting and',
+    'geography filters are parallel lanes unless they define the population; journal lists never',
+    'restrict the core; exclusion filters are appended with NOT. Then fetch each chosen filter with',
+    'pubmed_get_filter. Read-only; no PubMed call.',
+  ].join(' '),
+  inputSchema: {
+    type: 'object',
+    properties: {
+      role: { type: 'string', maxLength: 40, description: 'Only filters with this role.' },
+      include_journals: { type: 'boolean', default: false, description: 'Also list the journal lists (editorial role).' },
+    },
+    additionalProperties: false,
+  },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+};
+
+export const GET_FILTER_TOOL = {
+  name: 'pubmed_get_filter',
+  title: 'Canonical query of one curated filter',
+  description: [
+    'Return the exact query of one catalog filter, extracted by the reference parser (all lines joined,',
+    'metadata block removed), with its SHA-256, role, how to compose it, and its flags: an exclusion',
+    'filter starts with NOT and must be appended as (topic) NOT (filter), never with AND; a filter with an',
+    'embedded date limit overrides your date policy. Paste the query unchanged into pubmed_search_exact',
+    'and list its path in filters_used. Never rebuild a filter from memory. Read-only; no PubMed call.',
+  ].join(' '),
+  inputSchema: {
+    type: 'object',
+    properties: {
+      path: { type: 'string', minLength: 1, maxLength: 200, description: 'Catalog path (filters/...txt) or journal list id (jnl_...).' },
+    },
+    required: ['path'],
+    additionalProperties: false,
+  },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+};
+
+const flat = (s) => String(s).replace(/\s+/g, ' ').trim();
+const resolvePath = (bundle, p) => (bundle.filters[p] ? p
+  : /^jnl_[a-z0-9_]+$/.test(p) && bundle.filters[`filters/journals/${p}.txt`] ? `filters/journals/${p}.txt` : null);
+
+/**
+ * ¿Lleva la consulta enviada cada filtro declarado, literal? Se compara con los espacios colapsados:
+ * un salto de línea de más no cambia lo que PubMed ejecuta, una palabra cambiada sí. Una exclusión
+ * compuesta con AND se marca aparte: es la inversión silenciosa de composition.negation_filters.
+ */
+export function filterFidelity(bundle, query, declared) {
+  const sent = flat(query);
+  const filters = declared.map((p) => {
+    const path = resolvePath(bundle, p);
+    if (!path) return { declared: p, found_literal: false, problem: 'no está en el catálogo' };
+    const canonical = flat(bundle.filters[path].query);
+    const at = sent.indexOf(canonical);
+    if (at === -1) {
+      return { declared: p, path, found_literal: false, problem: 'la consulta no contiene el filtro literal: modificado o reconstruido' };
+    }
+    const exclusion = /^NOT\b/i.test(canonical);
+    const before = sent.slice(Math.max(0, at - 8), at);
+    if (exclusion && /\bAND\s*\(?\s*$/i.test(before)) {
+      return { declared: p, path, found_literal: true, problem: 'filtro de exclusión compuesto con AND: PubMed lo traduce como inclusión' };
+    }
+    return { declared: p, path, found_literal: true, problem: null };
+  });
+  return { status: filters.every((f) => f.problem === null) ? 'verified' : 'failed', filters };
+}
+
+function catalogView(bundle, args) {
+  const role = args.role;
+  const pick = (f) => ({ path: f.path, title: f.title, description: f.description, role: f.role,
+    registry_key: f.registry_key, pair: f.pair, exclusion: f.exclusion, embedded_date_limit: f.embedded_date_limit,
+    validation: f.validation });
+  const filters = bundle.catalog.filters.filter((f) => !role || f.role === role).map(pick);
+  const journals = args.include_journals && (!role || role === 'editorial')
+    ? bundle.catalog.journal_lists.map((j) => ({ id: j.id, name: j.name, description: j.description, role: j.role }))
+    : undefined;
+  return {
+    contract_version: bundle.contract_version,
+    catalog_sha256: bundle.catalog_sha256,
+    validation_values: bundle.catalog.validation_values,
+    guidance: bundle.guidance,
+    counts: { ...bundle.catalog.counts, returned_filters: filters.length },
+    filters,
+    ...(journals ? { journal_lists: journals } : {}),
+  };
+}
+
+function filterView(bundle, p) {
+  const path = resolvePath(bundle, p);
+  if (!path) return null;
+  const entry = bundle.catalog.filters.find((f) => f.path === path)
+    ?? bundle.catalog.journal_lists.find((j) => j.path === path);
+  const role = entry.role;
+  const how = bundle.guidance.roles?.[role]?.how ?? null;
+  const exclusion = Boolean(entry.exclusion);
+  return {
+    path,
+    title: entry.title ?? entry.name,
+    description: entry.description,
+    role,
+    how_to_compose: exclusion
+      ? `Append it after the topic exactly as returned, which already starts with NOT: (topic) NOT (...). Never with AND: PubMed reads AND (NOT X) as AND X. ${how ?? ''}`.trim()
+      : how,
+    exclusion,
+    embedded_date_limit: Boolean(entry.embedded_date_limit),
+    validation: entry.validation ?? 'journal_list_not_validated',
+    reference: entry.reference ?? null,
+    query: bundle.filters[path].query,
+    query_sha256: bundle.filters[path].query_sha256,
+    source: bundle.filters[path].source,
+    catalog_sha256: bundle.catalog_sha256,
+  };
+}
+
 const INSTRUCTIONS = 'Literal PubMed execution for the pubmed-filters neurosymbolic router '
   + '(github.com/ernestobarrera/pubmed-filters). Every call returns a receipt; '
   + 'status.query_integrity decides whether the count may be used.';
+const SOURCE_INSTRUCTIONS = 'Before composing, call pubmed_filter_catalog and check every facet of the '
+  + 'question against it; fetch each chosen filter with pubmed_get_filter, paste it unchanged, and '
+  + 'declare it in filters_used so the receipt can check status.filter_fidelity.';
 
 const ok = (id, result) => ({ jsonrpc: '2.0', id, result });
 const fail = (id, code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
@@ -106,23 +244,49 @@ function makeThrottle(minMs, maxQueueMs = MAX_QUEUE_MS) {
  * Devuelve `handle(message) => response | null`. `null` para notificaciones, que no se contestan.
  * `run` se adjunta a cada recibo (versión de contrato, commit, hash del router) y lo pone quien
  * conoce el despliegue: stdio lo calcula con git, el Worker lo trae sellado del despliegue.
+ * `filters` es el paquete de scripts/filter-source.mjs. Sin él, el servidor solo ejecuta: no anuncia
+ * herramientas de catálogo ni acepta filters_used, en vez de fingir que comprueba lo que no conoce.
  */
 export function createMcpHandler({
-  apiKey = '', email = '', run = null, engine = 'mcp', fetcher, now, timeoutMs, maxQueueMs,
+  apiKey = '', email = '', run = null, engine = 'mcp', fetcher, now, timeoutMs, maxQueueMs, filters = null,
 } = {}) {
   const throttle = makeThrottle(apiKey ? 110 : 350, maxQueueMs);
+  const tools = filters ? [TOOL, CATALOG_TOOL, GET_FILTER_TOOL] : [TOOL];
+  const textResult = (structured) => ({ content: [{ type: 'text', text: JSON.stringify(structured, null, 2) }], structuredContent: structured, isError: false });
+
+  function callSourceTool(name, args) {
+    const extra = Object.keys(args).filter((k) => !(k in (name === CATALOG_TOOL.name ? CATALOG_TOOL : GET_FILTER_TOOL).inputSchema.properties));
+    if (extra.length) return toolError({ error: `argumentos no admitidos: ${extra.join(', ')}` });
+    if (name === CATALOG_TOOL.name) {
+      if (args.role !== undefined && typeof args.role !== 'string') return toolError({ error: 'role debe ser una cadena' });
+      if (args.include_journals !== undefined && typeof args.include_journals !== 'boolean') return toolError({ error: 'include_journals debe ser booleano' });
+      return textResult(catalogView(filters, args));
+    }
+    if (typeof args.path !== 'string' || args.path.trim() === '') return toolError({ error: 'path debe ser una cadena no vacía' });
+    const view = filterView(filters, args.path.trim());
+    return view ? textResult(view)
+      : toolError({ error: `No hay ningún filtro «${args.path}» en el catálogo. Consulta pubmed_filter_catalog; no lo reconstruyas de memoria.` });
+  }
 
   async function callTool(params) {
+    if (filters && (params?.name === CATALOG_TOOL.name || params?.name === GET_FILTER_TOOL.name)) {
+      return { result: callSourceTool(params.name, params.arguments ?? {}) };
+    }
     if (params?.name !== TOOL.name) return { error: [-32602, `Herramienta desconocida: ${params?.name}`] };
     const args = params.arguments ?? {};
     const extra = Object.keys(args).filter((k) => !(k in TOOL.inputSchema.properties));
     const query = args.query;
     const retmax = args.retmax ?? 0;
+    const used = args.filters_used;
     const invalid = extra.length > 0 ? `argumentos no admitidos: ${extra.join(', ')}`
       : typeof query !== 'string' || query.trim() === '' ? 'query debe ser una cadena no vacía'
         : query.length > MCP_MAX_QUERY ? `query supera ${MCP_MAX_QUERY} caracteres`
           : !Number.isSafeInteger(retmax) || retmax < 0 || retmax > MCP_MAX_RETMAX
-            ? `retmax debe ser un entero entre 0 y ${MCP_MAX_RETMAX}` : null;
+            ? `retmax debe ser un entero entre 0 y ${MCP_MAX_RETMAX}`
+            : used !== undefined && !filters ? 'filters_used no se puede comprobar: este servidor no tiene el catálogo de filtros'
+              : used !== undefined && (!Array.isArray(used) || used.length > MAX_FILTERS_USED
+                || !used.every((u) => typeof u === 'string' && u.trim() !== '' && u.length <= 200))
+                ? `filters_used debe ser una lista de hasta ${MAX_FILTERS_USED} rutas o ids` : null;
     if (invalid) return { result: toolError({ error: invalid, result_count: null }) };
 
     if (!(await throttle())) {
@@ -134,7 +298,13 @@ export function createMcpHandler({
         ...(fetcher ? { fetcher } : {}), ...(now ? { now } : {}), ...(timeoutMs ? { timeoutMs } : {}),
       });
       const structured = { run, ...receipt };
-      return { result: { content: [{ type: 'text', text: JSON.stringify(structured, null, 2) }], structuredContent: structured, isError: false } };
+      if (used !== undefined) {
+        const fidelity = filterFidelity(filters, query, used);
+        structured.status = { ...structured.status, filter_fidelity: fidelity.status };
+        structured.filter_fidelity = fidelity.filters;
+        structured.catalog_sha256 = filters.catalog_sha256;
+      }
+      return { result: textResult(structured) };
     } catch (e) {
       return {
         result: toolError({
@@ -167,13 +337,13 @@ export function createMcpHandler({
           protocolVersion: PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0],
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: SERVER_NAME, title: 'PubMed literal (pubmed-filters)', version: SERVER_VERSION },
-          instructions: INSTRUCTIONS,
+          instructions: filters ? `${INSTRUCTIONS} ${SOURCE_INSTRUCTIONS}` : INSTRUCTIONS,
         });
       }
       case 'ping':
         return ok(id, {});
       case 'tools/list':
-        return ok(id, { tools: [TOOL] });
+        return ok(id, { tools });
       case 'tools/call': {
         const { result, error } = await callTool(params);
         return error ? fail(id, error[0], error[1]) : ok(id, result);

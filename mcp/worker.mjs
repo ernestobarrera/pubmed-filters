@@ -26,6 +26,7 @@
 
 import { createMcpHandler, PROTOCOL_VERSIONS } from './protocol.mjs';
 import buildInfo from './build-info.mjs';
+import filterBundle from './filters-bundle.mjs';
 
 export const MAX_BODY_BYTES = 64 * 1024;
 export const MIN_ACCESS_KEY_LENGTH = 32;
@@ -72,7 +73,7 @@ const getHandler = (env) => {
   const key = `${env.NCBI_API_KEY ?? ''}\u0000${env.NCBI_EMAIL ?? ''}`;
   if (!handler || handlerKey !== key) {
     handler = createMcpHandler({
-      apiKey: env.NCBI_API_KEY ?? '', email: env.NCBI_EMAIL ?? '', run: buildInfo, engine: 'mcp/worker.mjs',
+      apiKey: env.NCBI_API_KEY ?? '', email: env.NCBI_EMAIL ?? '', run: buildInfo, engine: 'mcp/worker.mjs', filters: filterBundle,
       timeoutMs: 25000,
     });
     handlerKey = key;

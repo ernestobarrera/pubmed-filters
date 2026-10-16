@@ -359,7 +359,12 @@
       "warninglist.outputmessages contains a semantic warning"
     ],
     "false_zero_warning": "If the metadata block is swallowed into the query, PubMed returns count 0 with the error hidden in errorlist.phrasesnotfound and quotedphrasesnotfound empty.",
-    "modified_filter_declaration": "Modifying a filter is legitimate but must be declared as {path, modified: true, reason, effective_query}, and it is the effective_query that provenance refers to."
+    "modified_filter_declaration": "Modifying a filter is legitimate but must be declared as {path, modified: true, reason, effective_query}, and it is the effective_query that provenance refers to.",
+    "fidelity_check": {
+      "rule": "An engine that holds the catalog can check that every filter the surface declares as used appears literally in the sent query, whitespace aside, and that no exclusion filter follows an AND. The result is filter_fidelity: verified when all are present and correctly composed, failed otherwise. A modified filter is not declared as used; it is declared under modified_filter_declaration.",
+      "why": "validated_filters_as_symbolic_truth was a rule no conversational surface could prove: a filter rebuilt from memory, or truncated to its first line, produces a plausible query and a verified integrity status. Integrity says PubMed ran what was sent; fidelity says what was sent contains the curated filter.",
+      "reference": "filterFidelity() in mcp/protocol.mjs; served by the MCP together with pubmed_filter_catalog and pubmed_get_filter (canonical extraction by the reference parser)."
+    }
   },
   "query_execution_contract": {
     "rule": "Every executed query is inspected before its result is used. PubMed already reports what it ignored; the failure is not reading it.",
@@ -936,7 +941,7 @@
     "not_applicable_to": "routing.corpus_definition: there, narrowing changes the population instead of making it readable."
   },
   "tool_requirements": {
-    "filter_source": "GitHub",
+    "filter_source": "GitHub (local checkout, Pages or raw with an explicit ref), or an engine that serves the catalog and the canonical extraction of each filter (the repository MCP: pubmed_filter_catalog and pubmed_get_filter). The second avoids parsing filters by hand on surfaces without code execution.",
     "literal_pubmed_engine": "any_tool_capable_of_exact_pubmed_syntax",
     "rule": "A semantic search must not silently substitute a literal PubMed query when reproducibility is required.",
     "engine_selection": "The concrete engine is surface configuration, not a property of this repository. Declare in provenance which engine actually ran each pass.",

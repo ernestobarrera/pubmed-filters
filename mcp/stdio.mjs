@@ -13,12 +13,20 @@
  */
 
 import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { createMcpHandler } from './protocol.mjs';
 import { runContext } from '../scripts/pubmed-exact.mjs';
+import { buildFilterBundle } from '../scripts/filter-source.mjs';
 
 const run = await runContext().catch(() => null);
+// Sin paquete de filtros el servidor sigue ejecutando, pero no anuncia catálogo ni filter_fidelity.
+const filters = await buildFilterBundle(fileURLToPath(new URL('..', import.meta.url))).catch((e) => {
+  process.stderr.write(`pubmed-filters-exact: sin catálogo de filtros (${e?.message ?? e})
+`);
+  return null;
+});
 const handle = createMcpHandler({
-  apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '', run, engine: 'mcp/stdio.mjs',
+  apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '', run, engine: 'mcp/stdio.mjs', filters,
 });
 const send = (msg) => process.stdout.write(`${JSON.stringify(msg)}\n`);
 

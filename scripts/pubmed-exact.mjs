@@ -45,9 +45,10 @@ export async function runContext() {
   };
   const status = git('status', '--porcelain');
   const routerText = readFileSync(ROUTER, 'utf8');
-  // El catálogo es lo que había disponible para elegir (provenance.selection_record.catalog_ref).
+  // El catálogo es lo que había disponible para elegir (provenance.selection_record.catalog_ref). Se
+  // normaliza a LF para que el hash sea el mismo en cualquier clon y el mismo que sella el MCP.
   let catalogText = null;
-  try { catalogText = readFileSync(join(ROOT, 'filters', 'catalog.json'), 'utf8'); } catch { /* sin catálogo: null */ }
+  try { catalogText = readFileSync(join(ROOT, 'filters', 'catalog.json'), 'utf8').replace(/\r\n/g, '\n'); } catch { /* sin catálogo: null */ }
   return {
     contract_version: JSON.parse(routerText).conformance?.contract_version ?? null,
     repository: 'ernestobarrera/pubmed-filters',
