@@ -45,12 +45,16 @@ export async function runContext() {
   };
   const status = git('status', '--porcelain');
   const routerText = readFileSync(ROUTER, 'utf8');
+  // El catálogo es lo que había disponible para elegir (provenance.selection_record.catalog_ref).
+  let catalogText = null;
+  try { catalogText = readFileSync(join(ROOT, 'filters', 'catalog.json'), 'utf8'); } catch { /* sin catálogo: null */ }
   return {
     contract_version: JSON.parse(routerText).conformance?.contract_version ?? null,
     repository: 'ernestobarrera/pubmed-filters',
     repository_commit: git('rev-parse', 'HEAD'),
     repository_dirty: status === null ? null : status !== '',
     router_sha256: await sha256(routerText),
+    catalog_sha256: catalogText === null ? null : await sha256(catalogText),
   };
 }
 

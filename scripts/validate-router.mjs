@@ -463,9 +463,17 @@ const valoresHuerfanos = (os.dimensions ?? []).flatMap((d) => (porDimension[d] ?
 // Desde la 1.10.0, `coverage` también admite failed, pero con significado propio en failed_by_dimension:
 // una comprobación de cobertura que encuentra omisiones relevantes no tenía valor, y llamarla planned o
 // unsupported escondía un defecto conocido detrás de un desconocido (el mismo argumento de why_failed_exists).
+//
+// Endurecido en la 1.11.0. Codex mostró el 2026-10-16 que C13 aceptaba como «significado» 41 letras x,
+// y que bastaba eso para abrir `failed` en reading_depth. Ahora: (1) las dimensiones que admiten failed
+// están fijadas AQUÍ, así que extenderlo exige tocar la suite y su prueba, como pide values_by_dimension;
+// (2) el texto debe ser sustantivo. Lo segundo es ESTRUCTURAL: rechaza vacío y relleno, no prueba que el
+// texto signifique lo que debe. Eso sigue siendo cosa de una revisión.
+const sustantivo = (s, n = 8) => typeof s === 'string' && new Set((s.toLowerCase().match(/\p{L}{3,}/gu) ?? [])).size >= n;
+const DIMENSIONES_CON_FAILED = ['query_integrity', 'coverage'];
 const failedSignificado = os.failed_by_dimension ?? {};
 const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed')
-  && !(typeof failedSignificado[d] === 'string' && failedSignificado[d].length > 40));
+  && !(DIMENSIONES_CON_FAILED.includes(d) && sustantivo(failedSignificado[d])));
 check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
   && (porDimension.query_integrity ?? []).includes('failed'),
   `valores por dimensión: ${dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
@@ -479,10 +487,22 @@ check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 &
 // dos cosas que en un corpus definido cambian la población. Se comprueba en campos, no en prosa.
 const cc = router.coverage_check ?? {};
 const cd = router.routing?.corpus_definition ?? {};
+// Endurecido en la 1.11.0 tras la revisión de Codex del 2026-10-16: aceptaba vaciar los métodos,
+// borrar status y on_failed, y dejar required_when solo para corpus. Y la cobertura no estaba enlazada
+// con la adaptación: una pasada específica podía perder lo esencial sin que nada mandara retroceder.
+const exigidoCuando = ['routing.corpus_definition', 'a report, review, decision or publication rests on the result set',
+  'a count, a trend or an absence of evidence is reported'];
 const ccFallos = [
-  !(cc.required_when ?? []).includes('routing.corpus_definition') && 'coverage_check no es obligatorio para corpus_definition',
-  !(typeof cc.method?.sensitivity_minus_main === 'string' && typeof cc.method?.independent_pearls === 'string')
-    && 'falta el método: sensibilidad menos principal y perlas independientes',
+  !exigidoCuando.every((w) => (cc.required_when ?? []).includes(w)) && 'required_when ya no cubre corpus, informes y decisiones, y recuentos o ausencias',
+  !(sustantivo(cc.method?.sensitivity_minus_main) && sustantivo(cc.method?.independent_pearls))
+    && 'falta el método o está vacío: sensibilidad menos principal y perlas independientes',
+  !(sustantivo(cc.status) && sustantivo(cc.on_failed)) && 'falta qué significa cada estado o qué hacer ante failed',
+  !['unit', 'eligible_pearls', 'replacing_pass', 'compensation'].every((k) => sustantivo(cc[k]))
+    && 'falta la unidad de cobertura, las perlas elegibles, la pasada que sustituye al núcleo o la compensación',
+  !['unit_passes', 'pearls_lost_by_pass', 'compensated_by'].every((f) => (cc.record ?? []).includes(f))
+    && 'el registro no conserva la unidad, las perlas perdidas por pasada y la compensación',
+  !(router.adaptation?.if_pearls_lost ?? []).includes('specific_to_sensitive')
+    && 'adaptation no retrocede cuando una pasada pierde perlas elegibles',
   !['relevant_outside_pmids', 'pearls_with_source', 'coverage_status'].every((f) => (cc.record ?? []).includes(f))
     && 'el registro no conserva omisiones, perlas y estado',
   cd.coverage_check !== 'required' && 'corpus_definition no exige coverage_check',
@@ -554,6 +574,13 @@ check('K4', kFallos.length === 0,
   `composición por papel: ${kFallos.length === 0
     ? 'ámbito y revistas son pasadas por defecto, un concepto entra con OR y toda faceta se contrasta con el catálogo'
     : kFallos.join('; ')}`);
+
+const sel = router.provenance?.selection_record ?? {};
+check('K5', ['catalog_ref', 'facets', 'filters', 'passes', 'compensations'].every((k) => sustantivo(sel.fields?.[k], 4))
+  && ['catalog_sha256', 'selection_record'].every((f) => (router.provenance?.record_per_run ?? []).includes(f))
+  && (router.provenance?.record_per_pass ?? []).includes('pass_id')
+  && !(router.provenance?.operational_status?.dimensions ?? []).includes('applicability'),
+  'registro de selección: facetas, filtros usados y descartados con motivo, pasadas con su afirmación y compensaciones; sin dimensión de aplicabilidad');
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')

@@ -482,6 +482,57 @@ const MUTACIONES = [
     a: '"first_passes": [\n        "clinical.drug_adverse_events",\n        "scope.safety_specific"\n      ],',
     rompe: 'R19',
   },
+  // Las cinco alteraciones con las que Codex mostró, el 2026-10-16, que C13/C14 comprobaban existencia y
+  // longitud, no garantías. La de reading_depth ya la cubre C13-POLISEMIA. Son comprobaciones
+  // estructurales: rechazan vacío y relleno, no prueban significado.
+  {
+    id: 'C13-RELLENO',
+    porque: 'el significado de failed para coverage se sustituye por 41 letras x y C13 seguía pasando',
+    fichero: 'neurosymbolic_router.json',
+    de: '"coverage": "A coverage check found relevant records outside',
+    a: '"coverage": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "coverage_original": "A coverage check found relevant records outside',
+    rompe: 'C13',
+  },
+  {
+    id: 'C14-SIN-ESTADO',
+    porque: 'se borra qué significa cada estado de cobertura y C14 seguía pasando',
+    fichero: 'neurosymbolic_router.json',
+    de: '"status": "Recorded in provenance.operational_status under the coverage dimension.',
+    a: '"status_retirado": "Recorded in provenance.operational_status under the coverage dimension.',
+    rompe: 'C14',
+  },
+  {
+    id: 'C14-SOLO-CORPUS',
+    porque: 'la cobertura deja de ser obligatoria para informes y decisiones y solo queda para corpus',
+    fichero: 'neurosymbolic_router.json',
+    de: '      "a report, review, decision or publication rests on the result set",\n',
+    a: '',
+    rompe: 'C14',
+  },
+  {
+    id: 'C14-METODO-VACIO',
+    porque: 'el método de sensibilidad menos principal queda como cadena vacía y C14 seguía pasando',
+    fichero: 'neurosymbolic_router.json',
+    de: '"sensitivity_minus_main": "Build a broader query',
+    a: '"sensitivity_minus_main": "", "metodo_retirado": "Build a broader query',
+    rompe: 'C14',
+  },
+  {
+    id: 'C14-SIN-RETROCESO',
+    porque: 'una pasada específica que pierde perlas elegibles ya no manda retroceder: el hueco medido en desprescripción',
+    fichero: 'neurosymbolic_router.json',
+    de: '"if_pearls_lost": [\n      "specific_to_sensitive",',
+    a: '"if_pearls_lost": [',
+    rompe: 'C14',
+  },
+  {
+    id: 'K5-SIN-REGISTRO',
+    porque: 'la ejecución deja de registrar por qué se eligieron y descartaron los filtros',
+    fichero: 'neurosymbolic_router.json',
+    de: '"execution_engine",\n      "selection_record"\n    ],',
+    a: '"execution_engine"\n    ],',
+    rompe: 'K5',
+  },
   {
     id: 'K1-CATALOGO-VIEJO',
     porque: 'el catálogo publicado deja de coincidir con los ficheros: una superficie descubriría un filtro que no existe',

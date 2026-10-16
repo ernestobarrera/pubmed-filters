@@ -689,6 +689,10 @@
       "a count, a trend or an absence of evidence is reported"
     ],
     "optional_when": "Quick orientation answers that claim nothing about how much exists. Say that coverage was not checked.",
+    "unit": "What is checked is a claim together with the query or union of passes that supports it, not each pass on its own. Wherever this section says 'main query', it means that unit. A synthesis lane need not retrieve a trial, and an applicability lane need not retrieve international trials; demanding it would force fallbacks for omissions that were expected.",
+    "eligible_pearls": "Pearls are eligible for the purpose of the unit they test: a trial for an efficacy claim, an observational study for a harm claim, a national study for a local-applicability claim. Citations in a review are not its included studies; take pearls from the included studies, a guideline's evidence table or the user, and record their source.",
+    "replacing_pass": "A pass that replaces the core instead of running beside it (a specific version where the topic or the sensitive version would have run) is checked against the core's eligible pearls before anything rests on it. If it loses any, adaptation.if_pearls_lost applies. A large result count is not evidence of coverage.",
+    "compensation": "If another pass in the same unit recovers what one pass lost, record which pass compensated: the unit is then the union, and the loss is not a coverage failure.",
     "method": {
       "sensitivity_minus_main": "Build a broader query (synonyms, spelling variants, wider field tags, the vocabulary of earlier periods), run it NOT the main query, and screen what comes back. Report how many records outside are relevant, with their PMIDs.",
       "independent_pearls": "2 to 4 records known to be relevant that did not come from the main results (a guideline, a reference list, a citation supplied by the user, a lateral search with different vocabulary). Check each with (<main query>) AND <PMID>[pmid] at retmax 0. A pearl drawn from the main results approves the query it is meant to test and does not count.",
@@ -699,6 +703,10 @@
     "on_failed": "Revise the query and run it again, or narrow the declared scope explicitly so that the missed records fall outside it. Counts, trends or shares from a corpus whose coverage is failed are never reported without saying so next to the numbers.",
     "screening_basis": "Relevance of the records outside is the agent's judgement. State whether it was made on titles or abstracts.",
     "record": [
+      "unit_claim",
+      "unit_passes",
+      "pearls_lost_by_pass",
+      "compensated_by",
       "sensitivity_query",
       "sensitivity_minus_main_count",
       "candidates_screened",
@@ -718,9 +726,24 @@
       "repository_commit",
       "repository_dirty",
       "router_sha256",
-      "execution_engine"
+      "catalog_sha256",
+      "execution_engine",
+      "selection_record"
     ],
+    "selection_record": {
+      "purpose": "Makes the choice of filters auditable: what the question was split into, what was considered, what was used and what was left out, and why. Integrity says a query ran as written; this says why it was the query.",
+      "fields": {
+        "catalog_ref": "contract_version plus catalog_sha256. It stands for 'available'; the catalog is not copied into every run.",
+        "facets": "[{facet, role_in_question}] with role_in_question from composition.facet_roles.",
+        "filters": "[{path, decision: used | discarded, pass_id, role_used, reason}]. Every catalog filter whose purpose matches a facet appears here (composition.catalog_check). role_used differs from the catalog role only with a reason.",
+        "passes": "[{pass_id, purpose, unit_claim}]: what each pass is for and which claim it supports (coverage_check.unit).",
+        "compensations": "[{pass_id, lost_pmids, compensated_by}] (coverage_check.compensation)."
+      },
+      "record_at_decision_time": "Written when the plan is made and updated when it changes, like every other counter. A selection explained after the results are known is a justification, not a record.",
+      "not_a_judgement": "Recording an applicability lane says which passes were run. Judging whether the evidence applies stays with the surface (surface_policy_not_owned_here); that is why operational_status has no applicability dimension."
+    },
     "record_per_pass": [
+      "pass_id",
       "purpose",
       "exact_query",
       "transport",
@@ -902,6 +925,13 @@
       "relax_methodology_filter",
       "run_topic_only_pubmed_pass"
     ],
+    "if_pearls_lost": [
+      "specific_to_sensitive",
+      "or_concept_filter_with_agent_vocabulary",
+      "drop_precision_hints",
+      "run_topic_only_pass"
+    ],
+    "if_pearls_lost_why": "Until 1.10 the only trigger to fall back from a specific filter was too few results. A specific filter can return thousands of records and still lose the studies a claim rests on. Measured 2026-10-16 on deprescribing benzodiazepines in older people: Therapy/Narrow returned 3,313 records and lost included intervention studies such as PMID 29492957 and 31523732; nothing in adaptation said to fall back. The trigger is now the loss of eligible pearls (coverage_check.replacing_pass), whatever the count.",
     "merge_policy": "Deduplicate by PMID and then prioritize relevance, quality, recency and applicability.",
     "not_applicable_to": "routing.corpus_definition: there, narrowing changes the population instead of making it readable."
   },
