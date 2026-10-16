@@ -41,6 +41,8 @@ INTENCIÓN → FILTRO SIMBÓLICO → BÚSQUEDA → ABSTRACTS/FUENTES → LECTURA
 
 Cinco bloques que conviene leer antes de consumirlo, porque evitan errores que no hacen ruido:
 
+- **`filter_catalog`** y **`filters/catalog.json`** — los 48 filtros de recuperación y las 72 listas de revistas, con descripción, referencia y **papel**. El registro del router solo nombra 31 filtros, los de sus rutas por tipo de pregunta, y GitHub Pages no lista carpetas: el catálogo es la forma de descubrir el resto. La carpeta no dice cómo componer un filtro (`scope/` mezcla geografía, diseños, dominios, una lista de revistas y exclusiones); el papel sí lo dice, y su significado está en `composition.roles`. Se genera con `node scripts/catalog.mjs` y la suite falla si no coincide con los ficheros.
+- **`composition.scope_roles`** y **`composition.catalog_check`** — un ámbito que *define la población* («prevalencia en niños españoles») va con `AND`; uno que solo *condiciona la aplicabilidad* («qué rescate usar en España») va en una pasada paralela, a menudo con su propia subpregunta. Toda faceta de la pregunta se contrasta con el catálogo, y no usar un filtro que encaja exige un motivo en `provenance.selection_record`.
 - **`filter_file_contract`** — cómo se extrae la consulta de un `.txt`. Tomar solo la primera línea no comentada trunca los filtros multilínea y devuelve recuentos plausibles pero falsos.
 - **`composition.negation_filters`** — los filtros que empiezan por `NOT` (`humans`, `adults`, `ocde`) se añaden **sin** `AND`. Componerlos con `AND` invierte el filtro: PubMed traduce `AND (NOT X)` como `AND X` y devuelve justo lo que se quería excluir.
 - **`registry_validation`** — qué entradas son de elaboración propia y no están validadas, y por qué las listas de revistas no son filtros validados.
@@ -164,6 +166,27 @@ La suite **falla** si una cláusula que empieza por `NOT` o un recorte temporal 
 declararse, si una ruta del registry deja de existir, si un filtro cambia de estado de validación o
 si una lista de revistas deja de coincidir con `journal_filters_data.js`. Es deliberado: son los
 cambios que producen consultas plausibles y falsas.
+
+Un filtro nuevo necesita además su **papel** en `filter_catalog.role_of` y el catálogo regenerado
+(`node scripts/catalog.mjs`); sin las dos cosas la suite falla (K1, K2).
+
+### Batería de evaluación de la selección
+
+```
+node scripts/eval/run-eval.mjs                 # compara con la línea base
+node scripts/eval/run-eval.mjs --fijar-base    # la reescribe
+```
+
+La suite comprueba que las reglas están escritas; esto mide **qué recuperan**. Cada caso de
+`scripts/eval/cases.json` fija antes de ejecutar la pregunta, el papel esperado de cada faceta y los
+estudios **incluidos** por una revisión sistemática independiente, y compara la retención de tres
+lecturas: el riesgo que una ambigüedad de 1.10 permitía, lo que haría un lector cuidadoso de 1.10 y lo
+que prescribe 1.11. Incluye un control negativo (no activar filtros por quién pregunta) y uno positivo
+(activar la geografía cuando define la población). Falla si una pasada no está verificada, si cambia
+una consulta, la retención o las activaciones, o si los registros se doblan o se reducen a la mitad. Que
+las estrategias 1.11 respeten el papel declarado de cada faceta lo comprueba la suite sin red (K6).
+Necesita red, así que no corre en la CI. No mide lo que hace una superficie conversacional: las
+estrategias se componen a mano desde el texto del contrato.
 
 La suite **no** puede decidir si un filtro nuevo merece entrar en el registry del router, porque eso
 es una decisión editorial. Para ver qué hay en el repositorio que el router todavía no conoce:

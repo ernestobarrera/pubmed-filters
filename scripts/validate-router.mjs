@@ -21,6 +21,8 @@ import { fileURLToPath } from 'node:url';
 import { parseFilter, parseMetadata, isNegation, compose, hasEmbeddedDateLimit, inspectResponse, MARKER,
   unknownFieldTags, lookalikeCharacters, PUBMED_FIELD_TAGS }
   from './parse-filter.mjs';
+import { buildCatalog, serialize as serializeCatalog, CATALOG_PATH } from './catalog.mjs';
+import { roleConformance } from './eval/conformance.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FIXTURES = join(ROOT, 'scripts', 'fixtures');
@@ -360,6 +362,28 @@ check('R17', sinDeclarar.length === 0 && declaradoSinCaso.length === 0,
     ? `ninguno sin declarar (${declaradosTipo.size} declarado${declaradosTipo.size === 1 ? '' : 's'})`
     : `sin declarar ${JSON.stringify(sinDeclarar)} / declarados que ya no lo tienen ${JSON.stringify(declaradoSinCaso)}`}`);
 
+// Una declaración que sobrevive a su defecto describe un repositorio que ya no existe. Pasó: los
+// términos caídos de cuatro filtros se corrigieron el 2026-10-01 (a7bd7c8) y el router siguió
+// declarándolos hasta que una auditoría lo vio el 2026-10-16. R17 vigilaba los asteriscos; esto no.
+const caidos = router.registry_validation?.terms_pubmed_drops ?? {};
+const declaracionesCaidas = [
+  ...Object.entries(caidos.benign?.cases ?? {}).flatMap(([f, ts]) => (Array.isArray(ts) ? ts : [null]).map((t) => [f, t])),
+  ...Object.entries(caidos.dead_field_tags?.cases ?? {}).flatMap(([f, c]) => (Array.isArray(c?.terms) ? c.terms : [null]).map((t) => [f, t])),
+];
+const caducadas = declaracionesCaidas.filter(([f, t]) => typeof t !== 'string' || !existsSync(join(ROOT, f)) || !query(f).includes(t))
+  .map(([f, t]) => `${f}: ${t}`);
+check('R18', caducadas.length === 0 && typeof caidos.declaration_rule === 'string',
+  `términos caídos declarados (${declaracionesCaidas.length}): ${caducadas.length === 0
+    ? 'cada uno sigue, literal, en su filtro' : `declarados que el filtro ya no contiene ${JSON.stringify(caducadas)}`}`);
+
+// La seguridad farmacológica no se busca con filtros de seguridad del paciente. Medido el 2026-10-16:
+// scope.safety_* (errores médicos, Tanon 2010) estaban en routing.safety por el nombre de su clave y,
+// en una pregunta de fármaco, daban 1 registro y 0 de 18 estudios de referencia.
+const rutaSeguridad = JSON.stringify(router.routing?.safety ?? {});
+check('R19', !/scope\.safety_/.test(rutaSeguridad.replace(/"not_this":"[^"]*"/, ''))
+  && /scope\.safety_specific/.test(JSON.stringify(router.routing?.patient_safety ?? {})),
+  'la ruta de seguridad farmacológica no usa los filtros de seguridad del paciente, que tienen su propia ruta');
+
 const declaredDates = new Set(router.composition.embedded_date_limits?.known_cases ?? []);
 const undeclaredDates = allFilters.filter((f) => hasEmbeddedDateLimit(query(f)) && !declaredDates.has(f));
 check('R12', undeclaredDates.length === 0,
@@ -437,12 +461,136 @@ const porDimension = os.values_by_dimension ?? {};
 const dimensionesSinLista = (os.dimensions ?? []).filter((d) => !Array.isArray(porDimension[d]));
 const valoresHuerfanos = (os.dimensions ?? []).flatMap((d) => (porDimension[d] ?? [])
   .filter((v) => !(os.semantic_values ?? []).includes(v)).map((v) => `${d}:${v}`));
-const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed'));
+// Desde la 1.10.0, `coverage` también admite failed, pero con significado propio en failed_by_dimension:
+// una comprobación de cobertura que encuentra omisiones relevantes no tenía valor, y llamarla planned o
+// unsupported escondía un defecto conocido detrás de un desconocido (el mismo argumento de why_failed_exists).
+//
+// Endurecido en la 1.11.0. Codex mostró el 2026-10-16 que C13 aceptaba como «significado» 41 letras x,
+// y que bastaba eso para abrir `failed` en reading_depth. Ahora: (1) las dimensiones que admiten failed
+// están fijadas AQUÍ, así que extenderlo exige tocar la suite y su prueba, como pide values_by_dimension;
+// (2) el texto debe ser sustantivo. Lo segundo es ESTRUCTURAL: rechaza vacío y relleno, no prueba que el
+// texto signifique lo que debe. Eso sigue siendo cosa de una revisión.
+const sustantivo = (s, n = 8) => typeof s === 'string' && new Set((s.toLowerCase().match(/\p{L}{3,}/gu) ?? [])).size >= n;
+const DIMENSIONES_CON_FAILED = ['query_integrity', 'coverage'];
+const failedSignificado = os.failed_by_dimension ?? {};
+const failedFuera = (os.dimensions ?? []).filter((d) => d !== 'query_integrity' && (porDimension[d] ?? []).includes('failed')
+  && !(DIMENSIONES_CON_FAILED.includes(d) && sustantivo(failedSignificado[d])));
 check('C13', dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
   && (porDimension.query_integrity ?? []).includes('failed'),
   `valores por dimensión: ${dimensionesSinLista.length === 0 && valoresHuerfanos.length === 0 && failedFuera.length === 0
-    ? 'cada dimensión declara los suyos y failed solo vale para query_integrity'
+    ? 'cada dimensión declara los suyos y failed solo aparece donde tiene significado propio'
     : `sin lista ${JSON.stringify(dimensionesSinLista)} / inexistentes ${JSON.stringify(valoresHuerfanos)} / failed fuera de sitio ${JSON.stringify(failedFuera)}`}`);
+
+// Cobertura y corpus definido (1.10.0). Medido el 2026-10-14: una bibliometría con query_integrity
+// verified perdía al menos un 31 % de lo pertinente, y nada en el contrato obligaba a mirarlo; las
+// comprobaciones existían solo dentro de skills locales que otras superficies no leen. Y las reglas por
+// defecto empujaban en contra: adaptation recorta con filtros y saturation_policy no busca exhaustividad,
+// dos cosas que en un corpus definido cambian la población. Se comprueba en campos, no en prosa.
+const cc = router.coverage_check ?? {};
+const cd = router.routing?.corpus_definition ?? {};
+// Endurecido en la 1.11.0 tras la revisión de Codex del 2026-10-16: aceptaba vaciar los métodos,
+// borrar status y on_failed, y dejar required_when solo para corpus. Y la cobertura no estaba enlazada
+// con la adaptación: una pasada específica podía perder lo esencial sin que nada mandara retroceder.
+const exigidoCuando = ['routing.corpus_definition', 'a report, review, decision or publication rests on the result set',
+  'a count, a trend or an absence of evidence is reported'];
+const ccFallos = [
+  !exigidoCuando.every((w) => (cc.required_when ?? []).includes(w)) && 'required_when ya no cubre corpus, informes y decisiones, y recuentos o ausencias',
+  !(sustantivo(cc.method?.sensitivity_minus_main) && sustantivo(cc.method?.independent_pearls))
+    && 'falta el método o está vacío: sensibilidad menos principal y perlas independientes',
+  !(sustantivo(cc.status) && sustantivo(cc.on_failed)) && 'falta qué significa cada estado o qué hacer ante failed',
+  !['unit', 'eligible_pearls', 'replacing_pass', 'compensation'].every((k) => sustantivo(cc[k]))
+    && 'falta la unidad de cobertura, las perlas elegibles, la pasada que sustituye al núcleo o la compensación',
+  !['unit_passes', 'pearls_lost_by_pass', 'compensated_by'].every((f) => (cc.record ?? []).includes(f))
+    && 'el registro no conserva la unidad, las perlas perdidas por pasada y la compensación',
+  !(router.adaptation?.if_pearls_lost ?? []).includes('specific_to_sensitive')
+    && 'adaptation no retrocede cuando una pasada pierde perlas elegibles',
+  !['relevant_outside_pmids', 'pearls_with_source', 'coverage_status'].every((f) => (cc.record ?? []).includes(f))
+    && 'el registro no conserva omisiones, perlas y estado',
+  cd.coverage_check !== 'required' && 'corpus_definition no exige coverage_check',
+  !String(cd.adaptation ?? '').startsWith('not_applicable') && 'corpus_definition permite la adaptación que cambia la población',
+  !String(cd.saturation_policy ?? '').startsWith('not_applicable') && 'corpus_definition acepta saturación en vez de recuperación completa',
+  !String(router.adaptation?.not_applicable_to ?? '').includes('routing.corpus_definition')
+    && 'adaptation no declara su excepción',
+  !String(router.saturation_policy?.not_applicable_to ?? '').includes('routing.corpus_definition')
+    && 'saturation_policy no declara su excepción',
+  !(porDimension.coverage ?? []).includes('failed') && 'coverage no puede registrar una omisión encontrada',
+].filter(Boolean);
+check('C14', ccFallos.length === 0,
+  `cobertura y corpus definido: ${ccFallos.length === 0
+    ? 'la cobertura se comprueba, un corpus no se recorta ni se satura, y una omisión tiene valor propio'
+    : ccFallos.join('; ')}`);
+
+// ---------------------------------------------------------------------------------------------
+// Catálogo y composición por papel (1.11.0). Medido el 2026-10-16: desde ChatGPT, 17 de 48 filtros eran
+// inencontrables (Pages no lista carpetas y el «índice del repositorio» que citaba el router no
+// existía), y la carpeta de un filtro no decía cómo componerlo: AND con un filtro geográfico perdía 24
+// de 26 ensayos, y la ruta de seguridad farmacológica abría con un filtro de errores médicos.
+// ---------------------------------------------------------------------------------------------
+
+const fc = router.filter_catalog ?? {};
+const catalogoEnDisco = existsSync(join(ROOT, fc.path ?? '_')) ? read(fc.path).replace(/\r\n/g, '\n') : '';
+let catalogoFresco = '';
+try { catalogoFresco = serializeCatalog(buildCatalog(ROOT)); } catch (err) { catalogoFresco = `ERROR ${err.message}`; }
+check('K1', fc.path === CATALOG_PATH && catalogoEnDisco !== '' && catalogoEnDisco === catalogoFresco,
+  `catálogo ${fc.path}: ${catalogoEnDisco === catalogoFresco && catalogoEnDisco !== ''
+    ? 'coincide con lo que generan los ficheros' : 'no coincide con lo generado: node scripts/catalog.mjs'}`);
+
+const recuperacion = allFilters.filter((f) => !f.startsWith('filters/candidates/'));
+const papeles = router.composition?.roles ?? {};
+const papelesValidos = Object.keys(papeles).filter((k) => typeof papeles[k] === 'object' && papeles[k]?.default_composition);
+const roleOf = fc.role_of ?? {};
+const sinPapel = recuperacion.filter((f) => !(f in roleOf));
+const papelFantasma = Object.keys(roleOf).filter((f) => !recuperacion.includes(f));
+const papelInexistente = Object.entries(roleOf).filter(([, r]) => !papelesValidos.includes(r)).map(([f, r]) => `${f}:${r}`);
+check('K2', sinPapel.length === 0 && papelFantasma.length === 0 && papelInexistente.length === 0
+  && papelesValidos.includes(fc.journal_lists_role),
+  `papel de los ${recuperacion.length} filtros: ${sinPapel.length + papelFantasma.length + papelInexistente.length === 0
+    ? `todos con uno de los ${papelesValidos.length} papeles definidos`
+    : `sin papel ${JSON.stringify(sinPapel)} / fuera del repositorio ${JSON.stringify(papelFantasma)} / papel sin definir ${JSON.stringify(papelInexistente)}`}`);
+
+const exclusionSinNot = recuperacion.filter((f) => roleOf[f] === 'exclusion' && !isNegation(query(f)));
+const notSinExclusion = recuperacion.filter((f) => isNegation(query(f)) && roleOf[f] !== 'exclusion');
+check('K3', exclusionSinNot.length === 0 && notSinExclusion.length === 0 && papeles.exclusion?.default_composition === 'not',
+  `papel exclusión y NOT inicial coinciden: ${exclusionSinNot.length + notSinExclusion.length === 0
+    ? 'sí' : `exclusión sin NOT ${JSON.stringify(exclusionSinNot)} / NOT sin exclusión ${JSON.stringify(notSinExclusion)}`}`);
+
+// Lo que hace que el papel signifique algo: ni el ámbito ni lo editorial restringen el núcleo por
+// defecto, y un concepto entra con OR. Si alguien cambia esto, cambia el comportamiento medido.
+const defectos = Object.fromEntries(papelesValidos.map((k) => [k, papeles[k].default_composition]));
+const sr = router.composition?.scope_roles ?? {};
+const kFallos = [
+  defectos.population_setting !== 'parallel_lane' && 'población/ámbito ya no es pasada paralela por defecto',
+  defectos.editorial !== 'parallel_lane' && 'lo editorial puede restringir el núcleo',
+  defectos.concept !== 'or_within_concept' && 'un concepto ya no entra con OR en su bloque',
+  !(typeof sr.population_defining?.rule === 'string' && typeof sr.applicability?.rule === 'string')
+    && 'falta distinguir ámbito que define la población de ámbito de aplicabilidad',
+  !['core', 'concept', 'lane', 'context', 'interpretation'].every((k) => typeof router.composition?.facet_roles?.[k] === 'string')
+    && 'faltan papeles de faceta',
+  !String(router.composition?.catalog_check?.rule ?? '').includes('selection_record')
+    && 'la regla push no exige motivo registrado',
+  !String(router.registry_validation?.registry_is_a_subset ?? '').includes('filter_catalog')
+    && 'registry_is_a_subset no remite al catálogo',
+].filter(Boolean);
+check('K4', kFallos.length === 0,
+  `composición por papel: ${kFallos.length === 0
+    ? 'ámbito y revistas son pasadas por defecto, un concepto entra con OR y toda faceta se contrasta con el catálogo'
+    : kFallos.join('; ')}`);
+
+const sel = router.provenance?.selection_record ?? {};
+check('K5', ['catalog_ref', 'facets', 'filters', 'passes', 'compensations'].every((k) => sustantivo(sel.fields?.[k], 4))
+  && ['catalog_sha256', 'selection_record'].every((f) => (router.provenance?.record_per_run ?? []).includes(f))
+  && (router.provenance?.record_per_pass ?? []).includes('pass_id')
+  && !(router.provenance?.operational_status?.dimensions ?? []).includes('applicability'),
+  'registro de selección: facetas, filtros usados y descartados con motivo, pasadas con su afirmación y compensaciones; sin dimensión de aplicabilidad');
+
+// La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
+const casosEval = JSON.parse(read('scripts/eval/cases.json'));
+const conformidadEval = roleConformance(casosEval, roleOf);
+check('K6', conformidadEval.length === 0 && casosEval.cases.some((c) => (c.facets ?? []).some((f) => f.expected_role === 'core' && (f.filters ?? []).length))
+  && casosEval.cases.some((c) => (c.facets ?? []).some((f) => f.expected_role === 'context')),
+  `batería: ${conformidadEval.length === 0
+    ? 'las estrategias 1.11 respetan el papel de cada faceta, con al menos un control positivo y uno negativo'
+    : conformidadEval.join('; ')}`);
 
 check('C7', typeof qec.rule_for_headings === 'string'
   && qec.rule_for_headings.includes('db=pubmed')

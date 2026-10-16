@@ -17,6 +17,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runContext } from '../scripts/pubmed-exact.mjs';
+import { buildFilterBundle } from '../scripts/filter-source.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const DEPLOYED_CODE = ['mcp/worker.mjs', 'mcp/protocol.mjs', 'scripts/exact-core.mjs',
@@ -50,7 +51,14 @@ if (process.argv.includes('--deploy') && run.repository_dirty !== false) {
 }
 const code_sha256 = Object.fromEntries(DEPLOYED_CODE.map((f) => [f,
   createHash('sha256').update(readFileSync(join(HERE, '..', f))).digest('hex')]));
-const info = { ...run, code_sha256, deployed_at: new Date().toISOString() };
+// El Worker no tiene disco: el catálogo y las consultas canónicas viajan sellados con el código.
+const bundle = await buildFilterBundle(join(HERE, '..'));
+const bundleText = `// Generado por mcp/stamp.mjs. No editar ni versionar.
+export default ${JSON.stringify(bundle)};
+`;
+writeFileSync(join(HERE, 'filters-bundle.mjs'), bundleText);
+const filters_bundle_sha256 = createHash('sha256').update(bundleText).digest('hex');
+const info = { ...run, code_sha256, filters_bundle_sha256, deployed_at: new Date().toISOString() };
 writeFileSync(join(HERE, 'build-info.mjs'),
   `// Generado por mcp/stamp.mjs. No editar ni versionar.\nexport default ${JSON.stringify(info, null, 2)};\n`);
 console.log(`sellado: contrato ${info.contract_version} · commit ${info.repository_commit?.slice(0, 7)}`
