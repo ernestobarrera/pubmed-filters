@@ -156,7 +156,7 @@ if (process.argv.includes('--fijar-base')) {
   const prev = Object.fromEntries(counts(baseRaw));
   const costes = counts(results).filter(([k, n]) => prev[k] != null && n !== prev[k]).map(([k, n]) => {
     const ratio = prev[k] === 0 ? (n === 0 ? 1 : Infinity) : n / prev[k];
-    return { k, de: prev[k], a: n, grave: ratio > 2 || ratio < 0.5 };
+    return { k, de: prev[k], a: n, grave: ratio >= 2 || ratio <= 0.5 };
   });
   if (costes.length) console.log(`\nregistros que cambian: ${costes.map((c) => `${c.k} ${c.de}→${c.a}${c.grave ? ' (GRAVE)' : ''}`).join(' · ')}`);
   const graves = costes.filter((c) => c.grave);
