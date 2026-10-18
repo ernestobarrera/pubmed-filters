@@ -14,6 +14,22 @@ mano ni pueda reconstruirlos de memoria:
   exclusión sigue a `AND`, `OR` o `NOT` ni abre la consulta, por muchos paréntesis que haya en medio. Lo
   dice en `status.filter_fidelity` (`verified` | `failed`). `verified` no certifica que el filtro sea el
   adecuado para la pregunta, ni sustituye a `query_integrity`: son garantías distintas.
+- `pubmed_search_exact` admite también `selection_record` (contrato 1.12.0): el registro de selección
+  de **esa** pasada (facetas y su papel, filtros usados y descartados con motivo, la pasada, el origen de
+  una ventana de fecha y de los PMID que se pedirán por identificador). El recibo lo devuelve con la
+  **hora del servidor en que llegó, anterior a la consulta a PubMed**, su SHA-256 y un contraste mecánico
+  con el catálogo y `filters_used`: `status.selection_record` = `declared` | `inconsistent` (con
+  `problems`) | `not_declared`. Una ventana de fecha por política del agente **sin declarar un
+  identificador de pasada sin ventana** (distinta de la propia) sale `inconsistent`
+  (`adaptation.date_window_check`); el recibo comprueba la referencia declarada, no que esa pasada se
+  ejecutara ni que se compararan sus resultados. Una ventana «de filtro» exige un filtro con fecha
+  embebida usado y literal en la consulta; una ventana «del usuario» es una declaración que el servidor
+  no puede comprobar. Se detectan las etiquetas de fecha explícitas fuera de comillas, no rangos sin
+  etiqueta. Es una **declaración del agente**: no toca
+  `query_integrity` ni `filter_fidelity`, no certifica la estrategia y prueba que el registro existía antes
+  de esa ejecución, no antes de búsquedas anteriores de la conversación. El servidor no lo guarda: vuelve
+  en el recibo. Motivo, medido el 2026-10-17/18: con la instrucción sola, ChatGPT lo escribió después de
+  los resultados en cinco de cinco casos.
 
 El catálogo y los filtros los construye `scripts/filter-source.mjs`: el MCP local los lee del disco al
 arrancar y `stamp.mjs` los sella en `mcp/filters-bundle.mjs` para el Worker, que no tiene disco (su
@@ -231,7 +247,8 @@ node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en 
 ```
 
 La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M17 y W8, también
-sin red. Sin probar todavía desde claude.ai o ChatGPT: requiere desplegar el Worker.
+sin red; el registro de selección en el recibo, en M18-M19. Probado desde ChatGPT el 2026-10-17/18 con
+el contrato 1.11 (sin `selection_record`); la 1.12 no se ha probado todavía desde ninguna superficie.
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,
 contra PubMed real. Sin probar todavía dentro de `workerd` contra PubMed, ni desde claude.ai o ChatGPT.

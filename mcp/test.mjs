@@ -269,6 +269,112 @@ check('M17', excl.correcta.status.filter_fidelity === 'verified' && excl.dentroD
   && qPearls.includes(qH) && malas.every((k) => excl[k].status.filter_fidelity === 'failed'),
   `exclusión: literal tras un operando, verified (también dentro de pearls); tras AND u OR con saltos o paréntesis anidados, al inicio, o mal compuesta después de una buena, failed — estados: ${JSON.stringify(Object.fromEntries(Object.entries(excl).map(([k, v]) => [k, v.status.filter_fidelity])))}`);
 
+// --- Registro de selección en el recibo (1.12.0) -----------------------------------------------
+// Medido el 2026-10-17/18 con ChatGPT: el registro se escribió después de los resultados en cinco de
+// cinco casos. El recibo lo devuelve con la hora del servidor al llegar, ANTES de PubMed, y lo contrasta
+// con catálogo y filters_used. Es declaración del agente: nunca cambia query_integrity ni filter_fidelity.
+
+const { sha256 } = await import('../scripts/exact-core.mjs');
+let tic = Date.parse('2026-10-18T10:00:00.000Z');
+const reloj = () => new Date(tic += 1000);
+const conRegistro = createMcpHandler({ fetcher: sirve(JSON.stringify(respuestas['consulta-valida'])), filters: paquete, now: reloj });
+const buscar = async (id, query, extra) => (await conRegistro(llamada(id, query, extra))).result;
+const DEP = 'filters/clinical/deprescription.txt';
+const registro = (cambios = {}) => ({
+  plan_ref: 'plan-1/r1',
+  facets: [{ facet: 'benzodiazepines', role_in_question: 'core' }, { facet: 'deprescribing', role_in_question: 'concept' }],
+  filters: [{ path: DEP, decision: 'used', role_used: 'concept', reason: 'OR inside the deprescribing concept' },
+    { path: 'filters/scope/geriatrics_sensible.txt', decision: 'discarded', reason: 'older people is core vocabulary' }],
+  pass: { pass_id: 'p1', purpose: 'core with concept filter', unit_claim: 'effect of deprescribing' },
+  ...cambios,
+});
+const qDep = `(asthma[tiab]) AND (${qT})`;
+const conFecha = `${qDep} AND 2015:2026[dp]`;
+const r = {
+  bueno: await buscar(90, qDep, { filters_used: [DEP], selection_record: registro() }),
+  ausente: await buscar(91, qDep, { filters_used: [DEP] }),
+  descartadoPeroEnviado: await buscar(92, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [{ path: DEP, decision: 'discarded', reason: 'not needed here' }] }) }),
+  usadoPeroNoEnviado: await buscar(93, qDep, { selection_record: registro() }),
+  inventado: await buscar(94, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [...registro().filters, { path: 'filters/scope/inventado.txt', decision: 'discarded', reason: 'not in catalog' }] }) }),
+  fechaSinOrigen: await buscar(95, conFecha, { filters_used: [DEP], selection_record: registro() }),
+  fechaAgenteSola: await buscar(96, conFecha, { filters_used: [DEP], selection_record: registro({
+    date_window: { limit: '2015:2026[dp]', origin: 'agent_policy' } }) }),
+  fechaAgenteConPasada: await buscar(97, conFecha, { filters_used: [DEP], selection_record: registro({
+    date_window: { limit: '2015:2026[dp]', origin: 'agent_policy', unrestricted_pass_id: 'p0' } }) }),
+  fechaUsuario: await buscar(98, conFecha, { filters_used: [DEP], selection_record: registro({
+    date_window: { limit: '2015:2026[dp]', origin: 'user' },
+    known_pmids: [{ pmid: '24733354', origin: 'model_prior_knowledge' }, { pmid: '30422193', origin: 'undetermined' }] }) }),
+};
+const est = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v.structuredContent.status?.selection_record]));
+const bueno = r.bueno.structuredContent;
+const debenFallar = ['descartadoPeroEnviado', 'usadoPeroNoEnviado', 'inventado', 'fechaSinOrigen', 'fechaAgenteSola'];
+check('M18', est.bueno === 'declared' && est.ausente === 'not_declared' && r.ausente.structuredContent.selection_record === undefined
+  && debenFallar.every((k) => est[k] === 'inconsistent' && r[k].structuredContent.selection_record.problems.length > 0)
+  && est.fechaAgenteConPasada === 'declared' && est.fechaUsuario === 'declared'
+  && /date_window_check/.test(r.fechaAgenteSola.structuredContent.selection_record.problems.join(' '))
+  && bueno.selection_record.declared_by === 'agent' && Date.parse(bueno.selection_record.received_at) < Date.parse(bueno.executed_at)
+  && bueno.selection_record.sha256 === await sha256(JSON.stringify(registro()))
+  && JSON.stringify(bueno.selection_record.record) === JSON.stringify(registro())
+  && Object.values(r).every((v) => v.isError === false && v.structuredContent.status.query_integrity === 'verified')
+  && r.descartadoPeroEnviado.structuredContent.status.filter_fidelity === 'verified',
+  `registro en el recibo: hora del servidor anterior a PubMed, huella y contraste con catálogo, filters_used y ventana de fecha; sin tocar la integridad — estados: ${JSON.stringify(est)}`);
+
+// Los contraejemplos de la revisión de Codex del 2026-10-18 (13-revision-codex-delta-1.12): fechas que
+// el detector no veía o veía donde no había, una ventana «de filtro» sin filtro, una ruta enviada que no
+// existe, una decisión doble y una pasada sin ventana que era la misma.
+const PEARLS = 'filters/scope/pearls.txt';
+const qPearlsCore = `(asthma[tiab]) AND (${qPearls})`;
+const conPerlas = (cambios = {}) => registro({ filters: [{ path: PEARLS, decision: 'used', role_used: 'editorial', reason: 'clinical pearls lane' }], ...cambios });
+const agente = (pass = 'p0') => registro({ date_window: { limit: 'window', origin: 'agent_policy', unrestricted_pass_id: pass } });
+const c = {
+  epdatSinVentana: await buscar(120, `${qDep} AND 2015:2026[epdat]`, { filters_used: [DEP], selection_record: registro() }),
+  ppdatSinVentana: await buscar(121, `${qDep} AND 2015:2026[ppdat]`, { filters_used: [DEP], selection_record: registro() }),
+  espaciosSinVentana: await buscar(122, `${qDep} AND 2015:2026[ dp ]`, { filters_used: [DEP], selection_record: registro() }),
+  largaSinVentana: await buscar(123, `${qDep} AND 2015:2026[Date - MeSH]`, { filters_used: [DEP], selection_record: registro() }),
+  entreComillas: await buscar(124, `${qDep} AND "[dp]"[tiab]`, { filters_used: [DEP], selection_record: registro() }),
+  epdatConPasada: await buscar(125, `${qDep} AND 2015:2026[epdat]`, { filters_used: [DEP], selection_record: agente() }),
+  autorreferencia: await buscar(126, conFecha, { filters_used: [DEP], selection_record: agente('p1') }),
+  filtroSinFiltro: await buscar(127, 'asthma[tiab] AND 2015:2026[dp]', { selection_record: registro({ filters: [],
+    date_window: { limit: '2015:2026[dp]', origin: 'filter' } }) }),
+  filtroSinFecha: await buscar(128, 'asthma[tiab]', { selection_record: registro({ filters: [], date_window: { limit: 'x', origin: 'filter' } }) }),
+  filtroReal: await buscar(129, qPearlsCore, { filters_used: [PEARLS], selection_record: conPerlas({ date_window: { limit: 'last 5 years', origin: 'filter' } }) }),
+  filtroRealMasAgente: await buscar(130, `${qPearlsCore} AND 2015:2026[dp]`, { filters_used: [PEARLS],
+    selection_record: conPerlas({ date_window: { limit: 'last 5 years', origin: 'filter' } }) }),
+  enviadoInexistente: await buscar(131, 'asthma[tiab]', { filters_used: ['filters/scope/inventado.txt'], selection_record: registro({ filters: [] }) }),
+  decisionDoble: await buscar(132, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [...registro().filters, { path: DEP, decision: 'discarded', reason: 'and also not' }] }) }),
+  usadoEnOtraPasada: await buscar(133, 'asthma[tiab]', { selection_record: registro({
+    filters: [{ path: DEP, decision: 'used', pass_id: 'p2', reason: 'used in the concept pass p2' }] }) }),
+  papelDeFaceta: await buscar(134, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [{ path: DEP, decision: 'used', role_used: 'core', reason: 'facet role by mistake' }] }) }),
+};
+const ec = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.structuredContent.status?.selection_record]));
+const incoherentes = ['epdatSinVentana', 'ppdatSinVentana', 'espaciosSinVentana', 'largaSinVentana', 'autorreferencia',
+  'filtroSinFiltro', 'filtroSinFecha', 'filtroRealMasAgente', 'enviadoInexistente', 'decisionDoble', 'papelDeFaceta'];
+const coherentes = ['entreComillas', 'epdatConPasada', 'filtroReal', 'usadoEnOtraPasada'];
+check('M20', incoherentes.every((k) => ec[k] === 'inconsistent') && coherentes.every((k) => ec[k] === 'declared')
+  && Object.values(c).every((v) => v.isError === false && v.structuredContent.status.query_integrity === 'verified')
+  && c.enviadoInexistente.structuredContent.status.filter_fidelity === 'failed',
+  `fechas largas, con espacios o entre comillas; ventana «de filtro» solo con un filtro con fecha embebida y sin otra ventana fuera; ruta enviada inexistente, decisión doble, autorreferencia y papel de faceta como papel de filtro — estados: ${JSON.stringify(ec)}`);
+
+enviadas.length = 0;
+const malos = {
+  sinFacetas: registro({ facets: [] }),
+  claveAjena: { ...registro(), justification_after_results: 'x' },
+  papelInventado: registro({ facets: [{ facet: 'x', role_in_question: 'core_and_more' }] }),
+  origenInventado: registro({ known_pmids: [{ pmid: '123', origin: 'a review I recall' }] }),
+  pmidMalo: registro({ known_pmids: [{ pmid: 'PMC123', origin: 'user' }] }),
+  enorme: registro({ filters: Array.from({ length: 60 }, (_, i) => ({ path: `filters/x${i}.txt`, decision: 'discarded', reason: 'y'.repeat(400) })) }),
+  noObjeto: 'facets: core',
+};
+const rechazos = await Promise.all(Object.values(malos).map((rec, i) => buscar(100 + i, qDep, { filters_used: [DEP], selection_record: rec })));
+const sinCatalogo = (await h(llamada(110, 'asthma[tiab]', { selection_record: registro() }))).result;
+check('M19', rechazos.every((x) => x.isError === true && x.structuredContent.result_count === null)
+  && sinCatalogo.isError === true && /catálogo/.test(sinCatalogo.structuredContent.error) && enviadas.length === 0,
+  'un registro mal formado (vacío, con claves ajenas, papeles u orígenes inventados, PMID inválido, enorme o no objeto) o sin catálogo se rechaza sin llamar a PubMed');
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;

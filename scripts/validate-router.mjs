@@ -583,6 +583,31 @@ check('K5', ['catalog_ref', 'facets', 'filters', 'passes', 'compensations'].ever
   && !(router.provenance?.operational_status?.dimensions ?? []).includes('applicability'),
   'registro de selección: facetas, filtros usados y descartados con motivo, pasadas con su afirmación y compensaciones; sin dimensión de aplicabilidad');
 
+// Registro en el recibo y ventana de fecha (1.12.0). Medido el 2026-10-17/18 con ChatGPT: el registro
+// de selección se escribió después de los resultados en cinco de cinco casos, y una ventana de fecha que
+// nadie pidió, declarada como decisión de recuperación, costó 6 de 11 estudios en el caso P.
+const dwc = router.adaptation?.date_window_check ?? {};
+const tooMany = router.adaptation?.if_too_many_results_to_read ?? [];
+const k7Fallos = [
+  !(sustantivo(sel.fields?.date_window, 4) && /agent_policy/.test(sel.fields?.date_window ?? '')
+    && /unrestricted_pass_id/.test(sel.fields?.date_window ?? ''))
+    && 'el registro no exige origen de la ventana ni la pasada sin ella',
+  !(sustantivo(sel.fields?.known_pmids, 4) && ['model_prior_knowledge', 'undetermined', 'search_pass']
+    .every((o) => (sel.fields?.known_pmids ?? '').includes(o)))
+    && 'el registro no declara el origen de los PMID pedidos por identificador (o no admite «undetermined»)',
+  !(sustantivo(sel.on_the_repository_mcp) && /before PubMed/.test(sel.on_the_repository_mcp ?? '')
+    && /never part of query_integrity/.test(sel.on_the_repository_mcp ?? ''))
+    && 'falta cómo viaja el registro al conector, su hora previa a PubMed o su separación de la integridad',
+  !(sustantivo(dwc.rule) && /without the window/.test(dwc.rule ?? '') && /not enough/.test(dwc.rule ?? ''))
+    && 'date_window_check no obliga a comparar con el núcleo sin ventana',
+  (tooMany.includes('use_current_5y_window_if_appropriate') || !tooMany.some((s) => /date_window_check/.test(s)))
+    && 'adaptation vuelve a permitir una ventana de cinco años sin comprobación',
+].filter(Boolean);
+check('K7', k7Fallos.length === 0,
+  `registro en el recibo y ventanas de fecha: ${k7Fallos.length === 0
+    ? 'el registro dice de dónde sale cada ventana y cada PMID pedido por identificador, viaja al conector con su hora, y una ventana no pedida se compara con el núcleo sin ella'
+    : k7Fallos.join('; ')}`);
+
 // La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
 const casosEval = JSON.parse(read('scripts/eval/cases.json'));
 const conformidadEval = roleConformance(casosEval, roleOf);

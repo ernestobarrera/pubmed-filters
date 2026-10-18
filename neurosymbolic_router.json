@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.11.0",
+  "schema_version": "1.12.0",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.11.0",
+    "version": "1.12.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -46,7 +46,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.11.0",
+    "contract_version": "1.12.0",
     "reference_parser": "scripts/parse-filter.mjs",
     "reference_executor": "scripts/pubmed-exact.mjs",
     "test_suite": "scripts/validate-router.mjs",
@@ -742,9 +742,13 @@
         "facets": "[{facet, role_in_question}] with role_in_question from composition.facet_roles.",
         "filters": "[{path, decision: used | discarded, pass_id, role_used, reason}]. Every catalog filter whose purpose matches a facet appears here (composition.catalog_check). role_used differs from the catalog role only with a reason.",
         "passes": "[{pass_id, purpose, unit_claim}]: what each pass is for and which claim it supports (coverage_check.unit).",
-        "compensations": "[{pass_id, lost_pmids, compensated_by}] (coverage_check.compensation)."
+        "compensations": "[{pass_id, lost_pmids, compensated_by}] (coverage_check.compensation).",
+        "date_window": "{limit, origin: user | agent_policy | filter | none, unrestricted_pass_id, reason} for every pass with a date limit. An agent_policy window names the pass that runs the same core without it (adaptation.date_window_check).",
+        "known_pmids": "[{pmid, origin: search_pass | cited_in_document | user | model_prior_knowledge | undetermined, detail}] for every PMID fetched by identifier rather than taken from a returned list. undetermined is a valid answer; inventing a source is not. A PMID fetched by identifier feeds reading_and_drilldown, never coverage (tool_requirements.identifier_retrieval)."
       },
       "record_at_decision_time": "Written when the plan is made and updated when it changes, like every other counter. A selection explained after the results are known is a justification, not a record.",
+      "on_the_repository_mcp": "Sent as the selection_record argument of pubmed_search_exact, one per pass. The receipt echoes it with the server time at which it arrived, taken before PubMed is queried, its SHA-256, and a mechanical check against the catalog and filters_used (status.selection_record: declared | inconsistent | not_declared). It proves the record existed before that run, not before any earlier search in the conversation, and it is the agent's declaration: never part of query_integrity or filter_fidelity. For an agent_policy date window it checks that another pass id was declared, not that the pass ran or was compared; an origin user window cannot be checked by the server. The server stores nothing.",
+      "why_on_the_tool": "Measured 2026-10-17/18 (ChatGPT behaviour test, five questions): the selection record was written after the results in five of five runs, although the surface instructions asked for it before. An instruction alone did not produce it; a field the receipt checks makes its absence visible.",
       "not_a_judgement": "Recording an applicability lane says which passes were run. Judging whether the evidence applies stays with the surface (surface_policy_not_owned_here); that is why operational_status has no applicability dimension."
     },
     "record_per_pass": [
@@ -919,9 +923,15 @@
     "if_too_many_results_to_read": [
       "prefer_specific_over_sensitive_filter",
       "apply_relevant_methodology_filter",
-      "use_current_5y_window_if_appropriate",
+      "use_current_5y_window_if_appropriate_with_date_window_check",
       "use_scope_filter_only_if_it_defines_the_population (composition.scope_roles.population_defining)"
     ],
+    "date_window_check": {
+      "rule": "A date window the user did not ask for is a retrieval decision, not part of the question. Before a claim rests on a windowed pass, run the same core without the window in the same unit and check the eligible pearls against it (coverage_check.unit). Pearls that fall outside the window are either kept through the unrestricted pass or the claim is narrowed to the window explicitly, saying what it leaves out. Declaring the window is not enough.",
+      "applies_to": "Windows of origin agent_policy (provenance.selection_record.fields.date_window), including routing.background.date_policy. A window the user asked for is the scope of the question and is respected; a window embedded in a filter is declared with origin filter.",
+      "measured": "2026-10-18, ChatGPT behaviour test, case P (prevalence of childhood obesity in Spain): the agent's own core with 2015:2026[dp] kept 4 of 11 reference studies in 538 records; the same core without the window kept 10 of 11 in 831. The window was declared as a retrieval decision and still cost six studies.",
+      "not_a_judgement_of_recency": "The check compares coverage. Whether older data still answer the question (a prevalence measured in 2006 is not today's) is judged when reading, after the pearls have been seen."
+    },
     "if_too_few_results": [
       "remove_journal_constraint",
       "specific_to_sensitive_filter",
