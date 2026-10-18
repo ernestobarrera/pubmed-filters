@@ -200,8 +200,10 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
     if (!dw) problems.push('la consulta lleva límite de fecha y el registro no declara date_window (origen de la ventana)');
     else if (dw.origin === 'none') problems.push('date_window dice «none», pero la consulta lleva límite de fecha');
     else if (dw.origin === 'filter') {
-      if (dateFilters.length === 0) problems.push('date_window dice «filter», pero ningún filtro con fecha embebida va usado y literal en esta pasada');
-      else if (hasDateLimit(outside)) problems.push('la consulta lleva además una ventana fuera del filtro con fecha embebida: declárala con su propio origen');
+      // Sin filtro con fecha usado y literal, `outside` es la consulta entera: un solo control cubre los dos casos.
+      if (hasDateLimit(outside)) {
+        problems.push('date_window dice «filter», pero la ventana no sale (o no sale toda) de un filtro con fecha embebida usado y literal en esta pasada: declara su propio origen');
+      }
     } else if (dw.origin === 'agent_policy') {
       if (!dw.unrestricted_pass_id) {
         problems.push('ventana de fecha por política del agente sin declarar la pasada del mismo núcleo sin ella (adaptation.date_window_check)');

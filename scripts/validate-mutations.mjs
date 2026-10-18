@@ -553,8 +553,8 @@ const MUTACIONES = [
     id: 'MCP-VENTANA-SIN-PASADA',
     porque: 'una ventana de fecha por política del agente vuelve a pasar sin la pasada del núcleo sin ella: el caso P (6 de 11)',
     fichero: 'mcp/protocol.mjs',
-    de: "else if (dw.origin === 'agent_policy' && !dw.unrestricted_pass_id) {",
-    a: 'else if (false) {',
+    de: 'if (!dw.unrestricted_pass_id) {',
+    a: 'if (false) {',
     rompe: 'M18',
   },
   {
@@ -569,8 +569,8 @@ const MUTACIONES = [
     id: 'MCP-VENTANA-DE-FILTRO-LIBRE',
     porque: 'declarar la ventana como «de filtro» vuelve a eximir de la pasada sin fecha aunque no haya filtro con fecha',
     fichero: 'mcp/protocol.mjs',
-    de: 'if (dateFilters.length === 0) problems.push(',
-    a: 'if (false) problems.push(',
+    de: 'if (hasDateLimit(outside)) {',
+    a: 'if (false) {',
     rompe: 'M20',
   },
   {
