@@ -19,8 +19,13 @@ mano ni pueda reconstruirlos de memoria:
   una ventana de fecha y de los PMID que se pedirán por identificador). El recibo lo devuelve con la
   **hora del servidor en que llegó, anterior a la consulta a PubMed**, su SHA-256 y un contraste mecánico
   con el catálogo y `filters_used`: `status.selection_record` = `declared` | `inconsistent` (con
-  `problems`) | `not_declared`. Una ventana de fecha por política del agente sin la pasada del núcleo sin
-  ella sale `inconsistent` (`adaptation.date_window_check`). Es una **declaración del agente**: no toca
+  `problems`) | `not_declared`. Una ventana de fecha por política del agente **sin declarar un
+  identificador de pasada sin ventana** (distinta de la propia) sale `inconsistent`
+  (`adaptation.date_window_check`); el recibo comprueba la referencia declarada, no que esa pasada se
+  ejecutara ni que se compararan sus resultados. Una ventana «de filtro» exige un filtro con fecha
+  embebida usado y literal en la consulta; una ventana «del usuario» es una declaración que el servidor
+  no puede comprobar. Se detectan las etiquetas de fecha explícitas fuera de comillas, no rangos sin
+  etiqueta. Es una **declaración del agente**: no toca
   `query_integrity` ni `filter_fidelity`, no certifica la estrategia y prueba que el registro existía antes
   de esa ejecución, no antes de búsquedas anteriores de la conversación. El servidor no lo guarda: vuelve
   en el recibo. Motivo, medido el 2026-10-17/18: con la instrucción sola, ChatGPT lo escribió después de

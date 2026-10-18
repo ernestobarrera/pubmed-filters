@@ -333,6 +333,41 @@ export function fieldTagIssues(query) {
   return issues;
 }
 
+/** Etiquetas de fecha de PubMed, cortas y largas (las mismas que reconoce PUBMED_FIELD_TAGS). */
+const DATE_FIELD_TAGS = new Set(['crdt', 'date - create', 'dcom', 'date - completion', 'dp', 'pdat',
+  'date - publication', 'publication date', 'edat', 'date - entry', 'epdat', 'electronic publication date',
+  'ppdat', 'print publication date', 'lr', 'date - modification', 'mhda', 'date - mesh']);
+
+/**
+ * Etiquetas de fecha escritas en la consulta, con el mismo recorrido que fieldTagIssues: un corchete
+ * entre comillas es texto (`"[dp]"[tiab]` no limita fechas) y los espacios interiores se normalizan
+ * (`[ dp ]` = `[dp]`). Detecta restricciones temporales EXPLÍCITAS en campos de fecha; no interpreta
+ * números o rangos sin etiqueta ni lo que PubMed pueda deducir de texto libre. Revisión de Codex del
+ * 2026-10-18: la primera versión, una expresión regular, no veía `[epdat]`, `[ppdat]` ni `[date - mesh]`
+ * y sí veía `[dp]` dentro de comillas.
+ */
+export function dateLimitTags(query) {
+  const q = String(query);
+  const found = [];
+  let inQuote = false;
+  for (let i = 0; i < q.length; i += 1) {
+    const c = q[i];
+    if (inQuote) {
+      if (CLOSE_QUOTES.has(c)) inQuote = false;
+      continue;
+    }
+    if (OPEN_QUOTES.has(c)) { inQuote = true; continue; }
+    if (c !== '[') continue;
+    const close = q.indexOf(']', i + 1);
+    if (close === -1) break;
+    const inner = q.slice(i + 1, close).trim().toLowerCase().replace(/\s+/g, ' ');
+    const field = /^(.*?)(?::\s*(noexp|~\s*\d+))?$/.exec(inner)[1].trim();
+    if (DATE_FIELD_TAGS.has(field)) found.push(q.slice(i, close + 1));
+    i = close;
+  }
+  return found;
+}
+
 /**
  * ¿Lo que precede a una etiqueta con `:~N` es una frase válida para proximidad? Tiene que ser una frase
  * entrecomillada, de dos o más palabras y sin comodines (ni asteriscos tipográficos): la ayuda de

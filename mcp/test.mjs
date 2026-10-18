@@ -321,6 +321,44 @@ check('M18', est.bueno === 'declared' && est.ausente === 'not_declared' && r.aus
   && r.descartadoPeroEnviado.structuredContent.status.filter_fidelity === 'verified',
   `registro en el recibo: hora del servidor anterior a PubMed, huella y contraste con catálogo, filters_used y ventana de fecha; sin tocar la integridad — estados: ${JSON.stringify(est)}`);
 
+// Los contraejemplos de la revisión de Codex del 2026-10-18 (13-revision-codex-delta-1.12): fechas que
+// el detector no veía o veía donde no había, una ventana «de filtro» sin filtro, una ruta enviada que no
+// existe, una decisión doble y una pasada sin ventana que era la misma.
+const PEARLS = 'filters/scope/pearls.txt';
+const qPearlsCore = `(asthma[tiab]) AND (${qPearls})`;
+const conPerlas = (cambios = {}) => registro({ filters: [{ path: PEARLS, decision: 'used', role_used: 'editorial', reason: 'clinical pearls lane' }], ...cambios });
+const agente = (pass = 'p0') => registro({ date_window: { limit: 'window', origin: 'agent_policy', unrestricted_pass_id: pass } });
+const c = {
+  epdatSinVentana: await buscar(120, `${qDep} AND 2015:2026[epdat]`, { filters_used: [DEP], selection_record: registro() }),
+  ppdatSinVentana: await buscar(121, `${qDep} AND 2015:2026[ppdat]`, { filters_used: [DEP], selection_record: registro() }),
+  espaciosSinVentana: await buscar(122, `${qDep} AND 2015:2026[ dp ]`, { filters_used: [DEP], selection_record: registro() }),
+  largaSinVentana: await buscar(123, `${qDep} AND 2015:2026[Date - MeSH]`, { filters_used: [DEP], selection_record: registro() }),
+  entreComillas: await buscar(124, `${qDep} AND "[dp]"[tiab]`, { filters_used: [DEP], selection_record: registro() }),
+  epdatConPasada: await buscar(125, `${qDep} AND 2015:2026[epdat]`, { filters_used: [DEP], selection_record: agente() }),
+  autorreferencia: await buscar(126, conFecha, { filters_used: [DEP], selection_record: agente('p1') }),
+  filtroSinFiltro: await buscar(127, 'asthma[tiab] AND 2015:2026[dp]', { selection_record: registro({ filters: [],
+    date_window: { limit: '2015:2026[dp]', origin: 'filter' } }) }),
+  filtroSinFecha: await buscar(128, 'asthma[tiab]', { selection_record: registro({ filters: [], date_window: { limit: 'x', origin: 'filter' } }) }),
+  filtroReal: await buscar(129, qPearlsCore, { filters_used: [PEARLS], selection_record: conPerlas({ date_window: { limit: 'last 5 years', origin: 'filter' } }) }),
+  filtroRealMasAgente: await buscar(130, `${qPearlsCore} AND 2015:2026[dp]`, { filters_used: [PEARLS],
+    selection_record: conPerlas({ date_window: { limit: 'last 5 years', origin: 'filter' } }) }),
+  enviadoInexistente: await buscar(131, 'asthma[tiab]', { filters_used: ['filters/scope/inventado.txt'], selection_record: registro({ filters: [] }) }),
+  decisionDoble: await buscar(132, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [...registro().filters, { path: DEP, decision: 'discarded', reason: 'and also not' }] }) }),
+  usadoEnOtraPasada: await buscar(133, 'asthma[tiab]', { selection_record: registro({
+    filters: [{ path: DEP, decision: 'used', pass_id: 'p2', reason: 'used in the concept pass p2' }] }) }),
+  papelDeFaceta: await buscar(134, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [{ path: DEP, decision: 'used', role_used: 'core', reason: 'facet role by mistake' }] }) }),
+};
+const ec = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.structuredContent.status?.selection_record]));
+const incoherentes = ['epdatSinVentana', 'ppdatSinVentana', 'espaciosSinVentana', 'largaSinVentana', 'autorreferencia',
+  'filtroSinFiltro', 'filtroSinFecha', 'filtroRealMasAgente', 'enviadoInexistente', 'decisionDoble', 'papelDeFaceta'];
+const coherentes = ['entreComillas', 'epdatConPasada', 'filtroReal', 'usadoEnOtraPasada'];
+check('M20', incoherentes.every((k) => ec[k] === 'inconsistent') && coherentes.every((k) => ec[k] === 'declared')
+  && Object.values(c).every((v) => v.isError === false && v.structuredContent.status.query_integrity === 'verified')
+  && c.enviadoInexistente.structuredContent.status.filter_fidelity === 'failed',
+  `fechas largas, con espacios o entre comillas; ventana «de filtro» solo con un filtro con fecha embebida y sin otra ventana fuera; ruta enviada inexistente, decisión doble, autorreferencia y papel de faceta como papel de filtro — estados: ${JSON.stringify(ec)}`);
+
 enviadas.length = 0;
 const malos = {
   sinFacetas: registro({ facets: [] }),

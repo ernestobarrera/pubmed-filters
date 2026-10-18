@@ -16,6 +16,7 @@
 
 import { runExact, sha256, ESEARCH_WINDOW } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
+import { dateLimitTags } from '../scripts/parse-filter.mjs';
 
 export const SERVER_NAME = 'pubmed-filters-exact';
 export const SERVER_VERSION = '0.2.0';
@@ -72,7 +73,10 @@ const SELECTION_RECORD_SCHEMA = {
       items: { type: 'object', properties: {
         path: str(200), decision: { type: 'string', enum: ['used', 'discarded'] },
         pass_id: str(40, { description: 'Pass where it is used. Omitted on a used filter = this pass.' }),
-        role_used: str(40), reason: str(500, { minLength: 3 }),
+        role_used: str(40, { description: 'FILTER role from the catalog (concept, question_type, design, harm, outcome,'
+          + ' population_setting, editorial, exclusion), not a facet role. Example: facet Spain is core; the'
+          + ' Spanish filter role_used is population_setting.' }),
+        reason: str(500, { minLength: 3 }),
       }, required: ['path', 'decision', 'reason'], additionalProperties: false },
     },
     pass: {
@@ -82,7 +86,9 @@ const SELECTION_RECORD_SCHEMA = {
     date_window: {
       type: 'object',
       description: 'Required when the query has a date limit. An agent_policy window needs unrestricted_pass_id:'
-        + ' the same core without the window (adaptation.date_window_check).',
+        + ' ANOTHER pass with the same core without the window (adaptation.date_window_check). The receipt checks'
+        + ' that you declared it, not that it ran: run it and compare. origin filter needs a used filter with an'
+        + ' embedded date limit in this query; origin user is your declaration.',
       properties: { limit: str(100), origin: { type: 'string', enum: DATE_ORIGINS },
         unrestricted_pass_id: str(40), reason: str(300) },
       required: ['limit', 'origin'], additionalProperties: false,
@@ -141,11 +147,11 @@ function shapeError(value, schema, at = 'selection_record') {
 }
 
 /**
- * Límite de fecha escrito en la consulta: etiquetas de fecha de PubMed o un rango aaaa:aaaa con
- * etiqueta. Basta para exigir que el registro diga de dónde sale la ventana; no interpreta su alcance.
+ * Límite de fecha escrito en la consulta: alguna etiqueta de fecha de PubMed fuera de comillas
+ * (scripts/parse-filter.mjs, dateLimitTags). Basta para exigir que el registro diga de dónde sale la
+ * ventana; no interpreta su alcance. Este MCP no expone mindate/maxdate, así que no hay otra vía.
  */
-const DATE_LIMIT = /\[(dp|pdat|edat|crdt|mhda|dcom|lr|date\s*-\s*(publication|entry|create|completion|modification)|publication date|entry date)\]/i;
-export const hasDateLimit = (query) => DATE_LIMIT.test(query);
+export const hasDateLimit = (query) => dateLimitTags(query).length > 0;
 
 /**
  * Comprobación MECÁNICA del registro declarado: que nombre filtros del catálogo, que coincida con
@@ -157,23 +163,53 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
   const problems = [];
   const thisPass = record.pass.pass_id;
   const roles = Object.keys(bundle.guidance?.roles ?? {}).filter((k) => typeof bundle.guidance.roles[k] === 'object');
-  const resolved = record.filters.map((f) => ({ ...f, resolved: resolvePath(bundle, f.path) }));
+  const resolved = record.filters.map((f) => ({ ...f, resolved: resolvePath(bundle, f.path), passId: f.pass_id ?? thisPass }));
   for (const f of resolved) {
     if (!f.resolved) problems.push(`filters: «${f.path}» no está en el catálogo`);
-    if (f.role_used && !roles.includes(f.role_used)) problems.push(`filters: role_used «${f.role_used}» no es un papel del catálogo`);
+    if (f.role_used && !roles.includes(f.role_used)) {
+      problems.push(`filters: role_used «${f.role_used}» no es un papel de filtro del catálogo (${roles.join(', ')}); el papel de la faceta va en facets`);
+    }
   }
-  const usedHere = new Set(resolved.filter((f) => f.decision === 'used' && (f.pass_id ?? thisPass) === thisPass && f.resolved).map((f) => f.resolved));
-  const sent = new Set(filtersUsed.map((p) => resolvePath(bundle, p)).filter(Boolean));
+  // Una misma ruta en la misma pasada no puede estar usada y descartada a la vez. Pasadas distintas sí.
+  const decisions = new Map();
+  for (const f of resolved.filter((x) => x.resolved)) {
+    const key = `${f.resolved}\u0000${f.passId}`;
+    decisions.set(key, new Set([...(decisions.get(key) ?? []), f.decision]));
+  }
+  for (const [key, set] of decisions) {
+    if (set.size > 1) problems.push(`filters: «${key.split('\u0000')[0]}» figura a la vez como usado y descartado en la pasada ${key.split('\u0000')[1]}`);
+  }
+  const usedHere = new Set(resolved.filter((f) => f.decision === 'used' && f.passId === thisPass && f.resolved).map((f) => f.resolved));
+  const sent = new Set();
+  for (const p of filtersUsed) {
+    const r = resolvePath(bundle, p);
+    if (r) sent.add(r);
+    else problems.push(`«${p}» va en filters_used y no está en el catálogo`);
+  }
   for (const p of sent) if (!usedHere.has(p)) problems.push(`«${p}» va en filters_used pero el registro no lo da por usado en la pasada ${thisPass}`);
   for (const p of usedHere) if (!sent.has(p)) problems.push(`el registro da «${p}» por usado en la pasada ${thisPass}, pero no va en filters_used`);
+
+  // Ventana de fecha. Una ventana «de filtro» tiene que salir de un filtro con fecha embebida que vaya
+  // usado y literal en esta pasada; lo que quede fuera de su texto es otra ventana, con su propio origen.
+  const flatQuery = flat(query);
+  const dateFilters = [...usedHere].filter((p) => bundle.catalog.filters.find((e) => e.path === p)?.embedded_date_limit
+    && flatQuery.includes(flat(bundle.filters[p].query)));
+  const outside = dateFilters.reduce((q, p) => q.split(flat(bundle.filters[p].query)).join(' '), flatQuery);
   const dw = record.date_window;
   if (hasDateLimit(query)) {
     if (!dw) problems.push('la consulta lleva límite de fecha y el registro no declara date_window (origen de la ventana)');
     else if (dw.origin === 'none') problems.push('date_window dice «none», pero la consulta lleva límite de fecha');
-    else if (dw.origin === 'agent_policy' && !dw.unrestricted_pass_id) {
-      problems.push('ventana de fecha por política del agente sin pasada del mismo núcleo sin ella (adaptation.date_window_check)');
+    else if (dw.origin === 'filter') {
+      if (dateFilters.length === 0) problems.push('date_window dice «filter», pero ningún filtro con fecha embebida va usado y literal en esta pasada');
+      else if (hasDateLimit(outside)) problems.push('la consulta lleva además una ventana fuera del filtro con fecha embebida: declárala con su propio origen');
+    } else if (dw.origin === 'agent_policy') {
+      if (!dw.unrestricted_pass_id) {
+        problems.push('ventana de fecha por política del agente sin declarar la pasada del mismo núcleo sin ella (adaptation.date_window_check)');
+      } else if (dw.unrestricted_pass_id === thisPass) {
+        problems.push('unrestricted_pass_id es esta misma pasada: la pasada sin ventana tiene que ser otra');
+      }
     }
-  } else if (dw && dw.origin !== 'none' && dw.origin !== 'filter') {
+  } else if (dw && dw.origin !== 'none') {
     problems.push(`date_window declara una ventana (${dw.origin}) que la consulta no lleva`);
   }
   return { status: problems.length ? 'inconsistent' : 'declared', problems };
@@ -197,8 +233,8 @@ export const TOOL = {
     'result_count is what PubMed counts; records_retrieved is how many PMIDs came back',
     `(retmax, default 0, max ${MCP_MAX_RETMAX}); neither means anything was read.`,
     'Never shorten, split or "fix" a curated filter to make it fit: report the failure instead.',
-    'Send selection_record with every pass: it is the only way to show the selection was decided before',
-    'the results; status.selection_record is "not_declared" without it.',
+    'Send selection_record with every pass: it is the only way to show that your selection record was',
+    'supplied before this pass was executed; status.selection_record is "not_declared" without it.',
     'Read-only; queries PubMed only.',
   ].join(' '),
   inputSchema: {
