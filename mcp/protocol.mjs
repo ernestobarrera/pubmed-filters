@@ -14,7 +14,7 @@
  * no busca en ninguna otra fuente; no lee abstracts; no guarda nada. Es de solo lectura sobre PubMed.
  */
 
-import { runExact, ESEARCH_WINDOW } from '../scripts/exact-core.mjs';
+import { runExact, sha256, ESEARCH_WINDOW } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 
 export const SERVER_NAME = 'pubmed-filters-exact';
@@ -37,6 +37,147 @@ export const MCP_MAX_RETMAX = 1000;
 export const MCP_MAX_QUERY = 20000;
 /** Filtros declarables por consulta: más que los que una búsqueda razonable compone. */
 export const MAX_FILTERS_USED = 12;
+/** Tope del registro de selección serializado: holgado para un registro real, corto para un abuso. */
+export const MAX_SELECTION_RECORD = 16000;
+
+/**
+ * Registro de selección por pasada (1.12.0, provenance.selection_record). Medido en la prueba de
+ * comportamiento del 2026-10-17/18: ChatGPT reconstruyó el registro DESPUÉS de los resultados en los
+ * cinco casos, aunque sus instrucciones pedían hacerlo antes. Pedirlo en las instrucciones no bastó;
+ * llevarlo al conector sí deja una prueba: el recibo lo devuelve con la hora del servidor en que llegó,
+ * anterior a la consulta a PubMed. Es una DECLARACIÓN del agente: no toca query_integrity ni
+ * filter_fidelity, y no certifica que la estrategia sea buena. El servidor no lo guarda.
+ */
+const FACET_ROLES = ['core', 'concept', 'lane', 'context', 'interpretation'];
+const DATE_ORIGINS = ['user', 'agent_policy', 'filter', 'none'];
+const PMID_ORIGINS = ['search_pass', 'cited_in_document', 'user', 'model_prior_knowledge', 'undetermined'];
+const str = (max, extra = {}) => ({ type: 'string', minLength: 1, maxLength: max, ...extra });
+const SELECTION_RECORD_SCHEMA = {
+  type: 'object',
+  description: 'Your selection record for THIS pass, written before you see its results'
+    + ' (provenance.selection_record). The receipt echoes it with the server time it arrived, before PubMed'
+    + ' is queried, and checks it mechanically against the catalog and filters_used (status.selection_record).'
+    + ' It is your declaration: it never changes query_integrity or filter_fidelity and does not certify'
+    + ' the strategy. No personal data: it travels back in the receipt.',
+  properties: {
+    plan_ref: str(80, { description: 'Your id for the plan and its revision, e.g. "plan-1/r2".' }),
+    facets: {
+      type: 'array', minItems: 1, maxItems: 20,
+      items: { type: 'object', properties: { facet: str(200), role_in_question: { type: 'string', enum: FACET_ROLES } },
+        required: ['facet', 'role_in_question'], additionalProperties: false },
+    },
+    filters: {
+      type: 'array', maxItems: 60,
+      description: 'Every catalog filter whose purpose matches a facet: used or discarded, with the reason.',
+      items: { type: 'object', properties: {
+        path: str(200), decision: { type: 'string', enum: ['used', 'discarded'] },
+        pass_id: str(40, { description: 'Pass where it is used. Omitted on a used filter = this pass.' }),
+        role_used: str(40), reason: str(500, { minLength: 3 }),
+      }, required: ['path', 'decision', 'reason'], additionalProperties: false },
+    },
+    pass: {
+      type: 'object', properties: { pass_id: str(40), purpose: str(300), unit_claim: str(300) },
+      required: ['pass_id', 'purpose'], additionalProperties: false,
+    },
+    date_window: {
+      type: 'object',
+      description: 'Required when the query has a date limit. An agent_policy window needs unrestricted_pass_id:'
+        + ' the same core without the window (adaptation.date_window_check).',
+      properties: { limit: str(100), origin: { type: 'string', enum: DATE_ORIGINS },
+        unrestricted_pass_id: str(40), reason: str(300) },
+      required: ['limit', 'origin'], additionalProperties: false,
+    },
+    known_pmids: {
+      type: 'array', maxItems: 100,
+      description: 'PMIDs you will fetch by identifier, with where they came from. "undetermined" is allowed;'
+        + ' never invent a source. A PMID fetched by identifier feeds reading, not coverage.',
+      items: { type: 'object', properties: { pmid: { type: 'string', pattern: '^[0-9]{1,9}$' },
+        origin: { type: 'string', enum: PMID_ORIGINS }, detail: str(200) },
+      required: ['pmid', 'origin'], additionalProperties: false },
+    },
+  },
+  required: ['facets', 'filters', 'pass'],
+  additionalProperties: false,
+};
+
+/**
+ * Valida la forma contra el esquema anterior, sin dependencias: tipos, enumerados, longitudes,
+ * obligatorios y claves no admitidas. Devuelve el primer error o null. Una forma rota se rechaza antes
+ * de llamar a PubMed, como cualquier argumento mal formado.
+ */
+function shapeError(value, schema, at = 'selection_record') {
+  if (schema.type === 'object') {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) return `${at} debe ser un objeto`;
+    const extra = Object.keys(value).filter((k) => !Object.hasOwn(schema.properties, k));
+    if (extra.length) return `${at}: claves no admitidas ${extra.join(', ')}`;
+    const missing = (schema.required ?? []).filter((k) => !Object.hasOwn(value, k));
+    if (missing.length) return `${at}: falta ${missing.join(', ')}`;
+    for (const [k, sub] of Object.entries(schema.properties)) {
+      if (Object.hasOwn(value, k)) {
+        const e = shapeError(value[k], sub, `${at}.${k}`);
+        if (e) return e;
+      }
+    }
+    return null;
+  }
+  if (schema.type === 'array') {
+    if (!Array.isArray(value)) return `${at} debe ser una lista`;
+    if (value.length < (schema.minItems ?? 0) || value.length > (schema.maxItems ?? Infinity)) {
+      return `${at}: entre ${schema.minItems ?? 0} y ${schema.maxItems} elementos`;
+    }
+    for (let i = 0; i < value.length; i++) {
+      const e = shapeError(value[i], schema.items, `${at}[${i}]`);
+      if (e) return e;
+    }
+    return null;
+  }
+  if (typeof value !== 'string') return `${at} debe ser una cadena`;
+  if (schema.enum && !schema.enum.includes(value)) return `${at} debe ser uno de: ${schema.enum.join(', ')}`;
+  if (value.trim().length < (schema.minLength ?? 0) || value.length > (schema.maxLength ?? Infinity)) {
+    return `${at}: longitud entre ${schema.minLength ?? 0} y ${schema.maxLength}`;
+  }
+  if (schema.pattern && !new RegExp(schema.pattern).test(value)) return `${at} no tiene el formato esperado`;
+  return null;
+}
+
+/**
+ * Límite de fecha escrito en la consulta: etiquetas de fecha de PubMed o un rango aaaa:aaaa con
+ * etiqueta. Basta para exigir que el registro diga de dónde sale la ventana; no interpreta su alcance.
+ */
+const DATE_LIMIT = /\[(dp|pdat|edat|crdt|mhda|dcom|lr|date\s*-\s*(publication|entry|create|completion|modification)|publication date|entry date)\]/i;
+export const hasDateLimit = (query) => DATE_LIMIT.test(query);
+
+/**
+ * Comprobación MECÁNICA del registro declarado: que nombre filtros del catálogo, que coincida con
+ * filters_used en esta pasada, que los papeles existan y que una ventana de fecha tenga origen y, si es
+ * política del agente, su pasada sin ventana. `declared` = no se encontró contradicción;
+ * `inconsistent` = la hay, y `problems` dice cuál. Ninguno de los dos juzga si la estrategia es buena.
+ */
+export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }) {
+  const problems = [];
+  const thisPass = record.pass.pass_id;
+  const roles = Object.keys(bundle.guidance?.roles ?? {}).filter((k) => typeof bundle.guidance.roles[k] === 'object');
+  const resolved = record.filters.map((f) => ({ ...f, resolved: resolvePath(bundle, f.path) }));
+  for (const f of resolved) {
+    if (!f.resolved) problems.push(`filters: «${f.path}» no está en el catálogo`);
+    if (f.role_used && !roles.includes(f.role_used)) problems.push(`filters: role_used «${f.role_used}» no es un papel del catálogo`);
+  }
+  const usedHere = new Set(resolved.filter((f) => f.decision === 'used' && (f.pass_id ?? thisPass) === thisPass && f.resolved).map((f) => f.resolved));
+  const sent = new Set(filtersUsed.map((p) => resolvePath(bundle, p)).filter(Boolean));
+  for (const p of sent) if (!usedHere.has(p)) problems.push(`«${p}» va en filters_used pero el registro no lo da por usado en la pasada ${thisPass}`);
+  for (const p of usedHere) if (!sent.has(p)) problems.push(`el registro da «${p}» por usado en la pasada ${thisPass}, pero no va en filters_used`);
+  const dw = record.date_window;
+  if (hasDateLimit(query)) {
+    if (!dw) problems.push('la consulta lleva límite de fecha y el registro no declara date_window (origen de la ventana)');
+    else if (dw.origin === 'none') problems.push('date_window dice «none», pero la consulta lleva límite de fecha');
+    else if (dw.origin === 'agent_policy' && !dw.unrestricted_pass_id) {
+      problems.push('ventana de fecha por política del agente sin pasada del mismo núcleo sin ella (adaptation.date_window_check)');
+    }
+  } else if (dw && dw.origin !== 'none' && dw.origin !== 'filter') {
+    problems.push(`date_window declara una ventana (${dw.origin}) que la consulta no lleva`);
+  }
+  return { status: problems.length ? 'inconsistent' : 'declared', problems };
+}
 
 export const TOOL = {
   name: 'pubmed_search_exact',
@@ -56,6 +197,8 @@ export const TOOL = {
     'result_count is what PubMed counts; records_retrieved is how many PMIDs came back',
     `(retmax, default 0, max ${MCP_MAX_RETMAX}); neither means anything was read.`,
     'Never shorten, split or "fix" a curated filter to make it fit: report the failure instead.',
+    'Send selection_record with every pass: it is the only way to show the selection was decided before',
+    'the results; status.selection_record is "not_declared" without it.',
     'Read-only; queries PubMed only.',
   ].join(' '),
   inputSchema: {
@@ -83,6 +226,7 @@ export const TOOL = {
           + ' (status.filter_fidelity). Leave out a filter you modified on purpose and declare the'
           + ' modification in your provenance instead.',
       },
+      selection_record: SELECTION_RECORD_SCHEMA,
     },
     required: ['query'],
     additionalProperties: false,
@@ -252,7 +396,8 @@ const INSTRUCTIONS = 'Literal PubMed execution for the pubmed-filters neurosymbo
   + 'status.query_integrity decides whether the count may be used.';
 const SOURCE_INSTRUCTIONS = 'Before composing, call pubmed_filter_catalog and check every facet of the '
   + 'question against it; fetch each chosen filter with pubmed_get_filter, paste it unchanged, and '
-  + 'declare it in filters_used so the receipt can check status.filter_fidelity.';
+  + 'declare it in filters_used so the receipt can check status.filter_fidelity. Send your selection_record '
+  + 'with each pass, before its results: the receipt timestamps it on arrival.';
 
 const ok = (id, result) => ({ jsonrpc: '2.0', id, result });
 const fail = (id, code, message) => ({ jsonrpc: '2.0', id, error: { code, message } });
@@ -314,6 +459,11 @@ export function createMcpHandler({
     const query = args.query;
     const retmax = args.retmax ?? 0;
     const used = args.filters_used;
+    const record = args.selection_record;
+    // La hora del servidor se toma al recibir, antes de la cola y de PubMed: es lo que permite distinguir
+    // un registro declarado antes de la ejecución de una explicación escrita después.
+    const receivedAt = (now ? now() : new Date()).toISOString();
+    const recordText = record === undefined ? null : JSON.stringify(record);
     const invalid = extra.length > 0 ? `argumentos no admitidos: ${extra.join(', ')}`
       : typeof query !== 'string' || query.trim() === '' ? 'query debe ser una cadena no vacía'
         : query.length > MCP_MAX_QUERY ? `query supera ${MCP_MAX_QUERY} caracteres`
@@ -322,7 +472,11 @@ export function createMcpHandler({
             : used !== undefined && !filters ? 'filters_used no se puede comprobar: este servidor no tiene el catálogo de filtros'
               : used !== undefined && (!Array.isArray(used) || used.length > MAX_FILTERS_USED
                 || !used.every((u) => typeof u === 'string' && u.trim() !== '' && u.length <= 200))
-                ? `filters_used debe ser una lista de hasta ${MAX_FILTERS_USED} rutas o ids` : null;
+                ? `filters_used debe ser una lista de hasta ${MAX_FILTERS_USED} rutas o ids`
+                : record !== undefined && !filters ? 'selection_record no se puede comprobar: este servidor no tiene el catálogo de filtros'
+                  : record !== undefined && recordText.length > MAX_SELECTION_RECORD
+                    ? `selection_record supera ${MAX_SELECTION_RECORD} caracteres`
+                    : record !== undefined ? shapeError(record, SELECTION_RECORD_SCHEMA) : null;
     if (invalid) return { result: toolError({ error: invalid, result_count: null }) };
 
     if (!(await throttle())) {
@@ -339,6 +493,20 @@ export function createMcpHandler({
         structured.status = { ...structured.status, filter_fidelity: fidelity.status };
         structured.filter_fidelity = fidelity.filters;
         structured.catalog_sha256 = filters.catalog_sha256;
+      }
+      if (record === undefined) {
+        structured.status = { ...structured.status, selection_record: 'not_declared' };
+      } else {
+        const check = selectionRecordCheck(filters, record, { query, filtersUsed: used ?? [] });
+        structured.status = { ...structured.status, selection_record: check.status };
+        structured.selection_record = {
+          declared_by: 'agent',
+          received_at: receivedAt,
+          sha256: await sha256(recordText),
+          record,
+          problems: check.problems,
+          catalog_sha256: filters.catalog_sha256,
+        };
       }
       return { result: textResult(structured) };
     } catch (e) {
