@@ -14,7 +14,7 @@
  * no busca en ninguna otra fuente; no lee abstracts; no guarda nada. Es de solo lectura sobre PubMed.
  */
 
-import { runExact, sha256, ESEARCH_WINDOW } from '../scripts/exact-core.mjs';
+import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 import { dateLimitTags } from '../scripts/parse-filter.mjs';
 
@@ -50,6 +50,8 @@ export const MAX_SELECTION_RECORD = 16000;
  * filter_fidelity, y no certifica que la estrategia sea buena. El servidor no lo guarda.
  */
 const FACET_ROLES = ['core', 'concept', 'lane', 'context', 'interpretation'];
+/** Recorrido de lectura de la pasada (1.13.0, reading_and_drilldown.reading_path). */
+const READING_PATHS = ['complete_retrieval', 'focused_selection', 'exploration_only'];
 const DATE_ORIGINS = ['user', 'agent_policy', 'filter', 'none'];
 const PMID_ORIGINS = ['search_pass', 'cited_in_document', 'user', 'model_prior_knowledge', 'undetermined'];
 const str = (max, extra = {}) => ({ type: 'string', minLength: 1, maxLength: max, ...extra });
@@ -80,7 +82,16 @@ const SELECTION_RECORD_SCHEMA = {
       }, required: ['path', 'decision', 'reason'], additionalProperties: false },
     },
     pass: {
-      type: 'object', properties: { pass_id: str(40), purpose: str(300), unit_claim: str(300) },
+      type: 'object',
+      properties: {
+        pass_id: str(40), purpose: str(300), unit_claim: str(300),
+        reading_path: { type: 'string', enum: READING_PATHS,
+          description: 'How this pass will be read (reading_and_drilldown.reading_path): complete_retrieval (all PMIDs'
+            + ' of the set, page by page), focused_selection (which records you will read and why) or exploration_only'
+            + ' (size and shape; never counted as read). The first N of a truncated list are not the set, in any order.' },
+        selection_reason: str(500, { minLength: 3,
+          description: 'Required with focused_selection: what will be read, why it can support the claim, and its limits.' }),
+      },
       required: ['pass_id', 'purpose'], additionalProperties: false,
     },
     date_window: {
@@ -214,7 +225,18 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
   } else if (dw && dw.origin !== 'none') {
     problems.push(`date_window declara una ventana (${dw.origin}) que la consulta no lleva`);
   }
-  return { status: problems.length ? 'inconsistent' : 'declared', problems };
+
+  // Recorrido de lectura (1.13.0). Se contrasta el registro consigo mismo, nunca con la página: una
+  // primera página parcial no contradice un complete_retrieval, porque el servidor no sabe si vendrán más.
+  // Que falte el recorrido no es una contradicción: va a `notes`, aparte de `problems`, porque cualquier
+  // problema convierte el registro en inconsistent y un registro de la 1.12 debe seguir siendo válido.
+  const notes = [];
+  const readingPath = record.pass.reading_path;
+  if (readingPath === undefined) notes.push('reading_path no declarado');
+  else if (readingPath === 'focused_selection' && record.pass.selection_reason === undefined) {
+    problems.push('focused_selection sin selection_reason: di qué se leerá, por qué puede sostener la afirmación y sus límites');
+  }
+  return { status: problems.length ? 'inconsistent' : 'declared', problems, notes };
 }
 
 export const TOOL = {
@@ -234,6 +256,12 @@ export const TOOL = {
     '"unsupported" = cannot be verified.',
     'result_count is what PubMed counts; records_retrieved is how many PMIDs came back',
     `(retmax, default 0, max ${MCP_MAX_RETMAX}); neither means anything was read.`,
+    'PMIDs come in PubMed\'s default order (most recent entry first) unless you send sort "relevance";',
+    'the first N of a truncated list are not the set, in any order. For the next page send retstart =',
+    'next_retstart from the receipt; when it is null, next_retstart_reason says why (end_of_set,',
+    'window_limit, count_only, empty_page, not_verified, page_adjusted), and null never means everything',
+    'was retrieved. Pages are independent calls: joining them is an operational retrieval without a fixed',
+    'snapshot, never a certified complete set.',
     'Never shorten, split or "fix" a curated filter to make it fit: report the failure instead.',
     'Send selection_record with every pass: it is the only way to show that your selection record was',
     'supplied before this pass was executed; status.selection_record is "not_declared" without it.',
@@ -254,6 +282,21 @@ export const TOOL = {
         maximum: MCP_MAX_RETMAX,
         default: 0,
         description: 'How many PMIDs to return (0 = count and diagnostics only).',
+      },
+      retstart: {
+        type: 'integer',
+        minimum: 0,
+        maximum: ESEARCH_WINDOW - 1,
+        default: 0,
+        description: 'Offset of the first PMID returned (0 = first page). Use next_retstart from the previous'
+          + ` receipt. PubMed serves only the first ${ESEARCH_WINDOW} records; a page crossing that edge is trimmed`
+          + ' before sending (request.retmax_sent).',
+      },
+      sort: {
+        type: 'string',
+        enum: ['relevance'],
+        description: 'Omit for PubMed\'s default order (most recent entry first). "relevance" is Best Match. Neither'
+          + ' order makes a truncated list representative of the set.',
       },
       filters_used: {
         type: 'array',
@@ -496,17 +539,25 @@ export function createMcpHandler({
     const extra = Object.keys(args).filter((k) => !(k in TOOL.inputSchema.properties));
     const query = args.query;
     const retmax = args.retmax ?? 0;
+    const retstart = args.retstart ?? 0;
+    const sort = args.sort;
     const used = args.filters_used;
     const record = args.selection_record;
     // La hora del servidor se toma al recibir, antes de la cola y de PubMed: es lo que permite distinguir
     // un registro declarado antes de la ejecución de una explicación escrita después.
     const receivedAt = (now ? now() : new Date()).toISOString();
     const recordText = record === undefined ? null : JSON.stringify(record);
+    // Página y orden (1.13.0): se validan aquí, en la interfaz del MCP, y otra vez en el ejecutor.
+    const pageInvalid = !Number.isSafeInteger(retstart) || retstart < 0 || retstart > ESEARCH_WINDOW - 1
+      ? `retstart debe ser un entero entre 0 y ${ESEARCH_WINDOW - 1}`
+      : sort !== undefined && !SORT_VALUES.includes(sort)
+        ? `sort solo admite ${SORT_VALUES.join(', ')}; omítelo para el orden de PubMed` : null;
     const invalid = extra.length > 0 ? `argumentos no admitidos: ${extra.join(', ')}`
       : typeof query !== 'string' || query.trim() === '' ? 'query debe ser una cadena no vacía'
         : query.length > MCP_MAX_QUERY ? `query supera ${MCP_MAX_QUERY} caracteres`
           : !Number.isSafeInteger(retmax) || retmax < 0 || retmax > MCP_MAX_RETMAX
             ? `retmax debe ser un entero entre 0 y ${MCP_MAX_RETMAX}`
+            : pageInvalid ? pageInvalid
             : used !== undefined && !filters ? 'filters_used no se puede comprobar: este servidor no tiene el catálogo de filtros'
               : used !== undefined && (!Array.isArray(used) || used.length > MAX_FILTERS_USED
                 || !used.every((u) => typeof u === 'string' && u.trim() !== '' && u.length <= 200))
@@ -522,7 +573,7 @@ export function createMcpHandler({
     }
     try {
       const receipt = await runExact(query, {
-        retmax, apiKey, email, tool: 'pubmed-filters-mcp', engine,
+        retmax, retstart, ...(sort !== undefined ? { sort } : {}), apiKey, email, tool: 'pubmed-filters-mcp', engine,
         ...(fetcher ? { fetcher } : {}), ...(now ? { now } : {}), ...(timeoutMs ? { timeoutMs } : {}),
       });
       const structured = { run, ...receipt };
@@ -543,6 +594,7 @@ export function createMcpHandler({
           sha256: await sha256(recordText),
           record,
           problems: check.problems,
+          notes: check.notes,
           catalog_sha256: filters.catalog_sha256,
         };
       }

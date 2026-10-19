@@ -4,6 +4,8 @@
  *
  *   node scripts/pubmed-exact.mjs '<consulta>'                 solo recuento y diagnóstico (retmax=0)
  *   node scripts/pubmed-exact.mjs '<consulta>' --retmax 200    además, los primeros 200 PMIDs
+ *   node scripts/pubmed-exact.mjs '<consulta>' --retmax 200 --retstart 200 --sort relevance
+ *                                                              la segunda página, por relevancia
  *   node scripts/pubmed-exact.mjs --file consulta.txt          la consulta, leída de un fichero
  *
  * Imprime un recibo JSON por pasada. Sale 0 si la integridad es `verified`, 1 si es `failed` o
@@ -16,9 +18,11 @@
  * conversacional sin shell no puede ejecutar aquí, se le entrega a quien sí pueda.
  *
  * QUÉ NO HACE, a propósito. No reescribe, sanea, normaliza ni trocea la consulta: lo que se envía es
- * byte a byte lo que se recibe, y `sent_query_sha256` lo deja comprobable. No pagina más allá de la
- * primera ventana de ESearch: si el recuento supera lo recuperado, `records_complete` es false y se
- * dice. No lee abstracts: la profundidad de lectura no es suya y no la declara.
+ * byte a byte lo que se recibe, y `sent_query_sha256` lo deja comprobable. No pagina por su cuenta ni
+ * más allá de la ventana de ESearch: cada página se pide con --retstart, el recibo dice la siguiente
+ * (`next_retstart`) o por qué no la hay, y unir páginas es de `scripts/page-union.mjs`. Si el recuento
+ * supera lo recuperado, `records_complete` es false y se dice. No lee abstracts: la profundidad de
+ * lectura no es suya y no la declara.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -68,15 +72,17 @@ if (isMain) {
   };
   const file = opt('--file');
   const retmax = Number(opt('--retmax') ?? 0);
+  const retstart = Number(opt('--retstart') ?? 0);
+  const sort = opt('--sort');
   const term = file ? readFileSync(file, 'utf8').trim() : args.join(' ');
   if (!term) {
-    console.error("Uso: node scripts/pubmed-exact.mjs '<consulta>' [--retmax N] | --file consulta.txt");
+    console.error("Uso: node scripts/pubmed-exact.mjs '<consulta>' [--retmax N] [--retstart N] [--sort relevance] | --file consulta.txt");
     process.exit(2);
   }
   const run = await runContext();
   try {
     const receipt = await runExact(term, {
-      retmax, apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '',
+      retmax, retstart, sort, apiKey: process.env.NCBI_API_KEY ?? '', email: process.env.NCBI_EMAIL ?? '',
     });
     console.log(JSON.stringify({ run, ...receipt }, null, 2));
     process.exitCode = receipt.status.query_integrity === 'verified' ? 0 : 1;

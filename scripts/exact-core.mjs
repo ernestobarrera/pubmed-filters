@@ -45,21 +45,63 @@ export function queryIntegrity(inspection) {
   return inspection.usable ? 'verified' : 'unsupported';
 }
 
+/** Órdenes admitidos (1.13.0). Solo relevancia: omitido, ESearch usa el suyo («Most Recent»). */
+export const SORT_VALUES = ['relevance'];
+
+/** «Restrictions achieved. start and count adjusted to S, C»: la posición y el tamaño que NCBI sirvió. */
+const ADJUSTED = /adjusted to ([0-9]+), ([0-9]+)/i;
+
+/**
+ * Continuación de una página (1.13.0, especificación 18- y adenda de Codex). Las reglas van en este
+ * orden y la primera que se cumple decide. `page_adjusted` es la única que la tabla de la adenda no
+ * nombra: NCBI dice haber servido otra posición u otro tamaño que los enviados (o devuelve más PMIDs de
+ * los pedidos), y una continuación calculada sobre la posición pedida sería una posición inferida.
+ * Que no haya continuación nunca significa que se haya recuperado todo.
+ */
+export function continuation({ integrity, retstart, retmaxRequested, retmaxSent, count, n, notices }) {
+  const stop = (reason) => ({ next_retstart: null, next_retstart_reason: reason });
+  if (integrity !== 'verified' || count === null) return stop('not_verified');
+  if (retmaxRequested === 0) return stop('count_only');
+  const adjusted = notices.map((m) => ADJUSTED.exec(m)).filter(Boolean)
+    .some(([, s, c]) => Number(s) !== retstart || Number(c) !== retmaxSent);
+  if (adjusted || n > retmaxSent) return stop('page_adjusted');
+  if (n === 0 && count > retstart) return stop('empty_page');
+  if (retstart + n >= count) return stop('end_of_set');
+  if (retstart + n > ESEARCH_WINDOW - 1) return stop('window_limit');
+  return { next_retstart: retstart + n, next_retstart_reason: null };
+}
+
 /** Ejecuta `term` tal cual y devuelve el recibo. Un 413/414 lanza TransportError: nunca hay recibo con recuento. */
 /**
  * `email` es el contacto que NCBI pide junto a `tool` para poder avisar antes de bloquear: viaja a NCBI
  * y nunca al recibo, igual que la clave. `timeoutMs` corta una petición colgada: sin él, un Worker o un
  * chat esperan sin fin, y lo que llega después es un error declarado, nunca un recuento.
+ *
+ * Paginación (1.13.0): `retstart` (omitido = 0) pide otra página y `sort: 'relevance'` otro orden. Cada
+ * página es una llamada independiente: el servidor no guarda nada y no promete que el conjunto sea el
+ * mismo entre páginas. Una petición que cruza la ventana se acota ANTES de enviarla (`retmax_sent`), en
+ * vez de depender del recorte y del aviso de NCBI. `sort` omitido no se envía: nunca un orden por defecto.
  */
 export async function runExact(term, {
-  retmax = 0, apiKey = '', email = '', tool = 'pubmed-filters-exact', engine = 'scripts/pubmed-exact.mjs',
-  timeoutMs = 30000, fetcher, now = () => new Date(),
+  retmax = 0, retstart = 0, sort, apiKey = '', email = '', tool = 'pubmed-filters-exact',
+  engine = 'scripts/pubmed-exact.mjs', timeoutMs = 30000, fetcher, now = () => new Date(),
 } = {}) {
   if (typeof term !== 'string' || term.trim() === '') throw new Error('La consulta está vacía.');
   if (!Number.isSafeInteger(retmax) || retmax < 0 || retmax > ESEARCH_WINDOW) {
     throw new Error(`retmax debe ser un entero entre 0 y ${ESEARCH_WINDOW}.`);
   }
-  const params = { retmax: String(retmax), tool, ...(email ? { email } : {}), ...(apiKey ? { api_key: apiKey } : {}) };
+  if (!Number.isSafeInteger(retstart) || retstart < 0 || retstart > ESEARCH_WINDOW - 1) {
+    throw new Error(`retstart debe ser un entero entre 0 y ${ESEARCH_WINDOW - 1}.`);
+  }
+  if (sort !== undefined && !SORT_VALUES.includes(sort)) {
+    throw new Error(`sort solo admite ${SORT_VALUES.map((s) => `"${s}"`).join(', ')}; omitido, PubMed usa su orden.`);
+  }
+  // Validado lo pedido, se acota lo enviado: el acotado nunca convierte en válido un valor que no lo era.
+  const retmaxSent = Math.min(retmax, ESEARCH_WINDOW - retstart);
+  const params = {
+    retmax: String(retmaxSent), ...(retstart > 0 ? { retstart: String(retstart) } : {}), ...(sort ? { sort } : {}),
+    tool, ...(email ? { email } : {}), ...(apiKey ? { api_key: apiKey } : {}),
+  };
   const executedAt = now().toISOString();
   const { transport, esearchresult, raw } = await esearch(term, {
     params, signal: AbortSignal.timeout(timeoutMs), ...(fetcher ? { fetcher } : {}),
@@ -69,6 +111,8 @@ export async function runExact(term, {
   const inspection = inspectResponse(esearchresult, { sentQuery: term });
   const count = inspection.countIsValid ? Number(r.count) : null;
   const pmids = Array.isArray(r.idlist) ? r.idlist.map(String) : [];
+  const integrity = queryIntegrity(inspection);
+  const n = pmids.length;
 
   return {
     executed_at: executedAt,
@@ -77,11 +121,19 @@ export async function runExact(term, {
     sent_query: term,
     sent_query_sha256: await sha256(term),
     transport,
-    request: { retstart: 0, retmax, api_key_used: Boolean(apiKey), email_used: Boolean(email) },
+    // `retmax` se conserva como alias de `retmax_requested`: un consumidor de la 1.12 lee lo mismo que leía.
+    request: {
+      retstart, retmax, retmax_requested: retmax, retmax_sent: retmaxSent, sort: sort ?? null,
+      api_key_used: Boolean(apiKey), email_used: Boolean(email),
+    },
     result_count: count,
     count_raw: r.count ?? null,
-    records_retrieved: pmids.length,
-    records_complete: count !== null && pmids.length === count,
+    records_retrieved: n,
+    // Por llamada: ESTA respuesta trae todo el conjunto. La última página de un recorrido no lo es.
+    records_complete: retstart === 0 && count !== null && n === count,
+    // El tramo de la posición PEDIDA; no prueba por sí solo que NCBI sirviera ese offset.
+    page: n > 0 ? { first: retstart + 1, last: retstart + n } : null,
+    ...continuation({ integrity, retstart, retmaxRequested: retmax, retmaxSent, count, n, notices: inspection.pagination }),
     window_limit: count !== null && count > ESEARCH_WINDOW
       ? `De ${count} registros, ESearch solo sirve los primeros ${ESEARCH_WINDOW}: el resto no es `
         + `accesible por esta vía (EFetch con historial, o particionar por fechas).`
@@ -94,7 +146,7 @@ export async function runExact(term, {
     fatal_error: r.ERROR ?? null,
     raw_response_sha256: await sha256(raw),
     pagination_notices: inspection.pagination,
-    status: { query_integrity: queryIntegrity(inspection) },
+    status: { query_integrity: integrity },
     problems: inspection.problems,
   };
 }

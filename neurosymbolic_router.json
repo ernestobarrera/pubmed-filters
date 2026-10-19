@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.12.0",
+  "schema_version": "1.13.0",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -46,7 +46,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.12.0",
+    "contract_version": "1.13.0",
     "reference_parser": "scripts/parse-filter.mjs",
     "reference_executor": "scripts/pubmed-exact.mjs",
     "test_suite": "scripts/validate-router.mjs",
@@ -385,7 +385,7 @@
     "diagnostics_come_from_the_response": "querytranslation, warninglist, errorlist and ERROR are read from PubMed's own response (retmode=xml carries the same as QueryTranslation, WarningList, ErrorList and ERROR). Nothing a tool builds itself substitutes for them: an echo of the query it sent (effective, sanitized or normalized query) shows what was sent, not what PubMed executed; a list of filters it applied shows what it asked for, not what PubMed kept; a prose notice that summarises some warning types proves nothing about the types it never checks, so the absence of a notice is not the absence of a warning. An engine that does not return these fields produces a pass that was executed but is not verifiable. Found 2026-09-29 by static audit of a public PubMed MCP server: querytranslation was parsed internally and never returned, and neither phrasesignored nor outputmessages reached the consumer, which received the sent query labelled as effective query and a notice covering three warning types.",
     "transport_carries_the_whole_query": "A composed query travels in the request body (POST, application/x-www-form-urlencoded), or the engine is shown to switch to POST before URL limits. A topic plus an inline methodological filter routinely exceeds what a GET URL carries. Measured 2026-09-28: E-utilities accepted a GET of 3,573 URL-encoded characters and answered HTTP 414 at 5,343; one conversational engine answered 414 at 2,925 characters of query. A rejected or truncated request is a declared transport failure: never a zero, never 'no results', never 'not evaluable', and never silently retried with a shortened query. An engine whose transport is unknown is tested with a query above those lengths before it runs composed filters.",
     "field_tags_are_not_reported": "PubMed reports nothing when it ignores a field tag, so the response alone cannot reveal it; the check is made on the sent query. Measured 2026-10-08 against E-utilities, all with clean diagnostics and a plausible count: an unknown tag ('asthma[foo]', the typo 'asthma[tiabb]', also with a space before it: tags apply across whitespace); a tag on a group with AND, OR or NOT ('(asthma OR copd)[tiab]' searches all fields: 351,416 against 257,958 for asthma[tiab] OR copd[tiab]); a modifier on a field that does not take it (':~N' only on title, title/abstract and affiliation; ':noexp' only on MeSH, subheading and publication type: 'asthma[mh:~3]' runs as plain MeSH); proximity not applied to a quoted phrase of two or more words without wildcards ('\"asthma* control\"[tiab:~2]' and 'asthma control[tiab:~2]' drop the proximity); and a look-alike truncation character, also inside a quoted phrase ('intervent∗[ti]' with U+2217 = 9 records, 'intervent*[ti]' = 269,566; '\"randomized trial∗\"[tiab]' = 65,068 against 109,950). Brackets inside a quoted phrase are text, not tags ('\"[18F]FDG\"[tiab]' is valid). Any of these makes the pass failed. A judgement made without the sent query cannot be verified. Reference: fieldTagIssues() and lookalikeCharacters() in scripts/parse-filter.mjs, PUBMED_FIELD_TAGS verified tag by tag.",
-    "pagination_window": "A page PubMed rejects is never a count, and fewer records retrieved than counted is declared, never presented as all of them. The size of the window is an observed, dated limit, not part of this rule: on 2026-10-08 PubMed ESearch served the first 9,999 records (retstart <= 9998) and said so in its own ERROR, against the 10,000 in NCBI's documentation. Beyond it the ERROR arrives as malformed JSON (a raw newline inside the string), and an adapter that cannot read it and falls back to 0 fabricates a zero, as one conversational connector did for asthma[tiab]. A request overlapping the edge is trimmed with outputmessages 'Restrictions achieved...': a pagination notice, not a query-integrity warning."
+    "pagination_window": "A page PubMed rejects is never a count, and fewer records retrieved than counted is declared, never presented as all of them. The size of the window is an observed, dated limit, not part of this rule: on 2026-10-08 PubMed ESearch served the first 9,999 records (retstart <= 9998) and said so in its own ERROR, against the 10,000 in NCBI's documentation. Beyond it the ERROR arrives as malformed JSON (a raw newline inside the string), and an adapter that cannot read it and falls back to 0 fabricates a zero, as one conversational connector did for asthma[tiab]. A request overlapping the edge is trimmed with outputmessages 'Restrictions achieved...': a pagination notice, not a query-integrity warning. The reference executor trims such a request before sending it and records both sizes (request.retmax_requested and request.retmax_sent). A receipt says whether there is a next page and, when there is none, why (next_retstart_reason: not_verified, count_only, page_adjusted, empty_page, end_of_set, window_limit); no next page never means that everything was retrieved."
   },
   "registry_validation": {
     "rule": "validated_filters_as_symbolic_truth applies to filters carrying a published validation reference. The entries listed below are author-made and have none; cite them as such and never present them as validated.",
@@ -669,7 +669,29 @@
       "supplement",
       "protocol"
     ],
-    "drill_down_decision_owner": "The invoking surface decides which findings deserve a drill-down. This router only states how to reach the sources and that an abstract is the minimum before surfacing a paper."
+    "drill_down_decision_owner": "The invoking surface decides which findings deserve a drill-down. This router only states how to reach the sources and that an abstract is the minimum before surfacing a paper.",
+    "reading_path": {
+      "rule": "Each pass declares how it will be read, before its results, in provenance.selection_record (passes[].reading_path). It is a declaration of intent: it does not certify that anything was read, nor that the selection was good.",
+      "complete_retrieval": "Intent to retrieve every PMID of the defined set, for a screening or a map that needs it. It is reported as completed only after the page controls of pagination pass, and then with their limited guarantee. A count does not need it: a verified result_count is enough to say how many records there are. Retrieving every PMID does not prove that every abstract was read.",
+      "focused_selection": "States which records will be read and why they can support the claim (selection_reason). It may be a pass retrieved whole or a partial selection whose truncation, criterion and limits are stated. coverage_check applies where it would. Sorting by relevance does not show that the selection is adequate or representative.",
+      "exploration_only": "To see the size and shape of a set and plan the next pass. Never counted as a read corpus. Reading records from that batch afterwards is documented as a separate step, not attributed to the earlier record."
+    },
+    "ordered_sample_is_not_the_set": "The first N records of a truncated list, in any order, do not represent the set. They feed reading only inside a declared focused_selection with its reason, or as one page of a complete_retrieval. No sort is required: when a pass is retrieved whole the order does not change coverage, and keeping the default order of a partial list can be a deliberate choice. Measured 2026-10-17/18: ESearch returns the most recent entries first by default, and the trials that answered three of five behaviour-test questions were outside the lists the agent read; sort relevance put 5/5 within the first 150 in J and 0/11 within the first 30 in A2, so it is an option, not a guarantee.",
+    "pagination": {
+      "rule": "Pages are independent calls with retstart (and the same sort). The server keeps nothing, so a set of pages carries no snapshot guarantee: each page proves the integrity of its query, its list and the position requested, not that the set stayed the same between pages.",
+      "drift_controls": [
+        "same sent_query_sha256 and same request.sort on every page",
+        "first page at retstart 0 and each page starting where the previous one ended",
+        "every page query_integrity verified",
+        "every page complete for its stretch: n = min(retmax_sent, max(0, result_count - retstart))",
+        "same result_count on every page",
+        "no PMID repeated across pages, and the union equal to result_count when the set fits in the window"
+      ],
+      "grouping": "Pages are joined by the walk they belong to (plan_ref and pass_id of the selection record), never just because their parameters coincide.",
+      "label": "When the controls pass the union is reported as an operational retrieval without a fixed snapshot, never as a certified exhaustive set. When any fails it is incomplete, and said so.",
+      "known_limit": "The controls cannot detect a set that changed between pages while keeping its count: A, B, C, D becoming A, C, D, E between page 1 (A, B) and page 2 (D, E) loses C with every control passing. A product that needs a fixed, reproducible set (a map or a publishable screening) uses the NCBI history server, outside this contract version, or declares this limit.",
+      "reference": "scripts/page-union.mjs"
+    }
   },
   "saturation_policy": {
     "goal": "conceptual_and_clinically_relevant_saturation_not_exhaustive_retrieval",
@@ -745,20 +767,22 @@
         "catalog_ref": "contract_version plus catalog_sha256. It stands for 'available'; the catalog is not copied into every run.",
         "facets": "[{facet, role_in_question}] with role_in_question from composition.facet_roles.",
         "filters": "[{path, decision: used | discarded, pass_id, role_used, reason}]. Every catalog filter whose purpose matches a facet appears here (composition.catalog_check). role_used differs from the catalog role only with a reason.",
-        "passes": "[{pass_id, purpose, unit_claim}]: what each pass is for and which claim it supports (coverage_check.unit).",
+        "passes": "[{pass_id, purpose, unit_claim, reading_path, selection_reason}]: what each pass is for, which claim it supports (coverage_check.unit) and how it will be read (reading_and_drilldown.reading_path: complete_retrieval | focused_selection | exploration_only). selection_reason is required with focused_selection.",
         "compensations": "[{pass_id, lost_pmids, compensated_by}] (coverage_check.compensation).",
         "date_window": "{limit, origin: user | agent_policy | filter | none, unrestricted_pass_id, reason} for every pass with a date limit. An agent_policy window names the pass that runs the same core without it (adaptation.date_window_check).",
         "known_pmids": "[{pmid, origin: search_pass | cited_in_document | user | model_prior_knowledge | undetermined, detail}] for every PMID fetched by identifier rather than taken from a returned list. undetermined is a valid answer; inventing a source is not. A PMID fetched by identifier feeds reading_and_drilldown, never coverage (tool_requirements.identifier_retrieval)."
       },
       "record_at_decision_time": "Written when the plan is made and updated when it changes, like every other counter. A selection explained after the results are known is a justification, not a record.",
-      "on_the_repository_mcp": "Sent as the selection_record argument of pubmed_search_exact, one per pass. The receipt echoes it with the server time at which it arrived, taken before PubMed is queried, its SHA-256, and a mechanical check against the catalog and filters_used (status.selection_record: declared | inconsistent | not_declared). It proves the record existed before that run, not before any earlier search in the conversation, and it is the agent's declaration: never part of query_integrity or filter_fidelity. For an agent_policy date window it checks that another pass id was declared, not that the pass ran or was compared; an origin user window cannot be checked by the server. The server stores nothing.",
+      "on_the_repository_mcp": "Sent as the selection_record argument of pubmed_search_exact, one per pass. The receipt echoes it with the server time at which it arrived, taken before PubMed is queried, its SHA-256, and a mechanical check against the catalog and filters_used (status.selection_record: declared | inconsistent | not_declared). It proves the record existed before that run, not before any earlier search in the conversation, and it is the agent's declaration: never part of query_integrity or filter_fidelity. For an agent_policy date window it checks that another pass id was declared, not that the pass ran or was compared; an origin user window cannot be checked by the server. A focused_selection without selection_reason is inconsistent; a pass without reading_path stays declared, with a note in selection_record.notes kept apart from problems. The record is never checked against the page: a partial first page does not contradict a complete_retrieval. The server stores nothing.",
       "why_on_the_tool": "Measured 2026-10-17/18 (ChatGPT behaviour test, five questions): the selection record was written after the results in five of five runs, although the surface instructions asked for it before. An instruction alone did not produce it; a field the receipt checks makes its absence visible.",
       "not_a_judgement": "Recording an applicability lane says which passes were run. Judging whether the evidence applies stays with the surface (surface_policy_not_owned_here); that is why operational_status has no applicability dimension."
     },
     "record_per_pass": [
       "pass_id",
       "purpose",
+      "reading_path",
       "exact_query",
+      "sort_and_retstart",
       "transport",
       "filter_paths_or_ids",
       "filter_hash_if_available",
@@ -781,6 +805,7 @@
     "grounding_rule": "Never invent a retrieval.",
     "no_memory_completion": "Do not complete from model memory a concrete datum that should have come from the source. If it was not retrieved, say so.",
     "counts_are_not_interchangeable": "result_count is what PubMed reports; records_retrieved is what was actually downloaded; abstracts_read is what was actually read. Reporting the first as if it were the third overstates the screening by orders of magnitude. If only the first 30 of 256 were retrieved, say so.",
+    "denominators": "The surface's provenance keeps four denominators apart for every pass that supports a claim: found (result_count), unique returned (PMIDs actually listed, deduplicated across pages), abstracts obtained, and documents used. The receipt sees only the first two; the other two are the surface's to record. Measured 2026-10-17/18: the five behaviour-test cases mixed them, and the coverage of the query, the list delivered, the abstracts obtained and the evidence used diverged.",
     "exact_query_means_literal": "The recorded query is the string that was sent, with the filter expanded inline. A placeholder such as '(topic) AND (<contents of filters/...>)' documents the intent but is not provenance and cannot be re-executed.",
     "record_at_execution_time": "Counters are written when each action happens. Provenance reconstructed from memory at the end of the work is not provenance.",
     "filter_hash_rule": "Record SHA-256 for every filter whose working tree is dirty, mutable, unresolved to a repository commit, or modified for the run; otherwise repository_commit plus filter path is sufficient.",

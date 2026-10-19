@@ -628,6 +628,33 @@ check('K7', k7Fallos.length === 0,
     ? 'el registro dice de dónde sale cada ventana y cada PMID pedido por identificador, viaja al conector con su hora, y una ventana no pedida se compara con el núcleo sin ella'
     : k7Fallos.join('; ')}`);
 
+// Recorrido de lectura, muestra ordenada, paginación y denominadores (1.13.0). Comprobaciones
+// estructurales: rechazan vacío y relleno, no prueban significado.
+const rd = router.reading_and_drilldown ?? {};
+const pag = rd.pagination ?? {};
+const k8Fallos = [
+  !['complete_retrieval', 'focused_selection', 'exploration_only'].every((k) => sustantivo(rd.reading_path?.[k], 12))
+    && 'falta definir alguno de los tres recorridos de lectura',
+  !(sustantivo(rd.ordered_sample_is_not_the_set) && /focused_selection/.test(rd.ordered_sample_is_not_the_set ?? '')
+    && /complete_retrieval/.test(rd.ordered_sample_is_not_the_set ?? ''))
+    && 'la muestra ordenada no remite a los recorridos que la admiten',
+  !((pag.drift_controls ?? []).length === 6 && (pag.drift_controls ?? []).every((c) => sustantivo(c, 4))
+    && /without a fixed snapshot/.test(pag.label ?? '') && sustantivo(pag.known_limit) && sustantivo(pag.grouping, 6))
+    && 'la paginación no fija sus seis controles, su etiqueta, su agrupación o su límite conocido',
+  !(['result_count', 'returned', 'abstracts', 'used'].every((w) => (router.provenance?.denominators ?? '').includes(w)))
+    && 'faltan los cuatro denominadores',
+  !(/reading_path/.test(sel.fields?.passes ?? '') && /selection_reason/.test(sel.fields?.passes ?? '')
+    && /notes/.test(sel.on_the_repository_mcp ?? ''))
+    && 'el registro no lleva el recorrido, su motivo o la separación de notas',
+  !['not_verified', 'count_only', 'page_adjusted', 'empty_page', 'end_of_set', 'window_limit']
+    .every((m) => (qec.pagination_window ?? '').includes(m))
+    && 'pagination_window no nombra los motivos sin continuación',
+].filter(Boolean);
+check('K8', k8Fallos.length === 0,
+  `lectura y páginas: ${k8Fallos.length === 0
+    ? 'tres recorridos definidos, la muestra ordenada no es el conjunto, seis controles de deriva con su límite, cuatro denominadores y los motivos sin continuación'
+    : k8Fallos.join('; ')}`);
+
 // La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
 const casosEval = JSON.parse(read('scripts/eval/cases.json'));
 const conformidadEval = roleConformance(casosEval, roleOf);
@@ -870,6 +897,151 @@ const e9 = await recibo(JSON.stringify({ esearchresult: { count: '3', idlist: id
 check('E9', e9.pmid_list_sha256 === createHash('sha256').update('41626901\n36321557\n20734512', 'utf8').digest('hex')
   && e9.pmids.join() === idsEnOrden.join() && e9.records_complete === true,
   'el hash de PMIDs es el de la lista recibida, en su orden, comprobado contra un cálculo independiente');
+
+// ---------------------------------------------------------------------------------------------
+// E10-E17. Orden y páginas (1.13.0, especificación 18- y adenda de Codex). Medido el 2026-10-17/18:
+// ESearch devuelve primero lo más reciente y los ensayos que respondían tres de cinco preguntas
+// quedaban fuera de lo que el agente leía. `sort` y `retstart` lo hacen pedible; el recibo dice lo
+// pedido, lo enviado, el tramo y si hay página siguiente o por qué no. Respuestas controladas: lo que
+// se mira es la petición entregada y el recibo que sale de cada una.
+// ---------------------------------------------------------------------------------------------
+
+const er = (campos) => JSON.stringify({ esearchresult: { querytranslation: 'x[tiab]', ...campos } });
+const ids = (desde, k) => Array.from({ length: k }, (_, i) => String(30000000 + desde + i));
+const cuerpoDe = () => new URLSearchParams(entregadas[0]?.body ?? '');
+const rechaza = async (opciones) => {
+  try { await recibo(er({ count: '5' }), 'x[tiab]', opciones); return false; } catch { return entregadas.length === 0; }
+};
+
+// E10. Lo omitido no viaja; lo pedido viaja en el cuerpo y el recibo lo refleja; lo no admitido se
+// rechaza antes de llamar. `request.retmax` sigue ahí, como alias de lo pedido.
+const e10omitido = await recibo(er({ count: '5', idlist: ids(0, 5) }), 'x[tiab]', { retmax: 5 });
+const cuerpoOmitido = cuerpoDe();
+const e10pedido = await recibo(er({ count: '500', idlist: ids(200, 100) }), 'x[tiab]', { retmax: 100, retstart: 200, sort: 'relevance' });
+const cuerpoPedido = cuerpoDe();
+const e10rechazos = await Promise.all([
+  { sort: 'pub_date' }, { sort: '' }, { sort: null }, { sort: 'Relevance' },
+  { retstart: -1 }, { retstart: ESEARCH_WINDOW }, { retstart: 1.5 }, { retstart: '10' },
+].map(async (o) => [JSON.stringify(o), await rechaza({ retmax: 5, ...o })]));
+const e10mal = e10rechazos.filter(([, ok]) => !ok).map(([o]) => o);
+check('E10', !cuerpoOmitido.has('sort') && !cuerpoOmitido.has('retstart')
+  && e10omitido.request.sort === null && e10omitido.request.retstart === 0
+  && e10omitido.request.retmax === 5 && e10omitido.request.retmax_requested === 5 && e10omitido.request.retmax_sent === 5
+  && cuerpoPedido.get('sort') === 'relevance' && cuerpoPedido.get('retstart') === '200' && cuerpoPedido.get('retmax') === '100'
+  && e10pedido.request.sort === 'relevance' && e10pedido.request.retstart === 200 && e10pedido.request.retmax === 100
+  && e10mal.length === 0,
+  `sort omitido no viaja (nunca un orden por defecto), relevance y retstart viajan en el cuerpo y se reflejan, retmax se conserva como alias; rechazados sin llamar: ${e10mal.length ? `NO ${e10mal.join(' ')}` : 'sort no admitido y retstart fuera de rango'}`);
+
+// E11. Una petición que cruza la ventana se acota antes de enviarla, y se dicen las dos cifras. El
+// acotado nunca convierte en válido un valor que no lo era.
+const e11 = await recibo(er({ count: '12000', idlist: ids(9000, 999) }), 'x[tiab]', { retmax: 5000, retstart: 9000 });
+const cuerpoAcotado = cuerpoDe();
+const e11borde = await recibo(er({ count: '12000', idlist: ids(9998, 1) }), 'x[tiab]', { retmax: ESEARCH_WINDOW, retstart: ESEARCH_WINDOW - 1 });
+const cuerpoBorde = cuerpoDe();
+const e11invalido = await rechaza({ retmax: ESEARCH_WINDOW + 1, retstart: 5000 });
+check('E11', cuerpoAcotado.get('retmax') === '999' && e11.request.retmax_requested === 5000 && e11.request.retmax_sent === 999
+  && cuerpoBorde.get('retmax') === '1' && e11borde.request.retmax_requested === ESEARCH_WINDOW && e11borde.request.retmax_sent === 1
+  && e11invalido,
+  'cruzar la ventana se acota antes de enviar (5000 desde 9000 → 999; 9999 desde 9998 → 1) con lo pedido y lo enviado; un retmax inválido se rechaza aunque el acotado lo dejara caber');
+
+// E12. Sin integridad no hay continuación, ni siquiera como recuento: la primera regla prevalece.
+const e12recuento = await recibo(er({ count: '50' }), 'x[tiab]', { retmax: 0 });
+const descartado = { warninglist: { quotedphrasesnotfound: ['"inventado"[tiab]'] } };
+const e12roto = await recibo(er({ count: '50', idlist: ids(0, 10), ...descartado }), '"inventado"[tiab] OR x[tiab]', { retmax: 10 });
+const e12rotoRecuento = await recibo(er({ count: '50', ...descartado }), '"inventado"[tiab] OR x[tiab]', { retmax: 0 });
+check('E12', e12recuento.next_retstart === null && e12recuento.next_retstart_reason === 'count_only' && e12recuento.page === null
+  && e12roto.status.query_integrity === 'failed' && e12roto.next_retstart === null && e12roto.next_retstart_reason === 'not_verified'
+  && e12rotoRecuento.next_retstart_reason === 'not_verified',
+  `retmax 0 es recuento (count_only), no recuperación; una consulta no verificada no continúa (not_verified), tampoco con retmax 0 — ${
+    [e12recuento, e12roto, e12rotoRecuento].map((x) => x.next_retstart_reason).join(', ')}`);
+
+// E13. Fin del conjunto. records_complete es por llamada: la última página de varias no lo vuelve verdadero.
+const e13entero = await recibo(er({ count: '5', idlist: ids(0, 5) }), 'x[tiab]', { retmax: 10 });
+const e13ultima = await recibo(er({ count: '12', idlist: ids(10, 2) }), 'x[tiab]', { retmax: 10, retstart: 10 });
+check('E13', e13entero.next_retstart_reason === 'end_of_set' && e13entero.records_complete === true
+  && e13entero.page?.first === 1 && e13entero.page?.last === 5
+  && e13ultima.next_retstart === null && e13ultima.next_retstart_reason === 'end_of_set' && e13ultima.records_complete === false
+  && e13ultima.page?.first === 11 && e13ultima.page?.last === 12,
+  'una pasada entera acaba en end_of_set y es completa; la última página de varias acaba en end_of_set y NO es completa');
+
+// E14. Quedan registros, pero no accesibles: window_limit, que no es «todo recuperado».
+const e14 = await recibo(er({ count: '12000', idlist: ids(9000, 999) }), 'x[tiab]', { retmax: 999, retstart: 9000 });
+const e14ultimo = await recibo(er({ count: '12000', idlist: ids(9998, 1) }), 'x[tiab]', { retmax: 1, retstart: ESEARCH_WINDOW - 1 });
+check('E14', e14.next_retstart === null && e14.next_retstart_reason === 'window_limit' && typeof e14.window_limit === 'string'
+  && e14.records_complete === false && e14ultimo.next_retstart_reason === 'window_limit',
+  'al final de la ventana con un total mayor, window_limit y sin continuación: quedan registros que ESearch no sirve');
+
+// E15. Lista vacía: página nula, nunca «1001-1000». Vacía con registros pendientes es empty_page, nunca
+// end_of_set; empezar después del final sí es end_of_set.
+const e15vacia = await recibo(er({ count: '30', idlist: [] }), 'x[tiab]', { retmax: 10, retstart: 10 });
+const e15despues = await recibo(er({ count: '5', idlist: [] }), 'x[tiab]', { retmax: 10, retstart: 10 });
+check('E15', e15vacia.page === null && e15vacia.next_retstart === null && e15vacia.next_retstart_reason === 'empty_page'
+  && e15despues.page === null && e15despues.next_retstart_reason === 'end_of_set',
+  'lista vacía con registros por delante, empty_page; pedir más allá del final, end_of_set; en los dos, page null');
+
+// E16. Continuación normal: offset siguiente y motivo explícitamente null. Una página corta antes del
+// final continúa desde donde acabó (el comprobador de unión la marca); nunca se repite el offset.
+const e16 = await recibo(er({ count: '25', idlist: ids(0, 10) }), 'x[tiab]', { retmax: 10 });
+const e16corta = await recibo(er({ count: '25', idlist: ids(10, 4) }), 'x[tiab]', { retmax: 10, retstart: 10 });
+const todosE = [e10omitido, e10pedido, e11, e11borde, e12recuento, e12roto, e13entero, e13ultima, e14, e14ultimo,
+  e15vacia, e15despues, e16, e16corta];
+const sinAvance = todosE.filter((x) => x.next_retstart !== null && x.next_retstart <= x.request.retstart);
+const motivoSobrante = todosE.filter((x) => (x.next_retstart === null) === (x.next_retstart_reason === null));
+check('E16', e16.next_retstart === 10 && Object.hasOwn(e16, 'next_retstart_reason') && e16.next_retstart_reason === null
+  && e16corta.next_retstart === 14 && e16corta.next_retstart_reason === null
+  && sinAvance.length === 0 && motivoSobrante.length === 0,
+  'con continuación, next_retstart = retstart + n y motivo null; sin ella, un motivo; ningún recibo repite su offset');
+
+// E17. Si NCBI dice haber servido otra posición u otro tamaño, o devuelve más de lo pedido, no hay una
+// continuación calculada sobre una posición inferida; el aviso se conserva y la integridad no cambia.
+const ajuste = (s, c) => ({ warninglist: { outputmessages: [`Restrictions achieved. start and count adjusted to ${s}, ${c}.`] } });
+const e17otro = await recibo(er({ count: '20', idlist: ids(0, 10), ...ajuste(0, 5) }), 'x[tiab]', { retmax: 10 });
+const e17mismo = await recibo(er({ count: '20', idlist: ids(0, 10), ...ajuste(0, 10) }), 'x[tiab]', { retmax: 10 });
+const e17largo = await recibo(er({ count: '20', idlist: ids(0, 11) }), 'x[tiab]', { retmax: 10 });
+check('E17', e17otro.next_retstart === null && e17otro.next_retstart_reason === 'page_adjusted'
+  && e17otro.status.query_integrity === 'verified' && e17otro.pagination_notices.length === 1
+  && e17mismo.next_retstart === 10 && e17largo.next_retstart_reason === 'page_adjusted',
+  'un ajuste de NCBI distinto de lo enviado, o más PMID de los pedidos, deja page_adjusted sin continuación ni cambio de integridad; un ajuste igual no estorba');
+
+// U1-U2. Unión de páginas, fuera del servidor (scripts/page-union.mjs): los seis controles de deriva,
+// la referencia de recorrido y el límite documentado de la garantía.
+const { checkPageUnion, OPERATIONAL } = await import('./page-union.mjs');
+const pagina = (desde, lista, { count = 5, sort = null, q = 'q1', retmax = 3, verificada = true, plan = 'plan-1', pase = 'p1' } = {}) => ({
+  sent_query_sha256: q, request: { retstart: desde, retmax_sent: retmax, sort }, result_count: count,
+  status: { query_integrity: verificada ? 'verified' : 'failed' }, pmids: lista,
+  ...(pase ? { selection_record: { record: { plan_ref: plan, pass: { pass_id: pase } } } } : {}),
+});
+const buena = [pagina(0, ['1', '2', '3']), pagina(3, ['4', '5'])];
+const u = {
+  desordenada: checkPageUnion([buena[1], buena[0]]),
+  otraConsulta: checkPageUnion([buena[0], pagina(3, ['4', '5'], { q: 'q2' })]),
+  otroOrden: checkPageUnion([buena[0], pagina(3, ['4', '5'], { sort: 'relevance' })]),
+  hueco: checkPageUnion([buena[0], pagina(4, ['5'])]),
+  noEmpiezaEnCero: checkPageUnion([pagina(3, ['4', '5'])]),
+  noVerificada: checkPageUnion([buena[0], pagina(3, ['4', '5'], { verificada: false })]),
+  cortaAntesDelFinal: checkPageUnion([pagina(0, ['1', '2']), pagina(2, ['3', '4', '5'])]),
+  otroRecuento: checkPageUnion([buena[0], pagina(3, ['4', '5'], { count: 6 })]),
+  duplicado: checkPageUnion([buena[0], pagina(3, ['3', '5'])]),
+  ultimaCorta: checkPageUnion([pagina(0, ['1', '2', '3'], { count: 6 }), pagina(3, ['4', '5'], { count: 6 })]),
+  fueraDeVentana: checkPageUnion([pagina(0, ['1', '2', '3'], { count: ESEARCH_WINDOW + 1 })]),
+  sinRecorrido: checkPageUnion([buena[0], pagina(3, ['4', '5'], { pase: null })]),
+  otroRecorrido: checkPageUnion([buena[0], pagina(3, ['4', '5'], { pase: 'p2' })]),
+};
+const uBuena = checkPageUnion(buena);
+const uMal = Object.entries(u).filter(([k, v]) => (k === 'desordenada' ? v.status !== OPERATIONAL : v.status === OPERATIONAL || !v.problems.length));
+check('U1', uBuena.status === OPERATIONAL && uBuena.label === 'recuperación operativa sin instantánea fijada'
+  && uBuena.pmids.join() === '1,2,3,4,5' && uBuena.problems.length === 0 && uMal.length === 0,
+  `unión de páginas: operativa solo con misma consulta y orden, mismo recorrido, contigua desde 0, verificada, completa por tramo, mismo recuento, sin duplicados y dentro de la ventana${
+    uMal.length ? ` — mal: ${uMal.map(([k]) => k).join(', ')}` : ''}`);
+
+// El contraejemplo de Codex: A, B, C, D pasa a A, C, D, E entre páginas. Los seis controles pasan y C se
+// pierde. No es un fallo del comprobador: es el límite de una paginación sin historial, y se prueba como
+// límite documentado, para que nadie lo «arregle» llamando completa a la unión.
+const contraejemplo = checkPageUnion([pagina(0, ['A', 'B'], { count: 4, retmax: 2 }), pagina(2, ['D', 'E'], { count: 4, retmax: 2 })]);
+check('U2', contraejemplo.status === OPERATIONAL && contraejemplo.status !== 'complete'
+  && /no lo prueban/.test(contraejemplo.not_guaranteed) && !contraejemplo.pmids.includes('C')
+  && /A, C, D, E/.test(router.reading_and_drilldown?.pagination?.known_limit ?? ''),
+  'límite documentado: un conjunto que cambia entre páginas con el mismo recuento pasa los controles; la unión sigue siendo «operativa sin instantánea», nunca completa');
 
 // ---------------------------------------------------------------------------------------------
 // C. Autoprueba: las tres formas conocidas de equivocarse deben FALLAR estas pruebas.

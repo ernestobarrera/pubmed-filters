@@ -30,6 +30,19 @@ mano ni pueda reconstruirlos de memoria:
   de esa ejecución, no antes de búsquedas anteriores de la conversación. El servidor no lo guarda: vuelve
   en el recibo. Motivo, medido el 2026-10-17/18: con la instrucción sola, ChatGPT lo escribió después de
   los resultados en cinco de cinco casos.
+- **Orden, páginas y recorrido de lectura (contrato 1.13.0).** `sort: "relevance"` pide el orden por
+  relevancia; omitido, no se envía y PubMed usa el suyo (lo más reciente primero). `retstart` (omitido
+  = 0) pide otra página; una petición que cruza la ventana de 9.999 se acota antes de enviarla, y el
+  recibo dice lo pedido y lo enviado (`request.retmax_requested`, `request.retmax_sent`; `request.retmax`
+  se conserva como alias del primero). El recibo añade `page` (tramo de la posición pedida, `null` con
+  lista vacía), `next_retstart` y, cuando es `null`, `next_retstart_reason`: `not_verified`,
+  `count_only`, `page_adjusted`, `empty_page`, `end_of_set` o `window_limit`. Que no haya página
+  siguiente nunca significa que se haya recuperado todo, y `records_complete` sigue siendo por llamada.
+  Cada página es una llamada independiente: unirlas es de `scripts/page-union.mjs`, fuera del servidor,
+  y lo mejor que puede decir es «recuperación operativa sin instantánea fijada». El registro de selección
+  admite `pass.reading_path` (`complete_retrieval` | `focused_selection` | `exploration_only`) y
+  `pass.selection_reason`, obligatoria con `focused_selection`; sin `reading_path` el registro sigue
+  `declared` y el recibo lo anota en `selection_record.notes`, aparte de `problems`.
 
 El catálogo y los filtros los construye `scripts/filter-source.mjs`: el MCP local los lee del disco al
 arrancar y `stamp.mjs` los sella en `mcp/filters-bundle.mjs` para el Worker, que no tiene disco (su
@@ -247,8 +260,9 @@ node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en 
 ```
 
 La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M17 y W8, también
-sin red; el registro de selección en el recibo, en M18-M19. Probado desde ChatGPT el 2026-10-17/18 con
-el contrato 1.11 (sin `selection_record`); la 1.12 no se ha probado todavía desde ninguna superficie.
+sin red; el registro de selección en el recibo, en M18-M20; orden, páginas y recorrido de lectura, en
+M21-M22. Probado desde ChatGPT el 2026-10-17/18 con el contrato 1.11 (sin `selection_record`) y el
+2026-10-19 con la 1.12 (caso P); la 1.13 no se ha probado todavía desde ninguna superficie.
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,
 contra PubMed real. Sin probar todavía dentro de `workerd` contra PubMed, ni desde claude.ai o ChatGPT.
