@@ -326,6 +326,26 @@ check('R14', malEscritos.length === 0,
   `sintaxis booleana de los ${allFilters.length} filtros: ${
     malEscritos.length === 0 ? 'sin anomalías' : JSON.stringify(malEscritos)}`);
 
+// Nombre de revista con paréntesis y sin comillas, como `Rheumatology (Oxford)[JO]`. PubMed no da
+// error: lee el paréntesis como un grupo, une las palabras con AND en todos los campos y la etiqueta
+// solo se aplica al último trozo. Medido el 2026-10-19: 30 de las 72 listas lo tenían (37 nombres);
+// jnl_rheumatology daba 64.688 registros en vez de 127.082, jnl_pediatric_medicine 6.942 en vez de
+// 258.837 y jnl_nuclear_medicine_radiotherapy_molecular_imaging 0. El recibo los daba por
+// `verified` porque la consulta corre tal cual: es un error de escritura, no de transporte. Entre
+// comillas, `"Rheumatology (Oxford)"[JO]`, PubMed la resuelve como revista. Se mira la fuente de
+// verdad (journal_filters_data.js), su espejo .txt y los filtros de recuperación.
+const NOMBRE_CON_PARENTESIS = /(?<=^|[|(\s])[^|()"[\]\s][^|()"[\]]*\s\([^()"[\]]+\)\[(jo|ta|journal)\]/i;
+const conParentesis = [
+  ...[...allFilters, ...readdirSync(join(ROOT, 'filters', 'journals'))
+    .filter((f) => f.endsWith('.txt')).map((f) => `filters/journals/${f}`)]
+    .filter((f) => NOMBRE_CON_PARENTESIS.test(query(f))),
+  ...Object.entries(journals).filter(([, j]) => NOMBRE_CON_PARENTESIS.test(j.query ?? ''))
+    .map(([id]) => `journal_filters_data.js#${id}`),
+];
+check('R20', conParentesis.length === 0,
+  `nombres de revista con paréntesis sin comillas: ${conParentesis.length === 0
+    ? 'ninguno' : JSON.stringify(conParentesis)}`);
+
 // Estado de indexación no es MeSH (baseline PubMed 2027, IndexingMethod="NotIndexed"). Un subconjunto
 // de estado usado como proxy de «indexado» deja fuera, en silencio, citas MEDLINE sin MeSH. Ningún
 // filtro lo hace hoy; esto impide que empiece a hacerlo sin declararse.

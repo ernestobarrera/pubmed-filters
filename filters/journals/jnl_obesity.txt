@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Obesity según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Obes Rev[JO]|Diabetes Obes Metab[JO]|Obesity (Silver Spring)[JO]|Mol Metab[JO]|Int J Obes (Lond)[JO]|Diabetes Metab Syndr Obes[JO]|Obes Surg[JO]|Eat Weight Disord[JO]|Curr Obes Rep[JO]|Surg Obes Relat Dis[JO]|Pediatr Obes[JO]|Obes Facts[JO]|Ther Adv Endocrinol Metab[JO]|Obes Res Clin Pract[JO]|Obes Med[JO]|J Obes Metab Syndr[JO]|Endocrinol Diabetes Metab[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Sci Pract[JO]|Clin Obes[JO])
+(Obes Rev[JO]|Diabetes Obes Metab[JO]|"Obesity (Silver Spring)"[JO]|Mol Metab[JO]|"Int J Obes (Lond)"[JO]|Diabetes Metab Syndr Obes[JO]|Obes Surg[JO]|Eat Weight Disord[JO]|Curr Obes Rep[JO]|Surg Obes Relat Dis[JO]|Pediatr Obes[JO]|Obes Facts[JO]|Ther Adv Endocrinol Metab[JO]|Obes Res Clin Pract[JO]|Obes Med[JO]|J Obes Metab Syndr[JO]|Endocrinol Diabetes Metab[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Sci Pract[JO]|Clin Obes[JO])
 
 @@@FILTER_METADATA@@@
 {

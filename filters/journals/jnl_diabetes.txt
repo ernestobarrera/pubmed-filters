@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Diabetes según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Metabolism[JO]|Diabetologia[JO]|J Pineal Res[JO]|Diabetes[JO]|J Clin Endocrinol Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Obes Metab[JO]|Rev Endocr Metab Disord[JO]|Endocr Rev[JO]|Front Endocrinol (Lausanne)[JO]|J Cachexia Sarcopenia Muscle[JO]|Thyroid[JO]|Trends Endocrinol Metab[JO]|Mol Metab[JO]|Pediatr Diabetes[JO]|Diabetes Res Clin Pract[JO]|J Diabetes Complications[JO]|Diabet Med[JO])
+(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Metabolism[JO]|Diabetologia[JO]|J Pineal Res[JO]|Diabetes[JO]|J Clin Endocrinol Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Obes Metab[JO]|Rev Endocr Metab Disord[JO]|Endocr Rev[JO]|"Front Endocrinol (Lausanne)"[JO]|J Cachexia Sarcopenia Muscle[JO]|Thyroid[JO]|Trends Endocrinol Metab[JO]|Mol Metab[JO]|Pediatr Diabetes[JO]|Diabetes Res Clin Pract[JO]|J Diabetes Complications[JO]|Diabet Med[JO])
 
 @@@FILTER_METADATA@@@
 {

@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Heart & Thoracic Surgery según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Thorac Cardiovasc Surg[JO]|Ann Thorac Surg[JO]|Eur J Cardiothorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Ann Cardiothorac Surg[JO]|Gen Thorac Cardiovasc Surg[JO]|JTCVS Tech[JO]|Perfusion[JO]|Thorac Cardiovasc Surg[JO]|Braz J Cardiovasc Surg[JO]|Indian J Thorac Cardiovasc Surg[JO]|JTCVS Open[JO]|Thorac Surg Clin[JO]|Interdiscip Cardiovasc Thorac Surg[JO]|Scand Cardiovasc J[JO]|World J Pediatr Congenit Heart Surg[JO]|J Cardiovasc Surg (Torino)[JO])
+(J Thorac Cardiovasc Surg[JO]|Ann Thorac Surg[JO]|Eur J Cardiothorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Ann Cardiothorac Surg[JO]|Gen Thorac Cardiovasc Surg[JO]|JTCVS Tech[JO]|Perfusion[JO]|Thorac Cardiovasc Surg[JO]|Braz J Cardiovasc Surg[JO]|Indian J Thorac Cardiovasc Surg[JO]|JTCVS Open[JO]|Thorac Surg Clin[JO]|Interdiscip Cardiovasc Thorac Surg[JO]|Scand Cardiovasc J[JO]|World J Pediatr Congenit Heart Surg[JO]|"J Cardiovasc Surg (Torino)"[JO])
 
 @@@FILTER_METADATA@@@
 {

@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Pain & Pain Management según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Pain[JO]|J Pain Symptom Manage[JO]|J Headache Pain[JO]|Pain Med[JO]|Cephalalgia[JO]|Headache[JO]|J Pain Res[JO]|Eur J Pain[JO]|J Pain[JO]|Pain Physician[JO]|Curr Pain Headache Rep[JO]|Pain Rep[JO]|Pain Ther[JO]|Pain Res Manag[JO]|Clin J Pain[JO]|Pain Pract[JO]|Pain Manag Nurs[JO]|Front Pain Res (Lausanne)[JO]|Anesth Pain Med[JO]|Mol Pain[JO])
+(Pain[JO]|J Pain Symptom Manage[JO]|J Headache Pain[JO]|Pain Med[JO]|Cephalalgia[JO]|Headache[JO]|J Pain Res[JO]|Eur J Pain[JO]|J Pain[JO]|Pain Physician[JO]|Curr Pain Headache Rep[JO]|Pain Rep[JO]|Pain Ther[JO]|Pain Res Manag[JO]|Clin J Pain[JO]|Pain Pract[JO]|Pain Manag Nurs[JO]|"Front Pain Res (Lausanne)"[JO]|Anesth Pain Med[JO]|Mol Pain[JO])
 
 @@@FILTER_METADATA@@@
 {

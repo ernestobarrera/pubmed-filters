@@ -482,6 +482,14 @@ const MUTACIONES = [
     a: '"first_passes": [\n        "clinical.drug_adverse_events",\n        "scope.safety_specific"\n      ],',
     rompe: 'R19',
   },
+  {
+    id: 'R20-PARENTESIS-SIN-COMILLAS',
+    porque: 'vuelve el defecto real de 30 listas: `Rheumatology (Oxford)[JO]` sin comillas, que PubMed parte en un AND sobre todos los campos sin avisar',
+    fichero: 'journal_filters_data.js',
+    de: '|\\"Rheumatology (Oxford)\\"[JO]|',
+    a: '|Rheumatology (Oxford)[JO]|',
+    rompe: 'R20',
+  },
   // Las cinco alteraciones con las que Codex mostró, el 2026-10-16, que C13/C14 comprobaban existencia y
   // longitud, no garantías. La de reading_depth ya la cubre C13-POLISEMIA. Son comprobaciones
   // estructurales: rechazan vacío y relleno, no prueban significado.

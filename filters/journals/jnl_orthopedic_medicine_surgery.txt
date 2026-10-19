@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Orthopedic Medicine & Surgery según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Am J Sports Med[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|BMC Musculoskelet Disord[JO]|J Bone Joint Surg Am[JO]|J Arthroplasty[JO]|J Shoulder Elbow Surg[JO]|Arthroscopy[JO]|Spine J[JO]|Bone Joint J[JO]|J Orthop Surg Res[JO]|J Am Acad Orthop Surg[JO]|Orthop J Sports Med[JO]|Clin Orthop Relat Res[JO]|Injury[JO]|Eur Spine J[JO]|J Orthop Translat[JO]|Int Orthop[JO]|Spine (Phila Pa 1976)[JO]|Global Spine J[JO]|EFORT Open Rev[JO])
+(Am J Sports Med[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|BMC Musculoskelet Disord[JO]|J Bone Joint Surg Am[JO]|J Arthroplasty[JO]|J Shoulder Elbow Surg[JO]|Arthroscopy[JO]|Spine J[JO]|Bone Joint J[JO]|J Orthop Surg Res[JO]|J Am Acad Orthop Surg[JO]|Orthop J Sports Med[JO]|Clin Orthop Relat Res[JO]|Injury[JO]|Eur Spine J[JO]|J Orthop Translat[JO]|Int Orthop[JO]|"Spine (Phila Pa 1976)"[JO]|Global Spine J[JO]|EFORT Open Rev[JO])
 
 @@@FILTER_METADATA@@@
 {

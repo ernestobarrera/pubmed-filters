@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Medicinal Chemistry según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Med Res Rev[JO]|Nat Prod Rep[JO]|Curr Med Chem[JO]|J Enzyme Inhib Med Chem[JO]|Expert Opin Drug Discov[JO]|ACS Med Chem Lett[JO]|Bioorg Med Chem[JO]|ChemMedChem[JO]|Mol Divers[JO]|Mini Rev Med Chem[JO]|Bioorg Med Chem Lett[JO]|Arch Pharm (Weinheim)[JO]|Curr Top Med Chem[JO]|RSC Med Chem[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Anticancer Agents Med Chem[JO])
+(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Med Res Rev[JO]|Nat Prod Rep[JO]|Curr Med Chem[JO]|J Enzyme Inhib Med Chem[JO]|Expert Opin Drug Discov[JO]|ACS Med Chem Lett[JO]|Bioorg Med Chem[JO]|ChemMedChem[JO]|Mol Divers[JO]|Mini Rev Med Chem[JO]|Bioorg Med Chem Lett[JO]|"Arch Pharm (Weinheim)"[JO]|Curr Top Med Chem[JO]|RSC Med Chem[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Anticancer Agents Med Chem[JO])
 
 @@@FILTER_METADATA@@@
 {

@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Dermatology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Am Acad Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|Br J Dermatol[JO]|JAMA Dermatol[JO]|J Invest Dermatol[JO]|Am J Clin Dermatol[JO]|Dermatol Ther[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|Dermatol Ther (Heidelb)[JO]|Int J Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|Clin Cosmet Investig Dermatol[JO]|Clin Exp Dermatol[JO]|J Dtsch Dermatol Ges[JO]|J Dermatol[JO]|Clin Dermatol[JO]|Dermatology[JO]|Contact Dermatitis[JO])
+(J Am Acad Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|Br J Dermatol[JO]|JAMA Dermatol[JO]|J Invest Dermatol[JO]|Am J Clin Dermatol[JO]|Dermatol Ther[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|"Dermatol Ther (Heidelb)"[JO]|Int J Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|Clin Cosmet Investig Dermatol[JO]|Clin Exp Dermatol[JO]|J Dtsch Dermatol Ges[JO]|J Dermatol[JO]|Clin Dermatol[JO]|Dermatology[JO]|Contact Dermatitis[JO])
 
 @@@FILTER_METADATA@@@
 {

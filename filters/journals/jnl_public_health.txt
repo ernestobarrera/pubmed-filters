@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Public Health según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Int J Environ Res Public Health[JO]|BMC Public Health[JO]|Lancet Public Health[JO]|Am J Public Health[JO]|Int J Behav Nutr Phys Act[JO]|JMIR Public Health Surveill[JO]|Prev Med[JO]|Public Health[JO]|Am J Prev Med[JO]|SSM Popul Health[JO]|Int J Equity Health[JO]|J Glob Health[JO]|J Am Coll Health[JO]|AIDS Behav[JO]|J Public Health (Oxf)[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|J Racial Ethn Health Disparities[JO]|Bull World Health Organ[JO]|Tob Control[JO])
+(Int J Environ Res Public Health[JO]|BMC Public Health[JO]|Lancet Public Health[JO]|Am J Public Health[JO]|Int J Behav Nutr Phys Act[JO]|JMIR Public Health Surveill[JO]|Prev Med[JO]|Public Health[JO]|Am J Prev Med[JO]|SSM Popul Health[JO]|Int J Equity Health[JO]|J Glob Health[JO]|J Am Coll Health[JO]|AIDS Behav[JO]|"J Public Health (Oxf)"[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|J Racial Ethn Health Disparities[JO]|Bull World Health Organ[JO]|Tob Control[JO])
 
 @@@FILTER_METADATA@@@
 {

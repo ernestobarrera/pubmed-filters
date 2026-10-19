@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Pediatric Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Pediatrics[JO]|JAMA Pediatr[JO]|Front Pediatr[JO]|J Pediatr[JO]|Pediatr Res[JO]|Children (Basel)[JO]|Eur J Pediatr[JO]|BMC Pediatr[JO]|Acta Paediatr[JO]|Arch Dis Child[JO]|Dev Med Child Neurol[JO]|Pediatr Infect Dis J[JO]|Pediatr Pulmonol[JO]|Ital J Pediatr[JO]|Pediatr Nephrol[JO]|Pediatr Allergy Immunol[JO]|Am J Perinatol[JO]|J Pediatr (Rio J)[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Diabetes[JO])
+(Pediatrics[JO]|JAMA Pediatr[JO]|Front Pediatr[JO]|J Pediatr[JO]|Pediatr Res[JO]|"Children (Basel)"[JO]|Eur J Pediatr[JO]|BMC Pediatr[JO]|Acta Paediatr[JO]|Arch Dis Child[JO]|Dev Med Child Neurol[JO]|Pediatr Infect Dis J[JO]|Pediatr Pulmonol[JO]|Ital J Pediatr[JO]|Pediatr Nephrol[JO]|Pediatr Allergy Immunol[JO]|Am J Perinatol[JO]|"J Pediatr (Rio J)"[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Diabetes[JO])
 
 @@@FILTER_METADATA@@@
 {

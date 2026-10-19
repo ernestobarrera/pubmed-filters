@@ -615,7 +615,10 @@
       "pubmed_subset": "trending[sb]",
       "date_filter": "none_by_default",
       "if_user_says_last_week": "Run two lanes: trending without a date restriction and publications from the requested recent window.",
-      "interpretation": "attention_signal_not_quality_signal"
+      "interpretation": "attention_signal_not_quality_signal",
+      "what_is_known": "PubMed translates trending[sb] to \"trending\"[Filter]. NCBI does not document the algorithm; library guides describe it as records with a recent rise in PubMed views against a baseline of about a week. Treat any finer claim about how it ranks as unknown.",
+      "journal_list_intersection": "trending[sb] AND a journal list is a separate lane, never the core: with a small specialty or primary care list it can leave almost nothing.",
+      "measured": "2026-10-19, ESearch: trending[sb] = 1165. Of those, 336 (29%) were published more than 30 days earlier and 53 carry a future publication date (issues not yet out). trending[sb] AND 2026/10/13:2026/10/19[dp] = 133; with \"last 7 days\"[dp] = 264, because the relative form runs to 3000/01/01 and keeps future-dated issues. AND a journal list: jnl_top_publications 107, jnl_cardiology 27, jnl_rheumatology 5, jnl_primary_health_care 1."
     },
     "corpus_definition": {
       "use_when": "The product describes or analyses a defined population of records (bibliometrics, production or collaboration mapping, evidence-map counts, an inventory for management or teaching) rather than answering a clinical question.",

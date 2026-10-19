@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Veterinary Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Transbound Emerg Dis[JO]|Vet Microbiol[JO]|Front Vet Sci[JO]|Theriogenology[JO]|J Vet Intern Med[JO]|BMC Vet Res[JO]|Ticks Tick Borne Dis[JO]|Animals (Basel)[JO]|Vet Parasitol[JO]|Prev Vet Med[JO]|Res Vet Sci[JO]|Anim Nutr[JO]|Vet J[JO]|Asian-Australas J Anim Sci[JO]|Appl Anim Behav Sci[JO]|Vet Res[JO]|Annu Rev Anim Biosci[JO]|Vet World[JO]|Vet Rec[JO]|Vet Pathol[JO])
+(Transbound Emerg Dis[JO]|Vet Microbiol[JO]|Front Vet Sci[JO]|Theriogenology[JO]|J Vet Intern Med[JO]|BMC Vet Res[JO]|Ticks Tick Borne Dis[JO]|"Animals (Basel)"[JO]|Vet Parasitol[JO]|Prev Vet Med[JO]|Res Vet Sci[JO]|Anim Nutr[JO]|Vet J[JO]|Asian-Australas J Anim Sci[JO]|Appl Anim Behav Sci[JO]|Vet Res[JO]|Annu Rev Anim Biosci[JO]|Vet World[JO]|Vet Rec[JO]|Vet Pathol[JO])
 
 @@@FILTER_METADATA@@@
 {

@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Physiology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Physiol Rev[JO]|J Cell Physiol[JO]|J Physiol[JO]|Am J Physiol Cell Physiol[JO]|Am J Physiol Heart Circ Physiol[JO]|J Appl Physiol (1985)[JO]|Annu Rev Physiol[JO]|Am J Physiol Endocrinol Metab[JO]|Eur J Appl Physiol[JO]|Am J Physiol Lung Cell Mol Physiol[JO]|Acta Physiol (Oxf)[JO]|Pflugers Arch[JO]|Am J Physiol Gastrointest Liver Physiol[JO]|J Neurophysiol[JO]|Am J Physiol Renal Physiol[JO]|Physiol Rep[JO]|Exp Physiol[JO]|Physiology (Bethesda)[JO]|Compr Physiol[JO]|Auton Neurosci[JO])
+(Physiol Rev[JO]|J Cell Physiol[JO]|J Physiol[JO]|Am J Physiol Cell Physiol[JO]|Am J Physiol Heart Circ Physiol[JO]|"J Appl Physiol (1985)"[JO]|Annu Rev Physiol[JO]|Am J Physiol Endocrinol Metab[JO]|Eur J Appl Physiol[JO]|Am J Physiol Lung Cell Mol Physiol[JO]|"Acta Physiol (Oxf)"[JO]|Pflugers Arch[JO]|Am J Physiol Gastrointest Liver Physiol[JO]|J Neurophysiol[JO]|Am J Physiol Renal Physiol[JO]|Physiol Rep[JO]|Exp Physiol[JO]|"Physiology (Bethesda)"[JO]|Compr Physiol[JO]|Auton Neurosci[JO])
 
 @@@FILTER_METADATA@@@
 {

@@ -25,7 +25,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in AIDS & HIV by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Lancet HIV[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|J Acquir Immune Defic Syndr[JO]|AIDS[JO]|Curr HIV/AIDS Rep[JO]|AIDS Patient Care STDS[JO]|HIV Med[JO]|AIDS Care[JO]|AIDS Res Ther[JO]|Curr Opin HIV AIDS[JO]|Int J STD AIDS[JO]|Retrovirology[JO]|HIV AIDS (Auckl)[JO]|AIDS Res Hum Retroviruses[JO]|J Int Assoc Provid AIDS Care[JO]|J Assoc Nurses AIDS Care[JO]|J Virus Erad[JO]|AIDS Educ Prev[JO]|Open AIDS J[JO])"
+    "query": "(Lancet HIV[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|J Acquir Immune Defic Syndr[JO]|AIDS[JO]|Curr HIV/AIDS Rep[JO]|AIDS Patient Care STDS[JO]|HIV Med[JO]|AIDS Care[JO]|AIDS Res Ther[JO]|Curr Opin HIV AIDS[JO]|Int J STD AIDS[JO]|Retrovirology[JO]|\"HIV AIDS (Auckl)\"[JO]|AIDS Res Hum Retroviruses[JO]|J Int Assoc Provid AIDS Care[JO]|J Assoc Nurses AIDS Care[JO]|J Virus Erad[JO]|AIDS Educ Prev[JO]|Open AIDS J[JO])"
   },
   "jnl_alternative_traditional_medicine": {
     "name": "Alternative & Traditional Medicine",
@@ -81,7 +81,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Clinical Laboratory Science by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-17",
-    "query": "(Clin Chim Acta[JO]|Clin Chem Lab Med[JO]|Clin Chem[JO]|J Clin Lab Anal[JO]|Int J Lab Hematol[JO]|Crit Rev Clin Lab Sci[JO]|Adv Clin Chem[JO]|Ann Lab Med[JO]|Clin Biochem[JO]|J Appl Lab Med[JO]|J Anal Methods Chem[JO]|Indian J Clin Biochem[JO]|Ann Clin Biochem[JO]|Lab Med[JO]|Scand J Clin Lab Invest[JO]|Biochem Med (Zagreb)[JO]|Pract Lab Med[JO]|Clin Lab Med[JO]|J Med Biochem[JO]|J Lab Physicians[JO])"
+    "query": "(Clin Chim Acta[JO]|Clin Chem Lab Med[JO]|Clin Chem[JO]|J Clin Lab Anal[JO]|Int J Lab Hematol[JO]|Crit Rev Clin Lab Sci[JO]|Adv Clin Chem[JO]|Ann Lab Med[JO]|Clin Biochem[JO]|J Appl Lab Med[JO]|J Anal Methods Chem[JO]|Indian J Clin Biochem[JO]|Ann Clin Biochem[JO]|Lab Med[JO]|Scand J Clin Lab Invest[JO]|\"Biochem Med (Zagreb)\"[JO]|Pract Lab Med[JO]|Clin Lab Med[JO]|J Med Biochem[JO]|J Lab Physicians[JO])"
   },
   "jnl_communicable_diseases": {
     "name": "Communicable Diseases",
@@ -102,14 +102,14 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Dentistry by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Periodontol 2000[JO]|J Prosthet Dent[JO]|Clin Oral Investig[JO]|J Dent Res[JO]|Int Endod J[JO]|BMC Oral Health[JO]|J Clin Periodontol[JO]|J Dent[JO]|Oral Dis[JO]|J Endod[JO]|Dent Mater[JO]|J Prosthodont[JO]|J Periodontol[JO]|J Esthet Restor Dent[JO]|Clin Oral Implants Res[JO]|J Oral Rehabil[JO]|Int J Oral Sci[JO]|Am J Orthod Dentofacial Orthop[JO]|Dent J (Basel)[JO]|Br Dent J[JO])"
+    "query": "(Periodontol 2000[JO]|J Prosthet Dent[JO]|Clin Oral Investig[JO]|J Dent Res[JO]|Int Endod J[JO]|BMC Oral Health[JO]|J Clin Periodontol[JO]|J Dent[JO]|Oral Dis[JO]|J Endod[JO]|Dent Mater[JO]|J Prosthodont[JO]|J Periodontol[JO]|J Esthet Restor Dent[JO]|Clin Oral Implants Res[JO]|J Oral Rehabil[JO]|Int J Oral Sci[JO]|Am J Orthod Dentofacial Orthop[JO]|\"Dent J (Basel)\"[JO]|Br Dent J[JO])"
   },
   "jnl_dermatology": {
     "name": "Dermatology",
     "description": "Top 20 journals in Dermatology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(J Am Acad Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|Br J Dermatol[JO]|JAMA Dermatol[JO]|J Invest Dermatol[JO]|Am J Clin Dermatol[JO]|Dermatol Ther[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|Dermatol Ther (Heidelb)[JO]|Int J Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|Clin Cosmet Investig Dermatol[JO]|Clin Exp Dermatol[JO]|J Dtsch Dermatol Ges[JO]|J Dermatol[JO]|Clin Dermatol[JO]|Dermatology[JO]|Contact Dermatitis[JO])"
+    "query": "(J Am Acad Dermatol[JO]|J Eur Acad Dermatol Venereol[JO]|Br J Dermatol[JO]|JAMA Dermatol[JO]|J Invest Dermatol[JO]|Am J Clin Dermatol[JO]|Dermatol Ther[JO]|J Cosmet Dermatol[JO]|J Dermatolog Treat[JO]|\"Dermatol Ther (Heidelb)\"[JO]|Int J Dermatol[JO]|Exp Dermatol[JO]|Acta Derm Venereol[JO]|Clin Cosmet Investig Dermatol[JO]|Clin Exp Dermatol[JO]|J Dtsch Dermatol Ges[JO]|J Dermatol[JO]|Clin Dermatol[JO]|Dermatology[JO]|Contact Dermatitis[JO])"
   },
   "jnl_developmental_disabilities": {
     "name": "Developmental Disabilities",
@@ -123,21 +123,21 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Diabetes by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Metabolism[JO]|Diabetologia[JO]|J Pineal Res[JO]|Diabetes[JO]|J Clin Endocrinol Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Obes Metab[JO]|Rev Endocr Metab Disord[JO]|Endocr Rev[JO]|Front Endocrinol (Lausanne)[JO]|J Cachexia Sarcopenia Muscle[JO]|Thyroid[JO]|Trends Endocrinol Metab[JO]|Mol Metab[JO]|Pediatr Diabetes[JO]|Diabetes Res Clin Pract[JO]|J Diabetes Complications[JO]|Diabet Med[JO])"
+    "query": "(Diabetes Care[JO]|Lancet Diabetes Endocrinol[JO]|Metabolism[JO]|Diabetologia[JO]|J Pineal Res[JO]|Diabetes[JO]|J Clin Endocrinol Metab[JO]|Cardiovasc Diabetol[JO]|Diabetes Obes Metab[JO]|Rev Endocr Metab Disord[JO]|Endocr Rev[JO]|\"Front Endocrinol (Lausanne)\"[JO]|J Cachexia Sarcopenia Muscle[JO]|Thyroid[JO]|Trends Endocrinol Metab[JO]|Mol Metab[JO]|Pediatr Diabetes[JO]|Diabetes Res Clin Pract[JO]|J Diabetes Complications[JO]|Diabet Med[JO])"
   },
   "jnl_emergency_medicine": {
     "name": "Emergency Medicine",
     "description": "Top 20 journals in Emergency Medicine by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Am J Emerg Med[JO]|Resuscitation[JO]|Disaster Med Public Health Prep[JO]|Intern Emerg Med[JO]|Ann Emerg Med[JO]|J Trauma Acute Care Surg[JO]|World J Emerg Surg[JO]|Acad Emerg Med[JO]|West J Emerg Med[JO]|Eur J Trauma Emerg Surg[JO]|J Intensive Care[JO]|Scand J Trauma Resusc Emerg Med[JO]|Emerg Med J[JO]|Clin Toxicol (Phila)[JO]|J Emerg Med[JO]|BMC Emerg Med[JO]|Curr Opin Crit Care[JO]|Int Emerg Nurs[JO]|JACEP Open[JO]|Crit Care Clin[JO])"
+    "query": "(Am J Emerg Med[JO]|Resuscitation[JO]|Disaster Med Public Health Prep[JO]|Intern Emerg Med[JO]|Ann Emerg Med[JO]|J Trauma Acute Care Surg[JO]|World J Emerg Surg[JO]|Acad Emerg Med[JO]|West J Emerg Med[JO]|Eur J Trauma Emerg Surg[JO]|J Intensive Care[JO]|Scand J Trauma Resusc Emerg Med[JO]|Emerg Med J[JO]|\"Clin Toxicol (Phila)\"[JO]|J Emerg Med[JO]|BMC Emerg Med[JO]|Curr Opin Crit Care[JO]|Int Emerg Nurs[JO]|JACEP Open[JO]|Crit Care Clin[JO])"
   },
   "jnl_endocrinology": {
     "name": "Endocrinology",
     "description": "Top 20 journals in Endocrinology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Front Endocrinol (Lausanne)[JO]|Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|Endocr Rev[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|J Endocrinol Invest[JO]|Thyroid[JO]|Rev Endocr Metab Disord[JO]|Bone Res[JO]|Eur J Endocrinol[JO]|Osteoporos Int[JO]|Psychoneuroendocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrinology[JO]|Endocrine[JO]|Maturitas[JO]|J Pineal Res[JO]|Best Pract Res Clin Endocrinol Metab[JO]|Calcif Tissue Int[JO])"
+    "query": "(\"Front Endocrinol (Lausanne)\"[JO]|Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|Endocr Rev[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|J Endocrinol Invest[JO]|Thyroid[JO]|Rev Endocr Metab Disord[JO]|Bone Res[JO]|Eur J Endocrinol[JO]|Osteoporos Int[JO]|Psychoneuroendocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrinology[JO]|Endocrine[JO]|Maturitas[JO]|J Pineal Res[JO]|Best Pract Res Clin Endocrinol Metab[JO]|Calcif Tissue Int[JO])"
   },
   "jnl_epidemiology": {
     "name": "Epidemiology",
@@ -151,7 +151,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Forensic Science & Legal Medicine by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Forensic Sci Int[JO]|Int J Legal Med[JO]|Forensic Sci Int Genet[JO]|Forensic Sci Int Digit Investig[JO]|J Forensic Sci[JO]|J Anal Toxicol[JO]|Forensic Sci Int Synergy[JO]|Indian J Forensic Med Toxicol[JO]|Forensic Chem[JO]|Sci Justice[JO]|J Forensic Leg Med[JO]|Leg Med (Tokyo)[JO]|Forensic Sci Med Pathol[JO]|WIREs Forensic Sci[JO]|Forensic Sci Res[JO]|Forensic Toxicol[JO]|Aust J Forensic Sci[JO]|Forensic Sci Int Rep[JO]|J Am Acad Psychiatry Law[JO]|Med Leg J[JO])"
+    "query": "(Forensic Sci Int[JO]|Int J Legal Med[JO]|Forensic Sci Int Genet[JO]|Forensic Sci Int Digit Investig[JO]|J Forensic Sci[JO]|J Anal Toxicol[JO]|Forensic Sci Int Synergy[JO]|Indian J Forensic Med Toxicol[JO]|Forensic Chem[JO]|Sci Justice[JO]|J Forensic Leg Med[JO]|\"Leg Med (Tokyo)\"[JO]|Forensic Sci Med Pathol[JO]|WIREs Forensic Sci[JO]|Forensic Sci Res[JO]|Forensic Toxicol[JO]|Aust J Forensic Sci[JO]|Forensic Sci Int Rep[JO]|J Am Acad Psychiatry Law[JO]|Med Leg J[JO])"
   },
   "jnl_medical_education": {
     "name": "Medical Education",
@@ -172,14 +172,14 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Genetics & Genomics by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Front Genet[JO]|Oncogene[JO]|Genes (Basel)[JO]|Genome Med[JO]|Am J Hum Genet[JO]|Genet Med[JO]|Genome Res[JO]|PLoS Genet[JO]|BMC Genomics[JO]|Trends Genet[JO]|Theor Appl Genet[JO]|Eur J Hum Genet[JO]|Clin Epigenetics[JO]|Genomics[JO]|Genetics[JO]|Hum Genet[JO]|Gene[JO])"
+    "query": "(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Front Genet[JO]|Oncogene[JO]|\"Genes (Basel)\"[JO]|Genome Med[JO]|Am J Hum Genet[JO]|Genet Med[JO]|Genome Res[JO]|PLoS Genet[JO]|BMC Genomics[JO]|Trends Genet[JO]|Theor Appl Genet[JO]|Eur J Hum Genet[JO]|Clin Epigenetics[JO]|Genomics[JO]|Genetics[JO]|Hum Genet[JO]|Gene[JO])"
   },
   "jnl_gerontology_geriatric_medicine": {
     "name": "Gerontology & Geriatric Medicine",
     "description": "Top 20 journals in Gerontology & Geriatric Medicine by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Ageing Res Rev[JO]|Alzheimers Dement[JO]|Aging (Albany NY)[JO]|Mov Disord[JO]|Front Aging Neurosci[JO]|Aging Cell[JO]|BMC Geriatr[JO]|Nat Aging[JO]|J Am Geriatr Soc[JO]|Alzheimers Res Ther[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|J Gerontol A Biol Sci Med Sci[JO]|J Alzheimers Dis[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Gerontologist[JO]|Lancet Healthy Longev[JO]|Aging Clin Exp Res[JO]|Aging Dis[JO]|Aging Ment Health[JO])"
+    "query": "(Ageing Res Rev[JO]|Alzheimers Dement[JO]|\"Aging (Albany NY)\"[JO]|Mov Disord[JO]|Front Aging Neurosci[JO]|Aging Cell[JO]|BMC Geriatr[JO]|Nat Aging[JO]|J Am Geriatr Soc[JO]|Alzheimers Res Ther[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|J Gerontol A Biol Sci Med Sci[JO]|J Alzheimers Dis[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Gerontologist[JO]|Lancet Healthy Longev[JO]|Aging Clin Exp Res[JO]|Aging Dis[JO]|Aging Ment Health[JO])"
   },
   "jnl_gynecology_obstetrics": {
     "name": "Gynecology & Obstetrics",
@@ -200,7 +200,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Heart & Thoracic Surgery by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-17",
-    "query": "(J Thorac Cardiovasc Surg[JO]|Ann Thorac Surg[JO]|Eur J Cardiothorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Ann Cardiothorac Surg[JO]|Gen Thorac Cardiovasc Surg[JO]|JTCVS Tech[JO]|Perfusion[JO]|Thorac Cardiovasc Surg[JO]|Braz J Cardiovasc Surg[JO]|Indian J Thorac Cardiovasc Surg[JO]|JTCVS Open[JO]|Thorac Surg Clin[JO]|Interdiscip Cardiovasc Thorac Surg[JO]|Scand Cardiovasc J[JO]|World J Pediatr Congenit Heart Surg[JO]|J Cardiovasc Surg (Torino)[JO])"
+    "query": "(J Thorac Cardiovasc Surg[JO]|Ann Thorac Surg[JO]|Eur J Cardiothorac Surg[JO]|J Cardiothorac Surg[JO]|J Card Surg[JO]|Interact Cardiovasc Thorac Surg[JO]|Semin Thorac Cardiovasc Surg[JO]|Ann Cardiothorac Surg[JO]|Gen Thorac Cardiovasc Surg[JO]|JTCVS Tech[JO]|Perfusion[JO]|Thorac Cardiovasc Surg[JO]|Braz J Cardiovasc Surg[JO]|Indian J Thorac Cardiovasc Surg[JO]|JTCVS Open[JO]|Thorac Surg Clin[JO]|Interdiscip Cardiovasc Thorac Surg[JO]|Scand Cardiovasc J[JO]|World J Pediatr Congenit Heart Surg[JO]|\"J Cardiovasc Surg (Torino)\"[JO])"
   },
   "jnl_hematology": {
     "name": "Hematology",
@@ -214,7 +214,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Hospice & Palliative Care by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-17",
-    "query": "(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|Death Stud[JO]|BMC Palliat Care[JO]|Ann Palliat Med[JO]|BMJ Support Palliat Care[JO]|Omega (Westport)[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|Palliat Support Care[JO]|J Hosp Palliat Nurs[JO]|Palliat Care Soc Pract[JO]|J Palliat Care[JO]|Indian J Palliat Care[JO]|Curr Opin Support Palliat Care[JO]|J Health Care Chaplain[JO]|Illn Crises Loss[JO]|Int J Palliat Nurs[JO]|Prog Palliat Care[JO])"
+    "query": "(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|Death Stud[JO]|BMC Palliat Care[JO]|Ann Palliat Med[JO]|BMJ Support Palliat Care[JO]|\"Omega (Westport)\"[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|Palliat Support Care[JO]|J Hosp Palliat Nurs[JO]|Palliat Care Soc Pract[JO]|J Palliat Care[JO]|Indian J Palliat Care[JO]|Curr Opin Support Palliat Care[JO]|J Health Care Chaplain[JO]|Illn Crises Loss[JO]|Int J Palliat Nurs[JO]|Prog Palliat Care[JO])"
   },
   "jnl_immunology": {
     "name": "Immunology",
@@ -235,7 +235,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Medicinal Chemistry by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-17",
-    "query": "(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Med Res Rev[JO]|Nat Prod Rep[JO]|Curr Med Chem[JO]|J Enzyme Inhib Med Chem[JO]|Expert Opin Drug Discov[JO]|ACS Med Chem Lett[JO]|Bioorg Med Chem[JO]|ChemMedChem[JO]|Mol Divers[JO]|Mini Rev Med Chem[JO]|Bioorg Med Chem Lett[JO]|Arch Pharm (Weinheim)[JO]|Curr Top Med Chem[JO]|RSC Med Chem[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Anticancer Agents Med Chem[JO])"
+    "query": "(J Med Chem[JO]|Eur J Med Chem[JO]|Drug Discov Today[JO]|Med Res Rev[JO]|Nat Prod Rep[JO]|Curr Med Chem[JO]|J Enzyme Inhib Med Chem[JO]|Expert Opin Drug Discov[JO]|ACS Med Chem Lett[JO]|Bioorg Med Chem[JO]|ChemMedChem[JO]|Mol Divers[JO]|Mini Rev Med Chem[JO]|Bioorg Med Chem Lett[JO]|\"Arch Pharm (Weinheim)\"[JO]|Curr Top Med Chem[JO]|RSC Med Chem[JO]|Expert Opin Ther Pat[JO]|Future Med Chem[JO]|Anticancer Agents Med Chem[JO])"
   },
   "jnl_molecular_biology": {
     "name": "Molecular Biology",
@@ -263,14 +263,14 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Neurosurgery by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(World Neurosurg[JO]|Neurosurgery[JO]|J Neurosurg[JO]|Acta Neurochir (Wien)[JO]|Neurosurg Rev[JO]|Neurosurg Focus[JO]|J Neurosurg Spine[JO]|Oper Neurosurg (Hagerstown)[JO]|J Neurosurg Pediatr[JO]|Surg Neurol Int[JO]|Br J Neurosurg[JO]|Neurosurg Clin N Am[JO]|J Neurol Surg B Skull Base[JO]|Neurol Med Chir (Tokyo)[JO]|Neurochirurgie[JO]|J Korean Neurosurg Soc[JO]|Stereotact Funct Neurosurg[JO]|J Neurosurg Sci[JO]|Clin Neurol Neurosurg[JO]|Asian J Neurosurg[JO])"
+    "query": "(World Neurosurg[JO]|Neurosurgery[JO]|J Neurosurg[JO]|\"Acta Neurochir (Wien)\"[JO]|Neurosurg Rev[JO]|Neurosurg Focus[JO]|J Neurosurg Spine[JO]|Oper Neurosurg[JO]|J Neurosurg Pediatr[JO]|Surg Neurol Int[JO]|Br J Neurosurg[JO]|Neurosurg Clin N Am[JO]|J Neurol Surg B Skull Base[JO]|\"Neurol Med Chir (Tokyo)\"[JO]|Neurochirurgie[JO]|J Korean Neurosurg Soc[JO]|Stereotact Funct Neurosurg[JO]|J Neurosurg Sci[JO]|Clin Neurol Neurosurg[JO]|Asian J Neurosurg[JO])"
   },
   "jnl_nuclear_medicine_radiotherapy_molecular_imaging": {
     "name": "Nuclear Medicine, Radiotherapy & Molecular Imaging",
     "description": "Top 20 journals in Nuclear Medicine, Radiotherapy & Molecular Imaging by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Diagnostics (Basel)[JO]|Eur J Nucl Med Mol Imaging[JO]|J Nucl Med[JO]|Radiother Oncol[JO]|Int J Radiat Oncol Biol Phys[JO]|Med Phys[JO]|Phys Med Biol[JO]|Phys Med[JO]|Radiat Oncol[JO]|NMR Biomed[JO]|Semin Nucl Med[JO]|J Nucl Cardiol[JO]|Jpn J Radiol[JO]|IEEE Trans Radiat Plasma Med Sci[JO]|J Appl Clin Med Phys[JO]|Phys Eng Sci Med[JO]|Cancer Imaging[JO]|Int J Radiat Biol[JO]|EJNMMI Phys[JO]|Clin Oncol (R Coll Radiol)[JO])"
+    "query": "(\"Diagnostics (Basel)\"[JO]|Eur J Nucl Med Mol Imaging[JO]|J Nucl Med[JO]|Radiother Oncol[JO]|Int J Radiat Oncol Biol Phys[JO]|Med Phys[JO]|Phys Med Biol[JO]|Phys Med[JO]|Radiat Oncol[JO]|NMR Biomed[JO]|Semin Nucl Med[JO]|J Nucl Cardiol[JO]|Jpn J Radiol[JO]|IEEE Trans Radiat Plasma Med Sci[JO]|J Appl Clin Med Phys[JO]|Phys Eng Sci Med[JO]|Cancer Imaging[JO]|Int J Radiat Biol[JO]|EJNMMI Phys[JO]|\"Clin Oncol (R Coll Radiol)\"[JO])"
   },
   "jnl_nursing": {
     "name": "Nursing",
@@ -291,21 +291,21 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Obesity by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Obes Rev[JO]|Diabetes Obes Metab[JO]|Obesity (Silver Spring)[JO]|Mol Metab[JO]|Int J Obes (Lond)[JO]|Diabetes Metab Syndr Obes[JO]|Obes Surg[JO]|Eat Weight Disord[JO]|Curr Obes Rep[JO]|Surg Obes Relat Dis[JO]|Pediatr Obes[JO]|Obes Facts[JO]|Ther Adv Endocrinol Metab[JO]|Obes Res Clin Pract[JO]|Obes Med[JO]|J Obes Metab Syndr[JO]|Endocrinol Diabetes Metab[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Sci Pract[JO]|Clin Obes[JO])"
+    "query": "(Obes Rev[JO]|Diabetes Obes Metab[JO]|\"Obesity (Silver Spring)\"[JO]|Mol Metab[JO]|\"Int J Obes (Lond)\"[JO]|Diabetes Metab Syndr Obes[JO]|Obes Surg[JO]|Eat Weight Disord[JO]|Curr Obes Rep[JO]|Surg Obes Relat Dis[JO]|Pediatr Obes[JO]|Obes Facts[JO]|Ther Adv Endocrinol Metab[JO]|Obes Res Clin Pract[JO]|Obes Med[JO]|J Obes Metab Syndr[JO]|Endocrinol Diabetes Metab[JO]|Curr Opin Endocrinol Diabetes Obes[JO]|Obes Sci Pract[JO]|Clin Obes[JO])"
   },
   "jnl_oncology": {
     "name": "Oncology",
     "description": "Top 20 journals in Oncology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(J Clin Oncol[JO]|Lancet Oncol[JO]|Ann Oncol[JO]|Cancer Cell[JO]|Cancers (Basel)[JO]|Mol Cancer[JO]|J Hematol Oncol[JO]|Clin Cancer Res[JO]|Cancer Discov[JO]|Front Oncol[JO]|JAMA Oncol[JO]|Nat Rev Clin Oncol[JO]|Nat Rev Cancer[JO]|Cancer Res[JO]|J Immunother Cancer[JO]|Semin Cancer Biol[JO]|Nat Cancer[JO]|J Thorac Oncol[JO]|J Exp Clin Cancer Res[JO]|Cancer Lett[JO])"
+    "query": "(J Clin Oncol[JO]|Lancet Oncol[JO]|Ann Oncol[JO]|Cancer Cell[JO]|\"Cancers (Basel)\"[JO]|Mol Cancer[JO]|J Hematol Oncol[JO]|Clin Cancer Res[JO]|Cancer Discov[JO]|Front Oncol[JO]|JAMA Oncol[JO]|Nat Rev Clin Oncol[JO]|Nat Rev Cancer[JO]|Cancer Res[JO]|J Immunother Cancer[JO]|Semin Cancer Biol[JO]|Nat Cancer[JO]|J Thorac Oncol[JO]|J Exp Clin Cancer Res[JO]|Cancer Lett[JO])"
   },
   "jnl_ophthalmology_optometry": {
     "name": "Ophthalmology & Optometry",
     "description": "Top 20 journals in Ophthalmology & Optometry by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Ophthalmology[JO]|Prog Retin Eye Res[JO]|Eye (Lond)[JO]|JAMA Ophthalmol[JO]|Br J Ophthalmol[JO]|Invest Ophthalmol Vis Sci[JO]|Indian J Ophthalmol[JO]|Am J Ophthalmol[JO]|Ocul Surf[JO]|Surv Ophthalmol[JO]|Acta Ophthalmol[JO]|Exp Eye Res[JO]|Graefes Arch Clin Exp Ophthalmol[JO]|Transl Vis Sci Technol[JO]|Clin Ophthalmol[JO]|J Cataract Refract Surg[JO]|Ophthalmol Retina[JO]|Retina[JO]|Cornea[JO]|Ocul Immunol Inflamm[JO])"
+    "query": "(Ophthalmology[JO]|Prog Retin Eye Res[JO]|\"Eye (Lond)\"[JO]|JAMA Ophthalmol[JO]|Br J Ophthalmol[JO]|Invest Ophthalmol Vis Sci[JO]|Indian J Ophthalmol[JO]|Am J Ophthalmol[JO]|Ocul Surf[JO]|Surv Ophthalmol[JO]|Acta Ophthalmol[JO]|Exp Eye Res[JO]|Graefes Arch Clin Exp Ophthalmol[JO]|Transl Vis Sci Technol[JO]|Clin Ophthalmol[JO]|J Cataract Refract Surg[JO]|Ophthalmol Retina[JO]|Retina[JO]|Cornea[JO]|Ocul Immunol Inflamm[JO])"
   },
   "jnl_oral_maxillofacial_surgery": {
     "name": "Oral & Maxillofacial Surgery",
@@ -319,7 +319,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Orthopedic Medicine & Surgery by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Am J Sports Med[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|BMC Musculoskelet Disord[JO]|J Bone Joint Surg Am[JO]|J Arthroplasty[JO]|J Shoulder Elbow Surg[JO]|Arthroscopy[JO]|Spine J[JO]|Bone Joint J[JO]|J Orthop Surg Res[JO]|J Am Acad Orthop Surg[JO]|Orthop J Sports Med[JO]|Clin Orthop Relat Res[JO]|Injury[JO]|Eur Spine J[JO]|J Orthop Translat[JO]|Int Orthop[JO]|Spine (Phila Pa 1976)[JO]|Global Spine J[JO]|EFORT Open Rev[JO])"
+    "query": "(Am J Sports Med[JO]|Knee Surg Sports Traumatol Arthrosc[JO]|BMC Musculoskelet Disord[JO]|J Bone Joint Surg Am[JO]|J Arthroplasty[JO]|J Shoulder Elbow Surg[JO]|Arthroscopy[JO]|Spine J[JO]|Bone Joint J[JO]|J Orthop Surg Res[JO]|J Am Acad Orthop Surg[JO]|Orthop J Sports Med[JO]|Clin Orthop Relat Res[JO]|Injury[JO]|Eur Spine J[JO]|J Orthop Translat[JO]|Int Orthop[JO]|\"Spine (Phila Pa 1976)\"[JO]|Global Spine J[JO]|EFORT Open Rev[JO])"
   },
   "jnl_otolaryngology": {
     "name": "Otolaryngology",
@@ -333,7 +333,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Pain & Pain Management by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Pain[JO]|J Pain Symptom Manage[JO]|J Headache Pain[JO]|Pain Med[JO]|Cephalalgia[JO]|Headache[JO]|J Pain Res[JO]|Eur J Pain[JO]|J Pain[JO]|Pain Physician[JO]|Curr Pain Headache Rep[JO]|Pain Rep[JO]|Pain Ther[JO]|Pain Res Manag[JO]|Clin J Pain[JO]|Pain Pract[JO]|Pain Manag Nurs[JO]|Front Pain Res (Lausanne)[JO]|Anesth Pain Med[JO]|Mol Pain[JO])"
+    "query": "(Pain[JO]|J Pain Symptom Manage[JO]|J Headache Pain[JO]|Pain Med[JO]|Cephalalgia[JO]|Headache[JO]|J Pain Res[JO]|Eur J Pain[JO]|J Pain[JO]|Pain Physician[JO]|Curr Pain Headache Rep[JO]|Pain Rep[JO]|Pain Ther[JO]|Pain Res Manag[JO]|Clin J Pain[JO]|Pain Pract[JO]|Pain Manag Nurs[JO]|\"Front Pain Res (Lausanne)\"[JO]|Anesth Pain Med[JO]|Mol Pain[JO])"
   },
   "jnl_pathology": {
     "name": "Pathology",
@@ -347,14 +347,14 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Pediatric Medicine by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Pediatrics[JO]|JAMA Pediatr[JO]|Front Pediatr[JO]|J Pediatr[JO]|Pediatr Res[JO]|Children (Basel)[JO]|Eur J Pediatr[JO]|BMC Pediatr[JO]|Acta Paediatr[JO]|Arch Dis Child[JO]|Dev Med Child Neurol[JO]|Pediatr Infect Dis J[JO]|Pediatr Pulmonol[JO]|Ital J Pediatr[JO]|Pediatr Nephrol[JO]|Pediatr Allergy Immunol[JO]|Am J Perinatol[JO]|J Pediatr (Rio J)[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Diabetes[JO])"
+    "query": "(Pediatrics[JO]|JAMA Pediatr[JO]|Front Pediatr[JO]|J Pediatr[JO]|Pediatr Res[JO]|\"Children (Basel)\"[JO]|Eur J Pediatr[JO]|BMC Pediatr[JO]|Acta Paediatr[JO]|Arch Dis Child[JO]|Dev Med Child Neurol[JO]|Pediatr Infect Dis J[JO]|Pediatr Pulmonol[JO]|Ital J Pediatr[JO]|Pediatr Nephrol[JO]|Pediatr Allergy Immunol[JO]|Am J Perinatol[JO]|\"J Pediatr (Rio J)\"[JO]|Arch Dis Child Fetal Neonatal Ed[JO]|Pediatr Diabetes[JO])"
   },
   "jnl_pharmacology_pharmacy": {
     "name": "Pharmacology & Pharmacy",
     "description": "Top 20 journals in Pharmacology & Pharmacy by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Front Pharmacol[JO]|Nat Rev Drug Discov[JO]|J Control Release[JO]|Pharmaceutics[JO]|Pharmacol Res[JO]|Adv Drug Deliv Rev[JO]|J Med Chem[JO]|Acta Pharm Sin B[JO]|Int J Nanomedicine[JO]|Int J Pharm[JO]|Pharmacol Ther[JO]|Drugs[JO]|Pharmaceuticals (Basel)[JO]|J Ethnopharmacol[JO]|Br J Pharmacol[JO]|Phytother Res[JO]|Neuropsychopharmacology[JO]|J Drug Deliv Sci Technol[JO]|Eur J Pharmacol[JO]|Med Res Rev[JO])"
+    "query": "(Front Pharmacol[JO]|Nat Rev Drug Discov[JO]|J Control Release[JO]|Pharmaceutics[JO]|Pharmacol Res[JO]|Adv Drug Deliv Rev[JO]|J Med Chem[JO]|Acta Pharm Sin B[JO]|Int J Nanomedicine[JO]|Int J Pharm[JO]|Pharmacol Ther[JO]|Drugs[JO]|\"Pharmaceuticals (Basel)\"[JO]|J Ethnopharmacol[JO]|Br J Pharmacol[JO]|Phytother Res[JO]|Neuropsychopharmacology[JO]|J Drug Deliv Sci Technol[JO]|Eur J Pharmacol[JO]|Med Res Rev[JO])"
   },
   "jnl_physical_education_sports_medicine": {
     "name": "Physical Education & Sports Medicine",
@@ -368,7 +368,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Physiology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Physiol Rev[JO]|J Cell Physiol[JO]|J Physiol[JO]|Am J Physiol Cell Physiol[JO]|Am J Physiol Heart Circ Physiol[JO]|J Appl Physiol (1985)[JO]|Annu Rev Physiol[JO]|Am J Physiol Endocrinol Metab[JO]|Eur J Appl Physiol[JO]|Am J Physiol Lung Cell Mol Physiol[JO]|Acta Physiol (Oxf)[JO]|Pflugers Arch[JO]|Am J Physiol Gastrointest Liver Physiol[JO]|J Neurophysiol[JO]|Am J Physiol Renal Physiol[JO]|Physiol Rep[JO]|Exp Physiol[JO]|Physiology (Bethesda)[JO]|Compr Physiol[JO]|Auton Neurosci[JO])"
+    "query": "(Physiol Rev[JO]|J Cell Physiol[JO]|J Physiol[JO]|Am J Physiol Cell Physiol[JO]|Am J Physiol Heart Circ Physiol[JO]|\"J Appl Physiol (1985)\"[JO]|Annu Rev Physiol[JO]|Am J Physiol Endocrinol Metab[JO]|Eur J Appl Physiol[JO]|Am J Physiol Lung Cell Mol Physiol[JO]|\"Acta Physiol (Oxf)\"[JO]|Pflugers Arch[JO]|Am J Physiol Gastrointest Liver Physiol[JO]|J Neurophysiol[JO]|Am J Physiol Renal Physiol[JO]|Physiol Rep[JO]|Exp Physiol[JO]|\"Physiology (Bethesda)\"[JO]|Compr Physiol[JO]|Auton Neurosci[JO])"
   },
   "jnl_plastic_reconstructive_surgery": {
     "name": "Plastic & Reconstructive Surgery",
@@ -409,7 +409,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Public Health by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Int J Environ Res Public Health[JO]|BMC Public Health[JO]|Lancet Public Health[JO]|Am J Public Health[JO]|Int J Behav Nutr Phys Act[JO]|JMIR Public Health Surveill[JO]|Prev Med[JO]|Public Health[JO]|Am J Prev Med[JO]|SSM Popul Health[JO]|Int J Equity Health[JO]|J Glob Health[JO]|J Am Coll Health[JO]|AIDS Behav[JO]|J Public Health (Oxf)[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|J Racial Ethn Health Disparities[JO]|Bull World Health Organ[JO]|Tob Control[JO])"
+    "query": "(Int J Environ Res Public Health[JO]|BMC Public Health[JO]|Lancet Public Health[JO]|Am J Public Health[JO]|Int J Behav Nutr Phys Act[JO]|JMIR Public Health Surveill[JO]|Prev Med[JO]|Public Health[JO]|Am J Prev Med[JO]|SSM Popul Health[JO]|Int J Equity Health[JO]|J Glob Health[JO]|J Am Coll Health[JO]|AIDS Behav[JO]|\"J Public Health (Oxf)\"[JO]|Annu Rev Public Health[JO]|Nicotine Tob Res[JO]|J Racial Ethn Health Disparities[JO]|Bull World Health Organ[JO]|Tob Control[JO])"
   },
   "jnl_pulmonology": {
     "name": "Pulmonology",
@@ -444,7 +444,7 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Rheumatology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|Rheumatology (Oxford)[JO]|Autoimmun Rev[JO]|Lancet Rheumatol[JO]|Osteoarthritis Cartilage[JO]|Clin Rheumatol[JO]|RMD Open[JO]|Arthritis Care Res (Hoboken)[JO]|Rheumatol Int[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|Clin Exp Rheumatol[JO]|J Rheumatol[JO]|Curr Opin Rheumatol[JO]|Curr Rheumatol Rep[JO]|Best Pract Res Clin Rheumatol[JO]|Joint Bone Spine[JO]|Ther Adv Musculoskelet Dis[JO])"
+    "query": "(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|\"Rheumatology (Oxford)\"[JO]|Autoimmun Rev[JO]|Lancet Rheumatol[JO]|Osteoarthritis Cartilage[JO]|Clin Rheumatol[JO]|RMD Open[JO]|\"Arthritis Care Res (Hoboken)\"[JO]|Rheumatol Int[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|Clin Exp Rheumatol[JO]|J Rheumatol[JO]|Curr Opin Rheumatol[JO]|Curr Rheumatol Rep[JO]|Best Pract Res Clin Rheumatol[JO]|Joint Bone Spine[JO]|Ther Adv Musculoskelet Dis[JO])"
   },
   "jnl_social_psychology": {
     "name": "Social Psychology",
@@ -457,14 +457,14 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Surgery by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Ann Surg[JO]|JAMA Surg[JO]|Surg Endosc[JO]|Br J Surg[JO]|J Vasc Surg[JO]|Ann Med Surg (Lond)[JO]|Int J Surg[JO]|Ann Surg Oncol[JO]|Obes Surg[JO]|Surgery[JO]|Eur J Surg Oncol[JO]|J Am Coll Surg[JO]|Dig Endosc[JO]|J Trauma Acute Care Surg[JO]|J Gastrointest Surg[JO]|World J Emerg Surg[JO]|World J Surg[JO]|Eur J Vasc Endovasc Surg[JO]|J Surg Educ[JO]|J Surg Res[JO])"
+    "query": "(Ann Surg[JO]|JAMA Surg[JO]|Surg Endosc[JO]|Br J Surg[JO]|J Vasc Surg[JO]|\"Ann Med Surg (Lond)\"[JO]|Int J Surg[JO]|Ann Surg Oncol[JO]|Obes Surg[JO]|Surgery[JO]|Eur J Surg Oncol[JO]|J Am Coll Surg[JO]|Dig Endosc[JO]|J Trauma Acute Care Surg[JO]|J Gastrointest Surg[JO]|World J Emerg Surg[JO]|World J Surg[JO]|Eur J Vasc Endovasc Surg[JO]|J Surg Educ[JO]|J Surg Res[JO])"
   },
   "jnl_toxicology": {
     "name": "Toxicology",
     "description": "Top 20 journals in Toxicology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Environ Res[JO]|Ecotoxicol Environ Saf[JO]|Food Chem Toxicol[JO]|Toxins (Basel)[JO]|Environ Health Perspect[JO]|Arch Toxicol[JO]|Chem Biol Interact[JO]|Toxicol Rep[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Res Toxicol[JO]|Aquat Toxicol[JO]|J Expo Sci Environ Epidemiol[JO]|Toxicology[JO]|Part Fibre Toxicol[JO]|Regul Toxicol Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Appl Pharmacol[JO]|Bull Environ Contam Toxicol[JO]|Environ Toxicol[JO]|Neurotoxicology[JO])"
+    "query": "(Environ Res[JO]|Ecotoxicol Environ Saf[JO]|Food Chem Toxicol[JO]|\"Toxins (Basel)\"[JO]|Environ Health Perspect[JO]|Arch Toxicol[JO]|Chem Biol Interact[JO]|Toxicol Rep[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Res Toxicol[JO]|Aquat Toxicol[JO]|J Expo Sci Environ Epidemiol[JO]|Toxicology[JO]|Part Fibre Toxicol[JO]|Regul Toxicol Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Appl Pharmacol[JO]|Bull Environ Contam Toxicol[JO]|Environ Toxicol[JO]|Neurotoxicology[JO])"
   },
   "jnl_transplantation": {
     "name": "Transplantation",
@@ -492,20 +492,20 @@ const JOURNAL_FILTERS = {
     "description": "Top 20 journals in Vascular Medicine by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(Stroke[JO]|J Am Heart Assoc[JO]|Cardiovasc Diabetol[JO]|Hypertension[JO]|Arterioscler Thromb Vasc Biol[JO]|J Vasc Surg[JO]|Atherosclerosis[JO]|J Cereb Blood Flow Metab[JO]|J Neurointerv Surg[JO]|Int J Stroke[JO]|Nutr Metab Cardiovasc Dis[JO]|J Hypertens[JO]|J Stroke Cerebrovasc Dis[JO]|Curr Atheroscler Rep[JO]|Transl Stroke Res[JO]|Hypertens Res[JO]|Eur J Vasc Endovasc Surg[JO]|Curr Hypertens Rep[JO]|J Clin Hypertens (Greenwich)[JO]|Neurocrit Care[JO])"
+    "query": "(Stroke[JO]|J Am Heart Assoc[JO]|Cardiovasc Diabetol[JO]|Hypertension[JO]|Arterioscler Thromb Vasc Biol[JO]|J Vasc Surg[JO]|Atherosclerosis[JO]|J Cereb Blood Flow Metab[JO]|J Neurointerv Surg[JO]|Int J Stroke[JO]|Nutr Metab Cardiovasc Dis[JO]|J Hypertens[JO]|J Stroke Cerebrovasc Dis[JO]|Curr Atheroscler Rep[JO]|Transl Stroke Res[JO]|Hypertens Res[JO]|Eur J Vasc Endovasc Surg[JO]|Curr Hypertens Rep[JO]|\"J Clin Hypertens (Greenwich)\"[JO]|Neurocrit Care[JO])"
   },
   "jnl_veterinary_medicine": {
     "name": "Veterinary Medicine",
     "description": "Top 20 journals in Veterinary Medicine by Google Scholar h5-index",
     "journalCount": 20,
-    "query": "(Transbound Emerg Dis[JO]|Vet Microbiol[JO]|Front Vet Sci[JO]|Theriogenology[JO]|J Vet Intern Med[JO]|BMC Vet Res[JO]|Ticks Tick Borne Dis[JO]|Animals (Basel)[JO]|Vet Parasitol[JO]|Prev Vet Med[JO]|Res Vet Sci[JO]|Anim Nutr[JO]|Vet J[JO]|Asian-Australas J Anim Sci[JO]|Appl Anim Behav Sci[JO]|Vet Res[JO]|Annu Rev Anim Biosci[JO]|Vet World[JO]|Vet Rec[JO]|Vet Pathol[JO])"
+    "query": "(Transbound Emerg Dis[JO]|Vet Microbiol[JO]|Front Vet Sci[JO]|Theriogenology[JO]|J Vet Intern Med[JO]|BMC Vet Res[JO]|Ticks Tick Borne Dis[JO]|\"Animals (Basel)\"[JO]|Vet Parasitol[JO]|Prev Vet Med[JO]|Res Vet Sci[JO]|Anim Nutr[JO]|Vet J[JO]|Asian-Australas J Anim Sci[JO]|Appl Anim Behav Sci[JO]|Vet Res[JO]|Annu Rev Anim Biosci[JO]|Vet World[JO]|Vet Rec[JO]|Vet Pathol[JO])"
   },
   "jnl_virology": {
     "name": "Virology",
     "description": "Top 20 journals in Virology by Google Scholar h5-index",
     "journalCount": 20,
     "lastUpdated": "2026-01-16",
-    "query": "(J Med Virol[JO]|Vaccines (Basel)[JO]|Viruses[JO]|Vaccine[JO]|PLoS Pathog[JO]|Emerg Microbes Infect[JO]|J Clin Virol[JO]|J Virol[JO]|Hum Vaccin Immunother[JO]|Rev Med Virol[JO]|Transbound Emerg Dis[JO]|NPJ Vaccines[JO]|Virol J[JO]|Virus Res[JO]|Antiviral Res[JO]|Expert Rev Vaccines[JO]|J Gen Virol[JO]|Curr Opin Virol[JO]|Virus Evol[JO]|Arch Virol[JO])"
+    "query": "(J Med Virol[JO]|\"Vaccines (Basel)\"[JO]|Viruses[JO]|Vaccine[JO]|PLoS Pathog[JO]|Emerg Microbes Infect[JO]|J Clin Virol[JO]|J Virol[JO]|Hum Vaccin Immunother[JO]|Rev Med Virol[JO]|Transbound Emerg Dis[JO]|NPJ Vaccines[JO]|Virol J[JO]|Virus Res[JO]|Antiviral Res[JO]|Expert Rev Vaccines[JO]|J Gen Virol[JO]|Curr Opin Virol[JO]|Virus Evol[JO]|Arch Virol[JO])"
   }
 };
 

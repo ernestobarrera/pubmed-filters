@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Toxicology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Environ Res[JO]|Ecotoxicol Environ Saf[JO]|Food Chem Toxicol[JO]|Toxins (Basel)[JO]|Environ Health Perspect[JO]|Arch Toxicol[JO]|Chem Biol Interact[JO]|Toxicol Rep[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Res Toxicol[JO]|Aquat Toxicol[JO]|J Expo Sci Environ Epidemiol[JO]|Toxicology[JO]|Part Fibre Toxicol[JO]|Regul Toxicol Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Appl Pharmacol[JO]|Bull Environ Contam Toxicol[JO]|Environ Toxicol[JO]|Neurotoxicology[JO])
+(Environ Res[JO]|Ecotoxicol Environ Saf[JO]|Food Chem Toxicol[JO]|"Toxins (Basel)"[JO]|Environ Health Perspect[JO]|Arch Toxicol[JO]|Chem Biol Interact[JO]|Toxicol Rep[JO]|Annu Rev Pharmacol Toxicol[JO]|Chem Res Toxicol[JO]|Aquat Toxicol[JO]|J Expo Sci Environ Epidemiol[JO]|Toxicology[JO]|Part Fibre Toxicol[JO]|Regul Toxicol Pharmacol[JO]|Environ Toxicol Pharmacol[JO]|Toxicol Appl Pharmacol[JO]|Bull Environ Contam Toxicol[JO]|Environ Toxicol[JO]|Neurotoxicology[JO])
 
 @@@FILTER_METADATA@@@
 {
