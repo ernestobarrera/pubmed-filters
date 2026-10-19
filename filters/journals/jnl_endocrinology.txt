@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Endocrinology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Front Endocrinol (Lausanne)[JO]|Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|Endocr Rev[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|J Endocrinol Invest[JO]|Thyroid[JO]|Rev Endocr Metab Disord[JO]|Bone Res[JO]|Eur J Endocrinol[JO]|Osteoporos Int[JO]|Psychoneuroendocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrinology[JO]|Endocrine[JO]|Maturitas[JO]|J Pineal Res[JO]|Best Pract Res Clin Endocrinol Metab[JO]|Calcif Tissue Int[JO])
+("Front Endocrinol (Lausanne)"[JO]|Nat Rev Endocrinol[JO]|J Clin Endocrinol Metab[JO]|Endocr Rev[JO]|Trends Endocrinol Metab[JO]|J Bone Miner Res[JO]|J Endocrinol Invest[JO]|Thyroid[JO]|Rev Endocr Metab Disord[JO]|Bone Res[JO]|Eur J Endocrinol[JO]|Osteoporos Int[JO]|Psychoneuroendocrinology[JO]|Mol Cell Endocrinol[JO]|Endocrinology[JO]|Endocrine[JO]|Maturitas[JO]|J Pineal Res[JO]|Best Pract Res Clin Endocrinol Metab[JO]|Calcif Tissue Int[JO])
 
 @@@FILTER_METADATA@@@
 {

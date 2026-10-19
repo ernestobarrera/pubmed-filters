@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Hospice & Palliative Care según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|Death Stud[JO]|BMC Palliat Care[JO]|Ann Palliat Med[JO]|BMJ Support Palliat Care[JO]|Omega (Westport)[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|Palliat Support Care[JO]|J Hosp Palliat Nurs[JO]|Palliat Care Soc Pract[JO]|J Palliat Care[JO]|Indian J Palliat Care[JO]|Curr Opin Support Palliat Care[JO]|J Health Care Chaplain[JO]|Illn Crises Loss[JO]|Int J Palliat Nurs[JO]|Prog Palliat Care[JO])
+(Support Care Cancer[JO]|J Pain Symptom Manage[JO]|Palliat Med[JO]|Death Stud[JO]|BMC Palliat Care[JO]|Ann Palliat Med[JO]|BMJ Support Palliat Care[JO]|"Omega (Westport)"[JO]|J Palliat Med[JO]|Am J Hosp Palliat Care[JO]|Palliat Support Care[JO]|J Hosp Palliat Nurs[JO]|Palliat Care Soc Pract[JO]|J Palliat Care[JO]|Indian J Palliat Care[JO]|Curr Opin Support Palliat Care[JO]|J Health Care Chaplain[JO]|Illn Crises Loss[JO]|Int J Palliat Nurs[JO]|Prog Palliat Care[JO])
 
 @@@FILTER_METADATA@@@
 {

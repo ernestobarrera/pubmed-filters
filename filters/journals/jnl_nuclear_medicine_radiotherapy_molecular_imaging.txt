@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Nuclear Medicine, Radiotherapy & Molecular Imaging según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Nucl Med[JO]|Int J Radiat Oncol Biol Phys[JO]|Eur J Nucl Med Mol Imaging[JO]|Radiother Oncol[JO]|Med Phys[JO]|Phys Med Biol[JO]|NMR Biomed[JO]|Radiat Oncol[JO]|Diagnostics (Basel)[JO]|J Nucl Cardiol[JO]|Phys Med[JO]|Clin Nucl Med[JO]|Mol Imaging Biol[JO]|Clin Oncol[JO]|Semin Nucl Med[JO]|EJNMMI Res[JO]|Radiat Res[JO]|Int J Radiat Biol[JO]|Pract Radiat Oncol[JO]|Strahlenther Onkol[JO])
+(J Nucl Med[JO]|Int J Radiat Oncol Biol Phys[JO]|Eur J Nucl Med Mol Imaging[JO]|Radiother Oncol[JO]|Med Phys[JO]|Phys Med Biol[JO]|NMR Biomed[JO]|Radiat Oncol[JO]|"Diagnostics (Basel)"[JO]|J Nucl Cardiol[JO]|Phys Med[JO]|Clin Nucl Med[JO]|Mol Imaging Biol[JO]|Clin Oncol[JO]|Semin Nucl Med[JO]|EJNMMI Res[JO]|Radiat Res[JO]|Int J Radiat Biol[JO]|Pract Radiat Oncol[JO]|Strahlenther Onkol[JO])
 
 @@@FILTER_METADATA@@@
 {

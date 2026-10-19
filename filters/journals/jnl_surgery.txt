@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Surgery según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ann Surg[JO]|JAMA Surg[JO]|Surg Endosc[JO]|Br J Surg[JO]|J Vasc Surg[JO]|Ann Med Surg (Lond)[JO]|Int J Surg[JO]|Ann Surg Oncol[JO]|Obes Surg[JO]|Surgery[JO]|Eur J Surg Oncol[JO]|J Am Coll Surg[JO]|Dig Endosc[JO]|J Trauma Acute Care Surg[JO]|J Gastrointest Surg[JO]|World J Emerg Surg[JO]|World J Surg[JO]|Eur J Vasc Endovasc Surg[JO]|J Surg Educ[JO]|J Surg Res[JO])
+(Ann Surg[JO]|JAMA Surg[JO]|Surg Endosc[JO]|Br J Surg[JO]|J Vasc Surg[JO]|"Ann Med Surg (Lond)"[JO]|Int J Surg[JO]|Ann Surg Oncol[JO]|Obes Surg[JO]|Surgery[JO]|Eur J Surg Oncol[JO]|J Am Coll Surg[JO]|Dig Endosc[JO]|J Trauma Acute Care Surg[JO]|J Gastrointest Surg[JO]|World J Emerg Surg[JO]|World J Surg[JO]|Eur J Vasc Endovasc Surg[JO]|J Surg Educ[JO]|J Surg Res[JO])
 
 @@@FILTER_METADATA@@@
 {

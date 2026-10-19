@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Pharmacology & Pharmacy según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Front Pharmacol[JO]|Nat Rev Drug Discov[JO]|J Control Release[JO]|Pharmaceutics[JO]|Pharmacol Res[JO]|Adv Drug Deliv Rev[JO]|J Med Chem[JO]|Acta Pharm Sin B[JO]|Int J Nanomedicine[JO]|Int J Pharm[JO]|Pharmacol Ther[JO]|Drugs[JO]|Pharmaceuticals (Basel)[JO]|J Ethnopharmacol[JO]|Br J Pharmacol[JO]|Phytother Res[JO]|Neuropsychopharmacology[JO]|J Drug Deliv Sci Technol[JO]|Eur J Pharmacol[JO]|Med Res Rev[JO])
+(Front Pharmacol[JO]|Nat Rev Drug Discov[JO]|J Control Release[JO]|Pharmaceutics[JO]|Pharmacol Res[JO]|Adv Drug Deliv Rev[JO]|J Med Chem[JO]|Acta Pharm Sin B[JO]|Int J Nanomedicine[JO]|Int J Pharm[JO]|Pharmacol Ther[JO]|Drugs[JO]|"Pharmaceuticals (Basel)"[JO]|J Ethnopharmacol[JO]|Br J Pharmacol[JO]|Phytother Res[JO]|Neuropsychopharmacology[JO]|J Drug Deliv Sci Technol[JO]|Eur J Pharmacol[JO]|Med Res Rev[JO])
 
 @@@FILTER_METADATA@@@
 {

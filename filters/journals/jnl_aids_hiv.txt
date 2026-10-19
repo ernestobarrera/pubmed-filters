@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en AIDS & HIV según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Lancet HIV[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|J Acquir Immune Defic Syndr[JO]|AIDS[JO]|Curr HIV/AIDS Rep[JO]|AIDS Patient Care STDS[JO]|HIV Med[JO]|AIDS Care[JO]|AIDS Res Ther[JO]|Curr Opin HIV AIDS[JO]|Int J STD AIDS[JO]|Retrovirology[JO]|HIV AIDS (Auckl)[JO]|AIDS Res Hum Retroviruses[JO]|J Int Assoc Provid AIDS Care[JO]|J Assoc Nurses AIDS Care[JO]|J Virus Erad[JO]|AIDS Educ Prev[JO]|Open AIDS J[JO])
+(Lancet HIV[JO]|AIDS Behav[JO]|J Int AIDS Soc[JO]|J Acquir Immune Defic Syndr[JO]|AIDS[JO]|Curr HIV/AIDS Rep[JO]|AIDS Patient Care STDS[JO]|HIV Med[JO]|AIDS Care[JO]|AIDS Res Ther[JO]|Curr Opin HIV AIDS[JO]|Int J STD AIDS[JO]|Retrovirology[JO]|"HIV AIDS (Auckl)"[JO]|AIDS Res Hum Retroviruses[JO]|J Int Assoc Provid AIDS Care[JO]|J Assoc Nurses AIDS Care[JO]|J Virus Erad[JO]|AIDS Educ Prev[JO]|Open AIDS J[JO])
 
 @@@FILTER_METADATA@@@
 {

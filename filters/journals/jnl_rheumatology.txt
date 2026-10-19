@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Rheumatology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|Rheumatology (Oxford)[JO]|Autoimmun Rev[JO]|Lancet Rheumatol[JO]|Osteoarthritis Cartilage[JO]|Clin Rheumatol[JO]|RMD Open[JO]|Arthritis Care Res (Hoboken)[JO]|Rheumatol Int[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|Clin Exp Rheumatol[JO]|J Rheumatol[JO]|Curr Opin Rheumatol[JO]|Curr Rheumatol Rep[JO]|Best Pract Res Clin Rheumatol[JO]|Joint Bone Spine[JO]|Ther Adv Musculoskelet Dis[JO])
+(Ann Rheum Dis[JO]|Arthritis Rheumatol[JO]|Nat Rev Rheumatol[JO]|"Rheumatology (Oxford)"[JO]|Autoimmun Rev[JO]|Lancet Rheumatol[JO]|Osteoarthritis Cartilage[JO]|Clin Rheumatol[JO]|RMD Open[JO]|"Arthritis Care Res (Hoboken)"[JO]|Rheumatol Int[JO]|Arthritis Res Ther[JO]|Semin Arthritis Rheum[JO]|Clin Exp Rheumatol[JO]|J Rheumatol[JO]|Curr Opin Rheumatol[JO]|Curr Rheumatol Rep[JO]|Best Pract Res Clin Rheumatol[JO]|Joint Bone Spine[JO]|Ther Adv Musculoskelet Dis[JO])
 
 @@@FILTER_METADATA@@@
 {

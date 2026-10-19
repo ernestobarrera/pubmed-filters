@@ -100,6 +100,15 @@
 
 ## 📝 Historial de Cambios
 
+### 2026-10-19 - Nombres con paréntesis entre comillas
+
+- 37 nombres de revista con paréntesis, en 30 listas, van ahora entre comillas: `"Rheumatology (Oxford)"[JO]`.
+  Sin comillas, PubMed partía el nombre en un AND sobre todos los campos y la lista perdía registros o se
+  vaciaba (Reumatología 64.688 → 127.082; Pediatría 6.942 → 258.837; Medicina Nuclear 0 → 166.858).
+- `Oper Neurosurg (Hagerstown)` ya no existe en NLM: ahora es `Oper Neurosurg` (mismo ISSN, 2332-4252).
+- `scraping/process_journals_csv.js` entrecomilla estos nombres al generar; la suite lo vigila con R20.
+- Pendiente, sin tocar: `Forensic Sci Int Synergy[JO]` debería ser `Forensic Sci Int Synerg` (abreviatura NLM).
+
 ### 2026-01-16 - Revisión inicial de muestreo
 
 **Especialidades revisadas:** Addiction, Cardiology, Oncology

@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Gerontology & Geriatric Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Ageing Res Rev[JO]|Alzheimers Dement[JO]|Aging (Albany NY)[JO]|Mov Disord[JO]|Front Aging Neurosci[JO]|Aging Cell[JO]|BMC Geriatr[JO]|Nat Aging[JO]|J Am Geriatr Soc[JO]|Alzheimers Res Ther[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|J Gerontol A Biol Sci Med Sci[JO]|J Alzheimers Dis[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Gerontologist[JO]|Lancet Healthy Longev[JO]|Aging Clin Exp Res[JO]|Aging Dis[JO]|Aging Ment Health[JO])
+(Ageing Res Rev[JO]|Alzheimers Dement[JO]|"Aging (Albany NY)"[JO]|Mov Disord[JO]|Front Aging Neurosci[JO]|Aging Cell[JO]|BMC Geriatr[JO]|Nat Aging[JO]|J Am Geriatr Soc[JO]|Alzheimers Res Ther[JO]|Mol Neurodegener[JO]|Age Ageing[JO]|J Gerontol A Biol Sci Med Sci[JO]|J Alzheimers Dis[JO]|J Gerontol B Psychol Sci Soc Sci[JO]|Gerontologist[JO]|Lancet Healthy Longev[JO]|Aging Clin Exp Res[JO]|Aging Dis[JO]|Aging Ment Health[JO])
 
 @@@FILTER_METADATA@@@
 {

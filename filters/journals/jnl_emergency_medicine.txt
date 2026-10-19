@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Emergency Medicine según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Am J Emerg Med[JO]|Resuscitation[JO]|Disaster Med Public Health Prep[JO]|Intern Emerg Med[JO]|Ann Emerg Med[JO]|J Trauma Acute Care Surg[JO]|World J Emerg Surg[JO]|Acad Emerg Med[JO]|West J Emerg Med[JO]|Eur J Trauma Emerg Surg[JO]|J Intensive Care[JO]|Scand J Trauma Resusc Emerg Med[JO]|Emerg Med J[JO]|Clin Toxicol (Phila)[JO]|J Emerg Med[JO]|BMC Emerg Med[JO]|Curr Opin Crit Care[JO]|Int Emerg Nurs[JO]|JACEP Open[JO]|Crit Care Clin[JO])
+(Am J Emerg Med[JO]|Resuscitation[JO]|Disaster Med Public Health Prep[JO]|Intern Emerg Med[JO]|Ann Emerg Med[JO]|J Trauma Acute Care Surg[JO]|World J Emerg Surg[JO]|Acad Emerg Med[JO]|West J Emerg Med[JO]|Eur J Trauma Emerg Surg[JO]|J Intensive Care[JO]|Scand J Trauma Resusc Emerg Med[JO]|Emerg Med J[JO]|"Clin Toxicol (Phila)"[JO]|J Emerg Med[JO]|BMC Emerg Med[JO]|Curr Opin Crit Care[JO]|Int Emerg Nurs[JO]|JACEP Open[JO]|Crit Care Clin[JO])
 
 @@@FILTER_METADATA@@@
 {

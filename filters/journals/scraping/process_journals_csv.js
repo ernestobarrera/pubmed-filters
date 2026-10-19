@@ -39,6 +39,9 @@ function cleanQueryPart(queryPart) {
     if (!queryPart) return null;
     // Remove leading/trailing quotes and clean up
     let cleaned = queryPart.replace(/^"+|"+$/g, '');
+    // A name with parentheses must be quoted: unquoted, PubMed splits `Rheumatology (Oxford)[JO]`
+    // into an AND over all fields (scripts/validate-router.mjs, R20).
+    cleaned = cleaned.replace(/(?<=^|[|(])([^|()"[\]]+ \([^()"[\]]+\))\[JO\]/g, '"$1"[JO]');
     // Ensure it ends with |
     if (cleaned && !cleaned.endsWith('|')) {
         cleaned += '|';

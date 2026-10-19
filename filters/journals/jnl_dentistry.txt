@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Dentistry según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Periodontol 2000[JO]|J Prosthet Dent[JO]|Clin Oral Investig[JO]|J Dent Res[JO]|Int Endod J[JO]|BMC Oral Health[JO]|J Clin Periodontol[JO]|J Dent[JO]|Oral Dis[JO]|J Endod[JO]|Dent Mater[JO]|J Prosthodont[JO]|J Periodontol[JO]|J Esthet Restor Dent[JO]|Clin Oral Implants Res[JO]|J Oral Rehabil[JO]|Int J Oral Sci[JO]|Am J Orthod Dentofacial Orthop[JO]|Dent J (Basel)[JO]|Br Dent J[JO])
+(Periodontol 2000[JO]|J Prosthet Dent[JO]|Clin Oral Investig[JO]|J Dent Res[JO]|Int Endod J[JO]|BMC Oral Health[JO]|J Clin Periodontol[JO]|J Dent[JO]|Oral Dis[JO]|J Endod[JO]|Dent Mater[JO]|J Prosthodont[JO]|J Periodontol[JO]|J Esthet Restor Dent[JO]|Clin Oral Implants Res[JO]|J Oral Rehabil[JO]|Int J Oral Sci[JO]|Am J Orthod Dentofacial Orthop[JO]|"Dent J (Basel)"[JO]|Br Dent J[JO])
 
 @@@FILTER_METADATA@@@
 {

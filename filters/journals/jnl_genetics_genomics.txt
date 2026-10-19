@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Genetics & Genomics según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Front Genet[JO]|Oncogene[JO]|Genes (Basel)[JO]|Genome Med[JO]|Am J Hum Genet[JO]|Genet Med[JO]|Genome Res[JO]|PLoS Genet[JO]|BMC Genomics[JO]|Trends Genet[JO]|Theor Appl Genet[JO]|Eur J Hum Genet[JO]|Clin Epigenetics[JO]|Genomics[JO]|Genetics[JO]|Hum Genet[JO]|Gene[JO])
+(Nat Genet[JO]|Genome Biol[JO]|Nat Rev Genet[JO]|Front Genet[JO]|Oncogene[JO]|"Genes (Basel)"[JO]|Genome Med[JO]|Am J Hum Genet[JO]|Genet Med[JO]|Genome Res[JO]|PLoS Genet[JO]|BMC Genomics[JO]|Trends Genet[JO]|Theor Appl Genet[JO]|Eur J Hum Genet[JO]|Clin Epigenetics[JO]|Genomics[JO]|Genetics[JO]|Hum Genet[JO]|Gene[JO])
 
 @@@FILTER_METADATA@@@
 {

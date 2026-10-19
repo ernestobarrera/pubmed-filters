@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Clinical Laboratory Science según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(Clin Chim Acta[JO]|Clin Chem Lab Med[JO]|Clin Chem[JO]|J Clin Lab Anal[JO]|Int J Lab Hematol[JO]|Crit Rev Clin Lab Sci[JO]|Adv Clin Chem[JO]|Ann Lab Med[JO]|Clin Biochem[JO]|J Appl Lab Med[JO]|J Anal Methods Chem[JO]|Indian J Clin Biochem[JO]|Ann Clin Biochem[JO]|Lab Med[JO]|Scand J Clin Lab Invest[JO]|Biochem Med (Zagreb)[JO]|Pract Lab Med[JO]|Clin Lab Med[JO]|J Med Biochem[JO]|J Lab Physicians[JO])
+(Clin Chim Acta[JO]|Clin Chem Lab Med[JO]|Clin Chem[JO]|J Clin Lab Anal[JO]|Int J Lab Hematol[JO]|Crit Rev Clin Lab Sci[JO]|Adv Clin Chem[JO]|Ann Lab Med[JO]|Clin Biochem[JO]|J Appl Lab Med[JO]|J Anal Methods Chem[JO]|Indian J Clin Biochem[JO]|Ann Clin Biochem[JO]|Lab Med[JO]|Scand J Clin Lab Invest[JO]|"Biochem Med (Zagreb)"[JO]|Pract Lab Med[JO]|Clin Lab Med[JO]|J Med Biochem[JO]|J Lab Physicians[JO])
 
 @@@FILTER_METADATA@@@
 {

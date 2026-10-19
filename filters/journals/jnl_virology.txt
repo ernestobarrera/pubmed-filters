@@ -4,7 +4,7 @@
 # Descripción: Top 20 revistas en Virology según índice h5 de Google Scholar
 # Fuente: Google Scholar Metrics - Top Publications
 
-(J Med Virol[JO]|Vaccines (Basel)[JO]|Viruses[JO]|Vaccine[JO]|PLoS Pathog[JO]|Emerg Microbes Infect[JO]|J Clin Virol[JO]|J Virol[JO]|Hum Vaccin Immunother[JO]|Rev Med Virol[JO]|Transbound Emerg Dis[JO]|NPJ Vaccines[JO]|Virol J[JO]|Virus Res[JO]|Antiviral Res[JO]|Expert Rev Vaccines[JO]|J Gen Virol[JO]|Curr Opin Virol[JO]|Virus Evol[JO]|Arch Virol[JO])
+(J Med Virol[JO]|"Vaccines (Basel)"[JO]|Viruses[JO]|Vaccine[JO]|PLoS Pathog[JO]|Emerg Microbes Infect[JO]|J Clin Virol[JO]|J Virol[JO]|Hum Vaccin Immunother[JO]|Rev Med Virol[JO]|Transbound Emerg Dis[JO]|NPJ Vaccines[JO]|Virol J[JO]|Virus Res[JO]|Antiviral Res[JO]|Expert Rev Vaccines[JO]|J Gen Virol[JO]|Curr Opin Virol[JO]|Virus Evol[JO]|Arch Virol[JO])
 
 @@@FILTER_METADATA@@@
 {
