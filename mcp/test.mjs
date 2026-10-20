@@ -375,6 +375,64 @@ check('M19', rechazos.every((x) => x.isError === true && x.structuredContent.res
   && sinCatalogo.isError === true && /catálogo/.test(sinCatalogo.structuredContent.error) && enviadas.length === 0,
   'un registro mal formado (vacío, con claves ajenas, papeles u orígenes inventados, PMID inválido, enorme o no objeto) o sin catálogo se rechaza sin llamar a PubMed');
 
+// --- Orden, páginas y recorrido de lectura (1.13.0) ------------------------------------------------
+// Medido el 2026-10-17/18: ESearch devuelve primero lo más reciente y la superficie leía los primeros N
+// como si fueran el conjunto. El MCP deja pedir otro orden y otra página, valida ambos en su propia
+// interfaz (no solo en el ejecutor) y el registro declara cómo se leerá la pasada.
+
+const { ESEARCH_WINDOW } = await import('./protocol.mjs');
+const conPagina = (structured) => createMcpHandler({ fetcher: sirve(JSON.stringify({ esearchresult: structured })) });
+enviadas.length = 0;
+const sinOrden = (await conPagina({ count: '25', idlist: ['1', '2'], querytranslation: 'x[tiab]' })(llamada(140, 'x[tiab]', { retmax: 2 }))).result.structuredContent;
+const cuerpoSinOrden = new URLSearchParams(enviadas[0]?.body ?? '');
+enviadas.length = 0;
+const conOrden = (await conPagina({ count: '25', idlist: ['3', '4'], querytranslation: 'x[tiab]' })(llamada(141, 'x[tiab]', { retmax: 2, retstart: 2, sort: 'relevance' }))).result.structuredContent;
+const cuerpoConOrden = new URLSearchParams(enviadas[0]?.body ?? '');
+enviadas.length = 0;
+const paginaMala = await Promise.all([
+  { retstart: -1 }, { retstart: ESEARCH_WINDOW }, { retstart: 2.5 }, { retstart: null }, { sort: 'pub_date' }, { sort: null },
+].map((extra, i) => h(llamada(150 + i, 'x[tiab]', { retmax: 2, ...extra }))));
+const props = TOOL.inputSchema.properties;
+check('M21', !cuerpoSinOrden.has('sort') && !cuerpoSinOrden.has('retstart') && sinOrden.request.sort === null
+  && sinOrden.next_retstart === 2 && sinOrden.next_retstart_reason === null
+  && cuerpoConOrden.get('sort') === 'relevance' && cuerpoConOrden.get('retstart') === '2'
+  && conOrden.request.sort === 'relevance' && conOrden.request.retstart === 2 && conOrden.page?.first === 3 && conOrden.next_retstart === 4
+  && paginaMala.every((x) => x.result.isError === true && x.result.structuredContent.result_count === null
+    && !Object.hasOwn(x.result.structuredContent, 'sent_query'))
+  && enviadas.length === 0
+  && props.sort?.enum?.join() === 'relevance' && props.retstart?.maximum === ESEARCH_WINDOW - 1
+  && /next_retstart/.test(TOOL.description) && /not the set/.test(TOOL.description),
+  'sort y retstart viajan por POST solo si se piden y el recibo los refleja con su continuación; fuera de rango se rechazan en la interfaz del MCP, sin llamar a PubMed');
+
+const RECORRIDOS = Object.keys(JSON.parse(readFileSync(join(HERE, '..', 'neurosymbolic_router.json'), 'utf8')).reading_and_drilldown.reading_path)
+  .filter((k) => k !== 'rule');
+const conPase = (cambios) => registro({ pass: { ...registro().pass, ...cambios } });
+const rl = {
+  sinRecorrido: await buscar(160, qDep, { filters_used: [DEP], selection_record: registro() }),
+  completo: await buscar(161, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'complete_retrieval' }) }),
+  exploracion: await buscar(162, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'exploration_only' }) }),
+  focalizadaConMotivo: await buscar(163, qDep, { filters_used: [DEP], selection_record: conPase({
+    reading_path: 'focused_selection', selection_reason: 'the 59 synthesis records, retrieved whole' }) }),
+  focalizadaSinMotivo: await buscar(164, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'focused_selection' }) }),
+  focalizadaYDescartado: await buscar(165, qDep, { filters_used: [DEP], selection_record: registro({
+    filters: [{ path: DEP, decision: 'discarded', reason: 'not needed here' }],
+    pass: { ...registro().pass, reading_path: 'focused_selection', selection_reason: 'trials only' } }) }),
+};
+enviadas.length = 0;
+const rlMalos = await Promise.all([
+  conPase({ reading_path: 'read_everything' }), conPase({ reading_path: 'focused_selection', selection_reason: 'ok' }),
+].map((rec, i) => buscar(170 + i, qDep, { filters_used: [DEP], selection_record: rec })));
+const sr = (k) => rl[k].structuredContent.selection_record;
+const st = (k) => rl[k].structuredContent.status.selection_record;
+check('M22', RECORRIDOS.join() === TOOL.inputSchema.properties.selection_record.properties.pass.properties.reading_path.enum.join()
+  && st('sinRecorrido') === 'declared' && sr('sinRecorrido').notes.join() === 'reading_path no declarado' && sr('sinRecorrido').problems.length === 0
+  && ['completo', 'exploracion', 'focalizadaConMotivo'].every((k) => st(k) === 'declared' && sr(k).notes.length === 0)
+  && st('focalizadaSinMotivo') === 'inconsistent' && /selection_reason/.test(sr('focalizadaSinMotivo').problems.join(' '))
+  && st('focalizadaYDescartado') === 'inconsistent' && sr('focalizadaYDescartado').problems.length === 1
+  && Object.values(rl).every((v) => v.isError === false && v.structuredContent.status.query_integrity === 'verified')
+  && rlMalos.every((x) => x.isError === true) && enviadas.length === 0,
+  `recorrido de lectura: el enumerado es el del router; sin declarar, el registro sigue declared con una nota aparte; focused_selection exige su motivo; no oculta otros problemas; un recorrido inventado o un motivo de menos de 3 caracteres se rechazan — estados: ${JSON.stringify(Object.fromEntries(Object.keys(rl).map((k) => [k, st(k)])))}`);
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;
