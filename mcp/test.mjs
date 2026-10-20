@@ -390,7 +390,7 @@ const conOrden = (await conPagina({ count: '25', idlist: ['3', '4'], querytransl
 const cuerpoConOrden = new URLSearchParams(enviadas[0]?.body ?? '');
 enviadas.length = 0;
 const paginaMala = await Promise.all([
-  { retstart: -1 }, { retstart: ESEARCH_WINDOW }, { retstart: 2.5 }, { sort: 'pub_date' }, { sort: null },
+  { retstart: -1 }, { retstart: ESEARCH_WINDOW }, { retstart: 2.5 }, { retstart: null }, { sort: 'pub_date' }, { sort: null },
 ].map((extra, i) => h(llamada(150 + i, 'x[tiab]', { retmax: 2, ...extra }))));
 const props = TOOL.inputSchema.properties;
 check('M21', !cuerpoSinOrden.has('sort') && !cuerpoSinOrden.has('retstart') && sinOrden.request.sort === null

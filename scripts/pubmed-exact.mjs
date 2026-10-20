@@ -20,7 +20,8 @@
  * QUÉ NO HACE, a propósito. No reescribe, sanea, normaliza ni trocea la consulta: lo que se envía es
  * byte a byte lo que se recibe, y `sent_query_sha256` lo deja comprobable. No pagina por su cuenta ni
  * más allá de la ventana de ESearch: cada página se pide con --retstart, el recibo dice la siguiente
- * (`next_retstart`) o por qué no la hay, y unir páginas es de `scripts/page-union.mjs`. Si el recuento
+ * (`next_retstart`) o por qué no la hay. Unir páginas es de `scripts/page-union.mjs`, que en esta versión
+ * solo une recibos con registro de selección (los del MCP): los de este CLI no lo llevan. Si el recuento
  * supera lo recuperado, `records_complete` es false y se dice. No lee abstracts: la profundidad de
  * lectura no es suya y no la declara.
  */

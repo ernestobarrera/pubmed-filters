@@ -995,21 +995,24 @@ check('E16', e16.next_retstart === 10 && Object.hasOwn(e16, 'next_retstart_reaso
 // E17. Si NCBI dice haber servido otra posición u otro tamaño, o devuelve más de lo pedido, no hay una
 // continuación calculada sobre una posición inferida; el aviso se conserva y la integridad no cambia.
 const ajuste = (s, c) => ({ warninglist: { outputmessages: [`Restrictions achieved. start and count adjusted to ${s}, ${c}.`] } });
+// Tres casos aislados (Codex, 2026-10-20): solo el tamaño, solo la posición, solo la longitud de la lista.
 const e17otro = await recibo(er({ count: '20', idlist: ids(0, 10), ...ajuste(0, 5) }), 'x[tiab]', { retmax: 10 });
+const e17posicion = await recibo(er({ count: '20', idlist: ids(0, 10), ...ajuste(1, 10) }), 'x[tiab]', { retmax: 10 });
 const e17mismo = await recibo(er({ count: '20', idlist: ids(0, 10), ...ajuste(0, 10) }), 'x[tiab]', { retmax: 10 });
 const e17largo = await recibo(er({ count: '20', idlist: ids(0, 11) }), 'x[tiab]', { retmax: 10 });
 check('E17', e17otro.next_retstart === null && e17otro.next_retstart_reason === 'page_adjusted'
   && e17otro.status.query_integrity === 'verified' && e17otro.pagination_notices.length === 1
+  && e17posicion.next_retstart === null && e17posicion.next_retstart_reason === 'page_adjusted'
   && e17mismo.next_retstart === 10 && e17largo.next_retstart_reason === 'page_adjusted',
-  'un ajuste de NCBI distinto de lo enviado, o más PMID de los pedidos, deja page_adjusted sin continuación ni cambio de integridad; un ajuste igual no estorba');
+  'otro tamaño, otra posición o más PMID de los pedidos (cada uno por separado) dejan page_adjusted sin continuación ni cambio de integridad; un ajuste igual a lo enviado no estorba');
 
 // U1-U2. Unión de páginas, fuera del servidor (scripts/page-union.mjs): los seis controles de deriva,
 // la referencia de recorrido y el límite documentado de la garantía.
 const { checkPageUnion, OPERATIONAL } = await import('./page-union.mjs');
-const pagina = (desde, lista, { count = 5, sort = null, q = 'q1', retmax = 3, verificada = true, plan = 'plan-1', pase = 'p1' } = {}) => ({
+const pagina = (desde, lista, { count = 5, sort = null, q = 'q1', retmax = 3, verificada = true, plan = 'plan-1', pase = 'p1', avisos = [] } = {}) => ({
   sent_query_sha256: q, request: { retstart: desde, retmax_sent: retmax, sort }, result_count: count,
-  status: { query_integrity: verificada ? 'verified' : 'failed' }, pmids: lista,
-  ...(pase ? { selection_record: { record: { plan_ref: plan, pass: { pass_id: pase } } } } : {}),
+  status: { query_integrity: verificada ? 'verified' : 'failed' }, pmids: lista, pagination_notices: avisos,
+  ...(pase ? { selection_record: { record: { ...(plan ? { plan_ref: plan } : {}), pass: { pass_id: pase } } } } : {}),
 });
 const buena = [pagina(0, ['1', '2', '3']), pagina(3, ['4', '5'])];
 const u = {
@@ -1031,6 +1034,9 @@ const u = {
   // Ninguna página con recorrido: sin este caso, quitar el control sobrevivía (lo cazaba «recorridos distintos»).
   ningunaConRecorrido: checkPageUnion([pagina(0, ['1', '2', '3'], { pase: null }), pagina(3, ['4', '5'], { pase: null })]),
   otroRecorrido: checkPageUnion([buena[0], pagina(3, ['4', '5'], { pase: 'p2' })]),
+  // R2 de Codex (2026-10-20): un plan ausente no es un plan común, y un separador no distingue pares.
+  sinPlan: checkPageUnion([pagina(0, ['1', '2', '3'], { plan: null }), pagina(3, ['4', '5'], { plan: null })]),
+  paresQueColisionaban: checkPageUnion([pagina(0, ['1', '2', '3'], { plan: 'a#b', pase: 'c' }), pagina(3, ['4', '5'], { plan: 'a', pase: 'b#c' })]),
 };
 const uBuena = checkPageUnion(buena);
 const uMal = Object.entries(u).filter(([k, v]) => (k === 'desordenada' ? v.status !== OPERATIONAL : v.status === OPERATIONAL || !v.problems.length));
@@ -1038,6 +1044,28 @@ check('U1', uBuena.status === OPERATIONAL && uBuena.label === 'recuperación ope
   && uBuena.pmids.join() === '1,2,3,4,5' && uBuena.problems.length === 0 && uMal.length === 0,
   `unión de páginas: operativa solo con misma consulta y orden, mismo recorrido, contigua desde 0, verificada, completa por tramo, mismo recuento, sin duplicados y dentro de la ventana${
     uMal.length ? ` — mal: ${uMal.map(([k]) => k).join(', ')}` : ''}`);
+
+// U3. Una página que NCBI dice haber servido en otra posición o con otro tamaño no entra en la unión,
+// aunque su consulta esté verificada y su lista tenga la longitud esperada (Codex, R1, 2026-10-20). La
+// integridad de la consulta y la validez de la página son garantías distintas. Un aviso igual a lo
+// enviado, como el del borde real medido el 2026-10-19 («adjusted to 9998, 1»), no estorba.
+const conRegistro = (rc) => ({ ...rc, selection_record: { record: { plan_ref: 'plan-1', pass: { pass_id: 'p1' } } } });
+const reciboAjustado = conRegistro(await recibo(er({ count: '4', idlist: ['1', '2'], ...ajuste(1, 2) }), 'x[tiab]', { retmax: 2 }));
+const reciboSegunda = conRegistro(await recibo(er({ count: '4', idlist: ['3', '4'] }), 'x[tiab]', { retmax: 2, retstart: 2 }));
+const avisoNcbi = (s, c) => [`Restrictions achieved. start and count adjusted to ${s}, ${c}.`];
+const u3 = {
+  desdeElEjecutor: checkPageUnion([reciboAjustado, reciboSegunda]),
+  soloPosicion: checkPageUnion([pagina(0, ['1', '2', '3'], { avisos: avisoNcbi(1, 3) }), buena[1]]),
+  soloTamano: checkPageUnion([pagina(0, ['1', '2', '3'], { avisos: avisoNcbi(0, 2) }), buena[1]]),
+};
+const u3coincide = checkPageUnion([pagina(0, ['1', '2', '3'], { avisos: avisoNcbi(0, 3) }), buena[1]]);
+const u3borde = checkPageUnion([pagina(0, ids(0, 9998), { count: 9999, retmax: 9998 }),
+  pagina(9998, ids(9998, 1), { count: 9999, retmax: 1, avisos: avisoNcbi(9998, 1) })]);
+const u3mal = Object.entries(u3).filter(([, v]) => v.status === OPERATIONAL || !v.problems.some((p) => /otra posición/.test(p)));
+check('U3', reciboAjustado.next_retstart_reason === 'page_adjusted' && reciboAjustado.status.query_integrity === 'verified'
+  && u3mal.length === 0 && u3coincide.status === OPERATIONAL && u3borde.status === OPERATIONAL,
+  `una página con ajuste de NCBI incompatible (desde el ejecutor, solo posición, solo tamaño) deja la unión incompleta; un aviso igual a lo enviado, también en el borde de 9.999, no${
+    u3mal.length ? ` — mal: ${u3mal.map(([k]) => k).join(', ')}` : ''}`);
 
 // El contraejemplo de Codex: A, B, C, D pasa a A, C, D, E entre páginas. Los seis controles pasan y C se
 // pierde. No es un fallo del comprobador: es el límite de una paginación sin historial, y se prueba como

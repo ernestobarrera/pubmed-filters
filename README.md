@@ -79,14 +79,17 @@ su recibo, sin otro motor ni MCP intermedio:
 node scripts/pubmed-exact.mjs '(asthma[tiab]) AND (systematic[sb])' --retmax 200
 node scripts/pubmed-exact.mjs '(asthma[tiab]) AND (systematic[sb])' --retmax 200 --retstart 200 --sort relevance
 node scripts/pubmed-exact.mjs --file consulta.txt
-node scripts/page-union.mjs recibo-p1.json recibo-p2.json
+node scripts/page-union.mjs recibo-p1.json recibo-p2.json   # recibos del MCP, con registro de selección
 ```
 
 Desde la 1.13.0 se puede pedir el orden por relevancia (`--sort relevance`; omitido, PubMed usa el suyo,
 lo más reciente primero) y otra página (`--retstart`). El recibo dice la página siguiente o por qué no la
-hay, y `page-union.mjs` une las páginas de un recorrido con seis controles de deriva. Lo mejor que puede
-decir de la unión es «recuperación operativa sin instantánea fijada»: sin el historial de NCBI, un conjunto
-que cambie entre páginas sin cambiar su recuento no se detecta.
+hay, y `page-union.mjs` une las páginas de un recorrido con seis controles de deriva, más el de que cada
+página se sirvió en la posición pedida. Lo mejor que puede decir de la unión es «recuperación operativa sin
+instantánea fijada»: sin el historial de NCBI, un conjunto que cambie entre páginas sin cambiar su recuento
+no se detecta. **Límite de esta versión:** solo une recibos con registro de selección (`plan_ref` y
+`pass_id`), es decir, los del MCP. Los del CLI no llevan registro y no se pueden unir con él; un registro
+añadido después de los resultados no serviría.
 
 El recibo guarda la consulta enviada y su SHA-256, el transporte (POST), `querytranslation`,
 `warninglist`, `errorlist` y `ERROR` **tal como los devolvió PubMed**, el recuento crudo y el

@@ -539,7 +539,8 @@ export function createMcpHandler({
     const extra = Object.keys(args).filter((k) => !(k in TOOL.inputSchema.properties));
     const query = args.query;
     const retmax = args.retmax ?? 0;
-    const retstart = args.retstart ?? 0;
+    // El valor por defecto solo cuando falta: `retstart: null` no es un entero y se rechaza (Codex, P3).
+    const retstart = Object.hasOwn(args, 'retstart') ? args.retstart : 0;
     const sort = args.sort;
     const used = args.filters_used;
     const record = args.selection_record;

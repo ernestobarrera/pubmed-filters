@@ -52,6 +52,16 @@ export const SORT_VALUES = ['relevance'];
 const ADJUSTED = /adjusted to ([0-9]+), ([0-9]+)/i;
 
 /**
+ * ¿Dice NCBI haber servido otra posición u otro tamaño que los enviados? La usan el ejecutor (para no
+ * ofrecer continuación) y el comprobador de unión (para no aceptar la página): un solo juicio, y la unión
+ * lo hace sobre el aviso mismo, no sobre lo que el ejecutor concluyó de él (Codex, R1, 2026-10-20).
+ */
+export function pageAdjusted(notices, retstart, retmaxSent) {
+  return (notices ?? []).map((m) => ADJUSTED.exec(m)).filter(Boolean)
+    .some(([, s, c]) => Number(s) !== retstart || Number(c) !== retmaxSent);
+}
+
+/**
  * Continuación de una página (1.13.0, especificación 18- y adenda de Codex). Las reglas van en este
  * orden y la primera que se cumple decide. `page_adjusted` es la única que la tabla de la adenda no
  * nombra: NCBI dice haber servido otra posición u otro tamaño que los enviados (o devuelve más PMIDs de
@@ -62,9 +72,7 @@ export function continuation({ integrity, retstart, retmaxRequested, retmaxSent,
   const stop = (reason) => ({ next_retstart: null, next_retstart_reason: reason });
   if (integrity !== 'verified' || count === null) return stop('not_verified');
   if (retmaxRequested === 0) return stop('count_only');
-  const adjusted = notices.map((m) => ADJUSTED.exec(m)).filter(Boolean)
-    .some(([, s, c]) => Number(s) !== retstart || Number(c) !== retmaxSent);
-  if (adjusted || n > retmaxSent) return stop('page_adjusted');
+  if (pageAdjusted(notices, retstart, retmaxSent) || n > retmaxSent) return stop('page_adjusted');
   if (n === 0 && count > retstart) return stop('empty_page');
   if (retstart + n >= count) return stop('end_of_set');
   if (retstart + n > ESEARCH_WINDOW - 1) return stop('window_limit');

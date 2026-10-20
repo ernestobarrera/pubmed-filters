@@ -9,8 +9,12 @@
  * página es independiente y solo quien las tiene todas puede compararlas.
  *
  * QUÉ GARANTIZA. Que las páginas son de la misma consulta y el mismo orden, del mismo recorrido declarado,
- * contiguas desde 0, verificadas, completas en su tramo, con el mismo recuento y sin PMID repetidos, y que
- * la unión cuenta lo que PubMed dice que hay.
+ * contiguas desde 0, verificadas, completas en su tramo, servidas en la posición pedida, con el mismo
+ * recuento y sin PMID repetidos, y que la unión cuenta lo que PubMed dice que hay.
+ *
+ * QUÉ RECIBOS UNE. Solo los que llevan registro de selección con plan_ref y pass_id: en esta iteración,
+ * los del MCP. Los del CLI (`pubmed-exact.mjs`) no lo llevan y no se pueden unir aquí; inventarles un
+ * registro después de los resultados sería justo lo que el registro existe para evitar.
  *
  * QUÉ NO GARANTIZA, y no puede. Que el conjunto no cambiara entre páginas. El contraejemplo de Codex: el
  * conjunto A, B, C, D pasa a A, C, D, E entre la página 1 (A, B) y la 2 (D, E). El recuento sigue en 4, la
@@ -23,19 +27,21 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ESEARCH_WINDOW } from './exact-core.mjs';
+import { ESEARCH_WINDOW, pageAdjusted } from './exact-core.mjs';
 
 export const OPERATIONAL = 'operational_retrieval_without_snapshot';
 export const OPERATIONAL_LABEL = 'recuperación operativa sin instantánea fijada';
 
 /**
- * La referencia del recorrido sale del registro de selección que el recibo devuelve (plan y pasada). Dos
+ * La referencia del recorrido sale del registro de selección que el recibo devuelve: el PAR plan y pasada,
+ * los dos obligatorios aquí (el MCP admite registros sin plan; quien certifica una agrupación no). Dos
  * exploraciones independientes con los mismos parámetros no se funden por accidente: sin referencia
- * declarada, no hay recorrido que unir.
+ * completa, no hay recorrido que unir. El par se serializa como tupla: concatenarlo con un separador hacía
+ * iguales («a#b», «c») y («a», «b#c»), y un plan ausente se volvía cadena vacía (Codex, R2, 2026-10-20).
  */
 const walkRef = (r) => {
   const rec = r?.selection_record?.record;
-  return rec?.pass?.pass_id ? `${rec.plan_ref ?? ''}#${rec.pass.pass_id}` : null;
+  return rec?.plan_ref && rec?.pass?.pass_id ? JSON.stringify([rec.plan_ref, rec.pass.pass_id]) : null;
 };
 
 export function checkPageUnion(receipts) {
@@ -48,7 +54,7 @@ export function checkPageUnion(receipts) {
 
   // 0. Un mismo recorrido declarado.
   const refs = new Set(pages.map(walkRef));
-  if (refs.has(null)) problems.push('recorrido: hay páginas sin registro de selección con plan y pasada; no se sabe si son del mismo recorrido');
+  if (refs.has(null)) problems.push('recorrido: hay páginas sin registro de selección con plan_ref y pass_id; no se sabe si son del mismo recorrido');
   else if (refs.size > 1) problems.push(`recorrido: las páginas son de recorridos distintos (${[...refs].join(', ')})`);
 
   // 1. Misma consulta y mismo orden.
@@ -70,6 +76,10 @@ export function checkPageUnion(receipts) {
     if (start !== expected) problems.push(`continuidad: la página que empieza en ${start} debía empezar en ${expected}`);
     const full = Math.min(p.request?.retmax_sent ?? 0, Math.max(0, (p.result_count ?? 0) - start));
     if (n !== full) problems.push(`página ${start + 1}: ${n} PMID donde su tramo pedía ${full}`);
+    // La posición pedida no es la servida si NCBI dice otra: la integridad de la consulta no lo cubre.
+    if (pageAdjusted(p.pagination_notices, start, p.request?.retmax_sent)) {
+      problems.push(`página ${start + 1}: NCBI dice haber servido otra posición u otro tamaño (${(p.pagination_notices ?? []).join(' | ')})`);
+    }
     expected = start + n;
   }
 
