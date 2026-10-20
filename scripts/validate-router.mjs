@@ -1024,7 +1024,12 @@ const u = {
   duplicado: checkPageUnion([buena[0], pagina(3, ['3', '5'])]),
   ultimaCorta: checkPageUnion([pagina(0, ['1', '2', '3'], { count: 6 }), pagina(3, ['4', '5'], { count: 6 })]),
   fueraDeVentana: checkPageUnion([pagina(0, ['1', '2', '3'], { count: ESEARCH_WINDOW + 1 })]),
+  // Solo falla la continuidad: la página 2 dice empezar en 2 y no hay hueco ni duplicado que la delate.
+  // Sin este caso, quitar el control de continuidad sobrevivía (lo cazaba la unión frente al recuento).
+  solapeDeclarado: checkPageUnion([buena[0], pagina(2, ['4', '5'], { retmax: 2 })]),
   sinRecorrido: checkPageUnion([buena[0], pagina(3, ['4', '5'], { pase: null })]),
+  // Ninguna página con recorrido: sin este caso, quitar el control sobrevivía (lo cazaba «recorridos distintos»).
+  ningunaConRecorrido: checkPageUnion([pagina(0, ['1', '2', '3'], { pase: null }), pagina(3, ['4', '5'], { pase: null })]),
   otroRecorrido: checkPageUnion([buena[0], pagina(3, ['4', '5'], { pase: 'p2' })]),
 };
 const uBuena = checkPageUnion(buena);
