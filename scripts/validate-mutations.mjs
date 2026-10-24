@@ -553,8 +553,10 @@ const MUTACIONES = [
     id: 'MCP-REGISTRO-HORA-DE-EJECUCION',
     porque: 'la hora del registro deja de ser la de llegada y pasa a ser la de PubMed: ya no distingue un registro previo de uno posterior',
     fichero: 'mcp/protocol.mjs',
-    de: 'received_at: receivedAt,',
-    a: 'received_at: structured.executed_at,',
+    // Con la hora del registro y su huella: desde la 1.14.0 el rechazo de la lectura también lleva
+    // `received_at: receivedAt,` y va antes en el fichero; sin la segunda línea, se mutaba ese otro.
+    de: 'received_at: receivedAt,\n          sha256: await sha256(recordText),',
+    a: 'received_at: structured.executed_at,\n          sha256: await sha256(recordText),',
     rompe: 'M18',
   },
   {
