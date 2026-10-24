@@ -72,10 +72,10 @@ check('M1', iniPropia.result.protocolVersion === '2025-06-18' && ini.result.prot
   'anuncia solo la versión que cumple (2025-06-18) y la ofrece a quien pida otra');
 
 const lista = await h({ jsonrpc: '2.0', id: 3, method: 'tools/list' });
-check('M2', lista.result.tools.length === 1 && lista.result.tools[0].name === 'pubmed_search_exact'
-  && lista.result.tools[0].annotations.readOnlyHint === true
+check('M2', lista.result.tools.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_fetch_exact'
+  && lista.result.tools.every((t) => t.annotations.readOnlyHint === true)
   && lista.result.tools[0].inputSchema.required.includes('query'),
-  'una sola herramienta, de solo lectura, con query obligatoria');
+  'sin catálogo, buscar y leer por PMID: de solo lectura, con query obligatoria');
 
 check('M3', await h({ jsonrpc: '2.0', method: 'notifications/initialized' }) === null
   && await h({ jsonrpc: '2.0', id: 9, result: {} }) === null
@@ -187,7 +187,7 @@ const usar = (id, name, args) => conFuente({ jsonrpc: '2.0', id, method: 'tools/
 
 const listaFuente = (await conFuente({ jsonrpc: '2.0', id: 30, method: 'tools/list' })).result.tools;
 const iniFuente = (await conFuente({ jsonrpc: '2.0', id: 31, method: 'initialize', params: { protocolVersion: '2025-06-18' } })).result;
-check('M12', listaFuente.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_filter_catalog,pubmed_get_filter'
+check('M12', listaFuente.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_filter_catalog,pubmed_get_filter,pubmed_fetch_exact'
   && listaFuente.every((t) => t.annotations.readOnlyHint === true)
   && /pubmed_filter_catalog/.test(iniFuente.instructions) && !/pubmed_filter_catalog/.test(ini.result.instructions),
   'con el paquete de filtros anuncia catálogo y extracción, de solo lectura; sin él, solo ejecuta y no lo promete');
@@ -433,6 +433,76 @@ check('M22', RECORRIDOS.join() === TOOL.inputSchema.properties.selection_record.
   && rlMalos.every((x) => x.isError === true) && enviadas.length === 0,
   `recorrido de lectura: el enumerado es el del router; sin declarar, el registro sigue declared con una nota aparte; focused_selection exige su motivo; no oculta otros problemas; un recorrido inventado o un motivo de menos de 3 caracteres se rechazan — estados: ${JSON.stringify(Object.fromEntries(Object.keys(rl).map((k) => [k, st(k)])))}`);
 
+// --- Lectura por PMID con recibo (1.14.0, especificación 29-) --------------------------------------
+// Medido en las pruebas de superficie del 21-23/10: PMID pedidos contados como abstracts conservados, y un
+// tramo final de un texto marcado «no truncado». Aquí: esquema estricto antes de NCBI, la misma cola que la
+// búsqueda, el mismo run y un recibo que cabe en su presupuesto en las dos representaciones.
+
+const { FETCH_TOOL } = await import('./protocol.mjs');
+const { MAX_STRUCTURED_BYTES } = await import('../scripts/fetch-core.mjs');
+const xmlLectura = (ids, n = 3000) => `<?xml version="1.0" ?>\n<PubmedArticleSet>${ids.map((p) => `<PubmedArticle><MedlineCitation><PMID Version="1">${p}</PMID>`
+  + `<Article><Journal><JournalIssue><PubDate><Year>2021</Year></PubDate></JournalIssue></Journal><ArticleTitle>Synthetic ${p}.</ArticleTitle>`
+  + `<Abstract><AbstractText Label="RESULTS">${'r'.repeat(n)}</AbstractText></Abstract></Article></MedlineCitation></PubmedArticle>`).join('')}</PubmedArticleSet>`;
+const ncbiLectura = (status = 200, n) => async (url, init = {}) => {
+  enviadas.push({ url: String(url), method: init.method, body: init.body?.toString() ?? '' });
+  const ids = new URLSearchParams(init.body?.toString() ?? '').get('id')?.split(',') ?? [];
+  return /efetch/.test(String(url)) ? new Response(status === 200 ? xmlLectura(ids, n) : '', { status })
+    : { ok: true, status: 200, text: async () => JSON.stringify(respuestas['consulta-valida']) };
+};
+const leerCon = (handler, id, args) => handler({ jsonrpc: '2.0', id, method: 'tools/call', params: { name: 'pubmed_fetch_exact', arguments: args } });
+const CTX = { plan_ref: 'plan-1/r1', read_id: 'l1' };
+
+const fp = FETCH_TOOL.inputSchema.properties;
+check('M23', fp.pmids.maxItems === 5 && fp.pmids.minItems === 1 && fp.pmids.uniqueItems === true && fp.pmids.items.pattern === '^[1-9][0-9]{0,8}$'
+  && FETCH_TOOL.inputSchema.additionalProperties === false && fp.context.additionalProperties === false
+  && fp.context.required.join() === 'plan_ref,read_id' && FETCH_TOOL.inputSchema.required.join() === 'pmids,context'
+  && !Object.keys(fp).some((k) => /offset|continu|retstart|url|format|db/.test(k))
+  && FETCH_TOOL.annotations.readOnlyHint === true && /never cut|never/.test(FETCH_TOOL.description) && /not_found/.test(FETCH_TOOL.description)
+  && /pubmed_fetch_exact/.test(ini.result.instructions),
+  'pubmed_fetch_exact: 1-5 PMID en cadena sin ceros a la izquierda, contexto obligatorio, sin claves libres ni de continuación; las instrucciones la nombran');
+
+enviadas.length = 0;
+const hLectura = createMcpHandler({ fetcher: ncbiLectura(), run: { contract_version: 'x' } });
+const malosLectura = [{ pmids: [], context: CTX }, { pmids: ['1', '2', '3', '4', '5', '6'], context: CTX }, { pmids: ['1', '1'], context: CTX },
+  { pmids: [1], context: CTX }, { pmids: ['01'], context: CTX }, { pmids: null, context: CTX }, { pmids: ['1'] }, { pmids: ['1'], context: { plan_ref: 'p' } },
+  { pmids: ['1'], context: CTX, text_offset: 100 }, { pmids: ['1'], context: CTX, expected_abstract_sha256: 'x' }, { pmids: ['1'], context: { ...CTX, extra: 1 } }];
+const rechazosLectura = await Promise.all(malosLectura.map((args, i) => leerCon(hLectura, 300 + i, args)));
+check('M24', rechazosLectura.every((r) => r.result.isError === true && r.result.structuredContent.rejected_before_ncbi === true
+  && /^[0-9a-f-]{36}$/.test(r.result.structuredContent.attempt_id) && r.result.structuredContent.receipt_type === 'pubmed_fetch_exact')
+  && enviadas.length === 0,
+  `argumentos inválidos (vacío, seis, repetidos, número, cero a la izquierda, null, sin contexto, continuación, claves ajenas): rechazados con attempt_id y sin llamar a NCBI (${rechazosLectura.length})`);
+
+enviadas.length = 0;
+const RUN = { contract_version: 'x', repository_commit: 'y' };
+const hMixto = createMcpHandler({ fetcher: ncbiLectura(), run: RUN, filters: paquete });
+const lectura = (await leerCon(hMixto, 320, { pmids: ['11', '22', '33', '44', '55'], context: CTX })).result;
+const busqueda = (await hMixto(llamada(321, `(asthma[tiab]) AND (${qT})`, { filters_used: ['filters/clinical/deprescription.txt'] }))).result;
+const mensaje = { jsonrpc: '2.0', id: 320, result: lectura };
+const fallida = (await leerCon(createMcpHandler({ fetcher: ncbiLectura(429), run: RUN }), 322, { pmids: ['11', '22'], context: CTX })).result;
+const estructurado = Buffer.byteLength(JSON.stringify(lectura.structuredContent));
+const rpc = Buffer.byteLength(JSON.stringify(mensaje));
+check('M25', lectura.isError === false && lectura.content[0].text === JSON.stringify(lectura.structuredContent)
+  && lectura.structuredContent.run === busqueda.structuredContent.run && lectura.structuredContent.engine === 'mcp'
+  && lectura.structuredContent.status.delivery === 'complete' && lectura.structuredContent.results.length === 5
+  && estructurado <= MAX_STRUCTURED_BYTES && rpc > 2 * estructurado && rpc < 2 * MAX_STRUCTURED_BYTES + 4096
+  && busqueda.structuredContent.status.query_integrity === 'verified' && busqueda.structuredContent.status.filter_fidelity === 'verified'
+  && !('record_identity' in busqueda.structuredContent.status) && !('query_integrity' in lectura.structuredContent.status)
+  && fallida.isError === true && fallida.structuredContent.status.delivery === 'failed'
+  && fallida.structuredContent.results.every((r) => r.record_status === 'error' && r.reason === 'http_status')
+  && enviadas.filter((e) => /efetch/.test(e.url)).length === 2,
+  `recibo en structuredContent y, idéntico y compacto, como texto: ${estructurado} B estructurados (≤ ${MAX_STRUCTURED_BYTES}) y ${rpc} B el mensaje JSON-RPC entero, que lo lleva dos veces; mismo run que la búsqueda, que conserva query_integrity y filter_fidelity; un 429 es error declarado`);
+
+// Una sola cola para búsqueda y lectura: con la cola llena de búsquedas, la lectura también espera turno.
+enviadas.length = 0;
+const hCola = createMcpHandler({ fetcher: ncbiLectura(), maxQueueMs: 1000 });
+const mezcla = await Promise.all([...Array.from({ length: 6 }, (_, i) => hCola(llamada(400 + i, 'x[tiab]'))),
+  ...Array.from({ length: 6 }, (_, i) => leerCon(hCola, 410 + i, { pmids: [String(100 + i)], context: CTX }))]);
+const lecturasOcupadas = mezcla.slice(6).filter((r) => r.result.structuredContent.failure?.code === 'service_busy');
+check('M26', lecturasOcupadas.length > 0 && lecturasOcupadas.every((r) => r.result.isError === true
+  && r.result.structuredContent.results.every((x) => x.record_status === 'error' && x.reason === 'service_busy'))
+  && enviadas.length + lecturasOcupadas.length + mezcla.slice(0, 6).filter((r) => /SERVICIO_OCUPADO/.test(r.result.structuredContent.error ?? '')).length === 12,
+  `búsqueda y lectura comparten la cola: tras seis búsquedas, ${lecturasOcupadas.length} de seis lecturas se rechazan como servicio ocupado, con error por PMID y nunca como ausencia`);
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;
@@ -511,10 +581,21 @@ try {
   const wLista = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 50, method: 'tools/list' })).json();
   const wFiltro = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 51, method: 'tools/call',
     params: { name: 'pubmed_get_filter', arguments: { path: 'filters/scope/spanish.txt' } } })).json();
-  check('W8', wLista.result.tools.length === 3
+  check('W8', wLista.result.tools.length === 4
     && wFiltro.result.structuredContent.query === paquete.filters['filters/scope/spanish.txt'].query
     && wFiltro.result.structuredContent.catalog_sha256 === paquete.catalog_sha256,
-    'el Worker anuncia las tres herramientas y sirve la consulta canónica sellada, idéntica a la del repositorio');
+    'el Worker anuncia las cuatro herramientas y sirve la consulta canónica sellada, idéntica a la del repositorio');
+
+  // La lectura por el Worker: el sello del despliegue, su motor y su tiempo máximo, con la cola compartida.
+  globalThis.fetch = ncbiLectura();
+  const wLectura = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 52, method: 'tools/call',
+    params: { name: 'pubmed_fetch_exact', arguments: { pmids: ['11'], context: CTX } } })).json();
+  const wl = wLectura.result?.structuredContent;
+  const { default: sello } = await import('./build-info.mjs');
+  check('W9', wl?.engine === 'mcp/worker.mjs' && wl.limits.timeout_ms === 25000 && wl.run?.repository_commit === sello.repository_commit
+    && ['scripts/fetch-core.mjs', 'scripts/efetch.mjs', 'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs'].every((f) => typeof sello.code_sha256[f] === 'string')
+    && wl.status.delivery === 'complete' && wLectura.result.content[0].text === JSON.stringify(wl),
+    'el Worker lee por PMID con su sello, su motor y su tiempo máximo, y el sello cubre los ficheros de la lectura');
 } finally {
   globalThis.fetch = realFetch;
 }

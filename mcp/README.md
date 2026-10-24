@@ -1,8 +1,19 @@
 # MCP: búsqueda PubMed literal con recibo
 
-Un servidor MCP con tres herramientas de solo lectura. La central es `pubmed_search_exact`; las otras
-dos sirven la **fuente simbólica** para que una superficie sin terminal no tenga que extraer filtros a
-mano ni pueda reconstruirlos de memoria:
+Un servidor MCP con cuatro herramientas de solo lectura. La central es `pubmed_search_exact`;
+`pubmed_fetch_exact` lee por PMID con recibo (contrato 1.14.0), y las otras dos sirven la **fuente
+simbólica** para que una superficie sin terminal no tenga que extraer filtros a mano ni pueda
+reconstruirlos de memoria:
+
+- `pubmed_fetch_exact` (1.14.0, especificación 29-): de 1 a 5 PMID en cadena y un `context` con `plan_ref` y
+  `read_id`. Cada PMID sale `with_abstract` (abstract completo en `abstract_canonical`, con su SHA-256),
+  `without_abstract`, `not_found` (en **esta** respuesta) o `error` con `reason`; el que no cabe en lo que
+  queda del recibo (24 KiB) va a `pending_pmids`, y el que no cabe ni solo es `record_too_large`. Nada se
+  corta. `status.record_identity` (`verified` | `failed` | `unsupported`) y `status.delivery` (`complete` |
+  `partial` | `failed`); nunca `query_integrity`, que es de la búsqueda. Comparte la cola de la búsqueda y
+  su `run`. Su texto es el mismo JSON compacto que `structuredContent`, así que el mensaje entero lleva el
+  recibo dos veces (medido: unos 40 KB para cinco abstracts de 3.000 caracteres). Detalle y comprobador de
+  dossier en el [README principal](../README.md).
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición
@@ -261,8 +272,9 @@ node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en 
 
 La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M17 y W8, también
 sin red; el registro de selección en el recibo, en M18-M20; orden, páginas y recorrido de lectura, en
-M21-M22. Probado desde ChatGPT el 2026-10-17/18 con el contrato 1.11 (sin `selection_record`) y el
-2026-10-19 con la 1.12 (caso P); la 1.13 no se ha probado todavía desde ninguna superficie.
+M21-M22; la lectura por PMID, en M23-M26 y W9. Probado desde ChatGPT el 2026-10-17/18 con el contrato
+1.11 (sin `selection_record`) y el 2026-10-19 con la 1.12 (caso P); la 1.13 no se ha probado todavía desde
+ninguna superficie. La 1.14 (lectura por PMID) no está desplegada ni probada desde ninguna superficie.
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,
 contra PubMed real. Sin probar todavía dentro de `workerd` contra PubMed, ni desde claude.ai o ChatGPT.
