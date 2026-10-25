@@ -151,7 +151,8 @@ entradas ilegibles). Cuatro formatos JSON, todos con `format` y `format_version:
   `capture` (`method`, `inventory_by`, `closure` y `clock`), `plans` admitidos con sus pasadas y
   `attempts`, uno por llamada, con `tool`, `external_id`, `file` + `sha256` + `captured` (`on_receipt` |
   `transcribed`) o `absent_reason`, y, para recibos sin registro de selección, `plan_ref` y `pass_id`
-  (`walk_id` separa dos recorridos con la misma etiqueta). Opcionales: `response`, `citations`, `usage_log`,
+  (`walk_id` separa dos recorridos con la misma etiqueta). Una lectura sin respuesta lleva su `request`
+  (`{ pmids }`) si se conservó: sus PMID quedan por resolver; sin ella, el dossier no puede aprobar. Opcionales: `response`, `citations`, `usage_log`,
   `reference` (con `case_id` si es `scripts/eval/cases.json`) e `intersections`. Rutas relativas a la
   carpeta del manifiesto, sin salir de ella.
 - **`pubmed-dossier-capture-log`**: la evidencia externa de cierre (`dossier_id`, `closed: true`, `calls`
@@ -162,10 +163,16 @@ entradas ilegibles). Cuatro formatos JSON, todos con `format` y `format_version:
   (`agent` | `human`), atado a la respuesta por `response_sha256`, con `uses` (`source` pmid | doi | url,
   `fragment` exacto y, si se quiere, `start`/`end` en unidades UTF-16 y `abstract_ref`) e `identity_links`
   PMID-DOI. Una mención de un PMID en la respuesta es un candidato, no un uso: sin esto, D4 no se mide.
+  `uses: []` declara cero usos; un uso sin `fragment` queda sin comprobar y deja D4 no medido o parcial.
 - **`pubmed-dossier-reference`**: `reference_id`, `version`, `source`, `partial`, `target_pmids` y
   `synthesis_pmids` aparte.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F9 lectura, X1-X10 dossier; también en la CI y en
+Antes de usar un recibo, el comprobador valida su forma (lo que no la tiene es una entrada no soportada) y
+recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y continuación, con el criterio del
+ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
+a su PMID.
+
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, X1-X16 dossier; también en la CI y en
 la puerta de mutación).
 
 ### Desde un chat sin terminal: MCP

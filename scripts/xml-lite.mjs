@@ -23,6 +23,11 @@ export class XmlError extends Error {
 }
 
 const NAME = /[A-Za-z_:][-A-Za-z0-9_:.]*/y;
+// Fuera de Char: controles salvo tab/LF/CR, U+FFFE/U+FFFF y sustitutos sueltos.
+const INVALID_CHAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
+const XML_DECL = /^<\?xml[ \t\n]+version[ \t\n]*=[ \t\n]*(["'])1\.[0-9]+\1(?:[ \t\n]+encoding[ \t\n]*=[ \t\n]*(["'])([A-Za-z][A-Za-z0-9._-]*)\2)?(?:[ \t\n]+standalone[ \t\n]*=[ \t\n]*(["'])(?:yes|no)\4)?[ \t\n]*\?>/;
+/** Los nombres y textos que vienen de la respuesta, acotados en los diagnósticos (revisión de Codex, R8). */
+export const clip = (text, max = 80) => (String(text).length > max ? `${String(text).slice(0, max)}…(${String(text).length} caracteres)` : String(text));
 const SPACE = /[ \t\n]*/y;
 const PREDEFINED = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 export const MAX_DEPTH = 256;
@@ -45,13 +50,13 @@ function decode(raw, at) {
       // Un carácter que XML no admite (nulo, sustitutos, fuera de Unicode) no se convierte en otro.
       if (!(code === 0x9 || code === 0xA || code === 0xD || (code >= 0x20 && code <= 0xD7FF)
         || (code >= 0xE000 && code <= 0xFFFD) || (code >= 0x10000 && code <= 0x10FFFF))) {
-        throw new XmlError(`referencia numérica no válida «&${ref};»`, at + amp);
+        throw new XmlError(`referencia numérica no válida «&${clip(ref)};»`, at + amp);
       }
       out += String.fromCodePoint(code);
     } else if (Object.hasOwn(PREDEFINED, ref)) {
       out += PREDEFINED[ref];
     } else {
-      throw new XmlError(`entidad no definida «&${ref};»: no se cargan DTD ni entidades externas`, at + amp);
+      throw new XmlError(`entidad no definida «&${clip(ref)};»: no se cargan DTD ni entidades externas`, at + amp);
     }
     i = semi + 1;
   }
@@ -64,6 +69,10 @@ function decode(raw, at) {
  */
 export function parseXml(input) {
   if (typeof input !== 'string') throw new XmlError('la entrada no es texto');
+  // Todo carácter del documento ha de ser un Char de XML, también en texto, CDATA, atributos y comentarios
+  // (XML 1.0, §2.2): un nulo o un sustituto suelto no se entregan como texto (revisión de Codex, R7).
+  const bad = INVALID_CHAR.exec(input);
+  if (bad) throw new XmlError(`carácter no admitido en XML (U+${bad[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0')})`, bad.index);
   const s = input.replace(/\r\n?/g, '\n');
   let i = 0;
   let doctype = null;
@@ -130,7 +139,13 @@ export function parseXml(input) {
     }
   };
 
-  if (s.startsWith('<?xml', i) && /[ \t\n?]/.test(s[i + 5] ?? '')) until('?>', 'declaración XML');
+  // La declaración se comprueba, no se salta: solo versión 1.x, codificación UTF-8 y standalone.
+  if (s.startsWith('<?xml', i) && /[ \t\n?]/.test(s[i + 5] ?? '')) {
+    const decl = XML_DECL.exec(s);
+    if (!decl) throw new XmlError('declaración XML mal formada', i);
+    if (decl[3] && !/^utf-?8$/i.test(decl[3])) throw new XmlError(`codificación declarada «${clip(decl[3])}» no admitida: solo UTF-8`, i);
+    i = decl[0].length;
+  }
   misc();
   if (s.startsWith('<!DOCTYPE', i)) { doctype = doctypeDecl(); misc(); }
   if (s[i] !== '<') throw new XmlError('falta el elemento raíz', i);
@@ -147,7 +162,7 @@ export function parseXml(input) {
 
   // Elemento raíz y contenido, con una pila en vez de recursión: la profundidad la decide el documento.
   for (;;) {
-    if (i >= s.length) throw new XmlError(stack.length ? `fin del documento con <${stack.at(-1).name}> abierto` : 'documento vacío', i);
+    if (i >= s.length) throw new XmlError(stack.length ? `fin del documento con <${clip(stack.at(-1).name)}> abierto` : 'documento vacío', i);
     const top = stack.at(-1);
     if (s[i] !== '<') {
       if (!top) throw new XmlError('texto fuera del elemento raíz', i);
@@ -176,7 +191,7 @@ export function parseXml(input) {
       const closing = name();
       space();
       expect('>');
-      if (!top || top.name !== closing) throw new XmlError(`cierre </${closing}> sin apertura que le corresponda`, i);
+      if (!top || top.name !== closing) throw new XmlError(`cierre </${clip(closing)}> sin apertura que le corresponda`, i);
       stack.pop();
       if (stack.length === 0) break;
       continue;
@@ -193,7 +208,7 @@ export function parseXml(input) {
       space(); expect('='); space();
       const { raw, at } = quoted();
       if (raw.includes('<')) throw new XmlError('«<» en un valor de atributo', at);
-      if (Object.hasOwn(el.attrs, attr)) throw new XmlError(`atributo repetido «${attr}»`, at);
+      if (Object.hasOwn(el.attrs, attr)) throw new XmlError(`atributo repetido «${clip(attr)}»`, at);
       // Normalización de atributos de XML: el espacio literal pasa a espacio; una referencia (&#10;) se respeta.
       el.attrs[attr] = decode(raw.replace(/[\t\n]/g, ' '), at);
     }
@@ -217,6 +232,6 @@ export const childrenNamed = (el, name) => (el?.children ?? []).filter((c) => ty
 /** El único hijo con ese nombre, null si no hay; lanza si hay más de uno (no se elige uno). */
 export function childNamed(el, name) {
   const found = childrenNamed(el, name);
-  if (found.length > 1) throw new XmlError(`<${name}> repetido dentro de <${el.name}>`);
+  if (found.length > 1) throw new XmlError(`<${clip(name)}> repetido dentro de <${clip(el.name)}>`);
   return found[0] ?? null;
 }

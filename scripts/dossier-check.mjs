@@ -29,7 +29,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sha256 } from './exact-core.mjs';
+import { sha256, continuation, ESEARCH_WINDOW } from './exact-core.mjs';
 import { checkPageUnion, OPERATIONAL, OPERATIONAL_LABEL } from './page-union.mjs';
 import { sha256Bytes, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION, RECORD_STATUSES, PMID_PATTERN } from './fetch-core.mjs';
 import { ABSTRACT_FORMAT, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
@@ -116,8 +116,17 @@ export function manifestErrors(m) {
       const at = `attempts[${i}]`;
       if (!isObj(a)) { errors.push(`${at} debe ser un objeto`); return; }
       const ab = extraKeys(a, ['attempt_ref', 'tool', 'external_id', 'file', 'sha256', 'captured', 'absent_reason',
-        'plan_ref', 'pass_id', 'walk_id', 'note']);
+        'plan_ref', 'pass_id', 'walk_id', 'note', 'request']);
       if (ab.length) errors.push(`${at}: claves no admitidas ${ab.join(', ')}`);
+      // La petición conservada de una lectura sin respuesta (R3): qué PMID quedaron sin leer.
+      if (a.request !== undefined && a.request !== null) {
+        const pm = a.request?.pmids;
+        if (a.tool !== 'pubmed_fetch_exact' || (a.file !== undefined && a.file !== null) || !isObj(a.request)
+          || extraKeys(a.request, ['pmids']).length || !Array.isArray(pm) || pm.length < 1 || pm.length > 5
+          || !pm.every((p) => typeof p === 'string' && PMID_PATTERN.test(p)) || new Set(pm).size !== pm.length) {
+          errors.push(`${at}.request: solo en una lectura sin respuesta, { pmids: 1-5 PMID sin repetir }`);
+        }
+      }
       if (!isStr(a.attempt_ref)) errors.push(`${at}.attempt_ref obligatorio`);
       if (!TOOLS.includes(a.tool)) errors.push(`${at}.tool: ${TOOLS.join(', ')}`);
       if (!optStr(a.external_id) || !optStr(a.plan_ref) || !optStr(a.pass_id) || !optStr(a.walk_id) || !optStr(a.note)) {
@@ -188,78 +197,169 @@ function kindOf(p) {
   return 'unknown';
 }
 
-/** Recalcula huellas y coherencia interna de un recibo de búsqueda (§4.2). Devuelve los defectos. */
-async function searchDefects(r) {
-  const d = [];
-  if (typeof r.sent_query !== 'string' || await sha256(r.sent_query) !== r.sent_query_sha256) d.push('sent_query_sha256 no corresponde a sent_query');
-  if (!Array.isArray(r.pmids) || !r.pmids.every((p) => typeof p === 'string' && /^[0-9]{1,9}$/.test(p))) {
-    d.push('pmids no es una lista de PMID');
-    return d;
-  }
-  if (await sha256(r.pmids.join('\n')) !== r.pmid_list_sha256) d.push('pmid_list_sha256 no corresponde a la lista');
-  if (new Set(r.pmids).size !== r.pmids.length) d.push('PMID repetidos dentro de la página');
-  if (r.records_retrieved !== r.pmids.length) d.push('records_retrieved no coincide con la lista');
-  if (!(r.result_count === null || (Number.isSafeInteger(r.result_count) && r.result_count >= 0))) d.push('result_count no es un recuento');
-  const start = r.request?.retstart ?? 0;
-  if (!Number.isSafeInteger(start) || start < 0) d.push('request.retstart no es un entero');
-  else {
-    const n = r.pmids.length;
-    const pageOk = n === 0 ? r.page === null || r.page === undefined : r.page?.first === start + 1 && r.page?.last === start + n;
-    if (!pageOk) d.push('page no corresponde a retstart y a la lista');
-  }
-  if (!['verified', 'failed', 'unsupported'].includes(r.status.query_integrity)) d.push('status.query_integrity desconocido');
+const isIso = (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v));
+const isInt = (v, min = 0) => Number.isSafeInteger(v) && v >= min;
+const isSha = (v) => typeof v === 'string' && SHA.test(v);
+const strOrNull = (v) => v === null || typeof v === 'string';
+const pmidList = (l, pattern) => Array.isArray(l) && l.every((p) => typeof p === 'string' && pattern.test(p));
+
+/**
+ * Forma de un recibo de búsqueda 1.13 o posterior (revisión de Codex, R1). Se comprueba ANTES de usar
+ * ningún campo: lo que no tiene la forma no se interpreta y queda como entrada no soportada, nunca como
+ * excepción ni como aprobado.
+ */
+function searchShapeErrors(r) {
+  const e = [];
+  if (!('run' in r) || !(r.run === null || isObj(r.run))) e.push('run');
+  if (!isIso(r.executed_at)) e.push('executed_at');
+  for (const k of ['engine', 'endpoint', 'sent_query', 'transport']) if (typeof r[k] !== 'string') e.push(k);
+  for (const k of ['sent_query_sha256', 'pmid_list_sha256', 'raw_response_sha256']) if (!isSha(r[k])) e.push(k);
+  const q = r.request;
+  if (!isObj(q) || !isInt(q.retstart) || !isInt(q.retmax_requested) || !isInt(q.retmax_sent) || !strOrNull(q.sort)) e.push('request');
+  if (!(r.result_count === null || isInt(r.result_count)) || !strOrNull(r.count_raw)) e.push('result_count/count_raw');
+  if (!isInt(r.records_retrieved) || typeof r.records_complete !== 'boolean') e.push('records_retrieved/records_complete');
+  if (!(r.page === null || (isObj(r.page) && isInt(r.page.first, 1) && isInt(r.page.last, 1)))) e.push('page');
+  if (!(r.next_retstart === null || isInt(r.next_retstart)) || !strOrNull(r.next_retstart_reason)) e.push('next_retstart');
+  if (!pmidList(r.pmids, /^[0-9]{1,9}$/)) e.push('pmids');
+  if (!Array.isArray(r.pagination_notices) || !r.pagination_notices.every((x) => typeof x === 'string')) e.push('pagination_notices');
+  if (!isObj(r.status) || !['verified', 'failed', 'unsupported'].includes(r.status.query_integrity)) e.push('status.query_integrity');
+  if (!Array.isArray(r.problems)) e.push('problems');
   const sr = r.selection_record;
   if (sr !== undefined) {
-    if (!isObj(sr) || !isObj(sr.record) || await sha256(JSON.stringify(sr.record)) !== sr.sha256) d.push('selection_record.sha256 no corresponde al registro');
+    const rec = sr?.record;
+    const known = rec?.known_pmids;
+    if (!isObj(sr) || sr.declared_by !== 'agent' || !isIso(sr.received_at) || typeof sr.sha256 !== 'string' || !isObj(rec)
+      || !(rec.plan_ref === undefined || isStr(rec.plan_ref)) || !isObj(rec.pass) || !isStr(rec.pass.pass_id)
+      || !(rec.pass.reading_path === undefined || typeof rec.pass.reading_path === 'string')
+      || !(known === undefined || (Array.isArray(known) && known.every((k) => isObj(k) && typeof k.pmid === 'string'
+        && /^[0-9]{1,9}$/.test(k.pmid) && isStr(k.origin) && (k.detail === undefined || typeof k.detail === 'string'))))) {
+      e.push('selection_record');
+    }
+  }
+  return e;
+}
+
+/**
+ * Coherencia interna de un recibo de búsqueda con forma válida (§4.2 y R1): huellas recalculadas y las
+ * relaciones entre recuento, lista, posición, tamaño, completitud y continuación, recalculadas con el
+ * mismo criterio del ejecutor. No basta `verified`. Devuelve los defectos.
+ */
+async function searchDefects(r) {
+  const d = [];
+  if (await sha256(r.sent_query) !== r.sent_query_sha256) d.push('sent_query_sha256 no corresponde a sent_query');
+  if (await sha256(r.pmids.join('\n')) !== r.pmid_list_sha256) d.push('pmid_list_sha256 no corresponde a la lista');
+  if (r.selection_record !== undefined && await sha256(JSON.stringify(r.selection_record.record)) !== r.selection_record.sha256) {
+    d.push('selection_record.sha256 no corresponde al registro');
+  }
+  const n = r.pmids.length;
+  const start = r.request.retstart;
+  const count = r.result_count;
+  if (new Set(r.pmids).size !== n) d.push('PMID repetidos dentro de la página');
+  if (r.records_retrieved !== n) d.push('records_retrieved no coincide con la lista');
+  const pageOk = n === 0 ? r.page === null : r.page?.first === start + 1 && r.page?.last === start + n;
+  if (!pageOk) d.push('page no corresponde a retstart y a la lista');
+  if (count !== null && String(count) !== r.count_raw) d.push(`result_count (${count}) no corresponde a count_raw (${r.count_raw})`);
+  if (count !== null && start + n > count) d.push(`la página llega más allá del recuento (${start} + ${n} > ${count})`);
+  if (r.records_complete !== (start === 0 && count !== null && n === count)) d.push('records_complete no corresponde a recuento y lista');
+  if (r.request.retmax_sent !== Math.min(r.request.retmax_requested, ESEARCH_WINDOW - start)) d.push('retmax_sent no corresponde a lo pedido');
+  const next = continuation({ integrity: r.status.query_integrity, retstart: start, retmaxRequested: r.request.retmax_requested,
+    retmaxSent: r.request.retmax_sent, count, n, notices: r.pagination_notices });
+  if (next.next_retstart !== r.next_retstart || next.next_retstart_reason !== r.next_retstart_reason) {
+    d.push(`continuación incoherente con la página: el ejecutor daría ${next.next_retstart}/${next.next_retstart_reason}`);
   }
   return d;
 }
 
-/** Coherencia de un recibo de lectura y de cada abstract entregado (§3.3, §3.6). */
+/** Forma de un resultado por PMID; null si es válida. */
+function resultShapeError(x) {
+  if (!isObj(x)) return 'no es un objeto';
+  if (typeof x.requested_pmid !== 'string' || !PMID_PATTERN.test(x.requested_pmid)) return 'requested_pmid';
+  if (!RECORD_STATUSES.includes(x.record_status)) return 'record_status';
+  if (!strOrNull(x.returned_pmid) || !strOrNull(x.reason)) return 'returned_pmid o reason';
+  if (x.record_status === 'with_abstract' || x.record_status === 'without_abstract') {
+    if (!['PubmedArticle', 'PubmedBookArticle'].includes(x.record_type) || !strOrNull(x.title)
+      || ![x.dois, x.pmcids, x.publication_types].every((l) => Array.isArray(l) && l.every((v) => typeof v === 'string'))
+      || !(x.year === null || Number.isSafeInteger(x.year))) return 'identidad del registro';
+  }
+  if (x.record_status === 'without_abstract'
+    && [x.abstract_format, x.abstract_bytes, x.abstract_sha256, x.abstract_canonical].some((v) => v !== null)) return 'without_abstract con abstract';
+  return null;
+}
+
+/** Forma de un recibo de lectura (R1): sin run, intento, tiempos, transporte o límites no es este formato. */
+function fetchShapeErrors(r) {
+  const e = [];
+  if (!isObj(r.run)) e.push('run');
+  if (!isStr(r.attempt_id)) e.push('attempt_id');
+  if (!isIso(r.received_at) || !(r.executed_at === null || isIso(r.executed_at)) || !isIso(r.completed_at)) e.push('tiempos');
+  for (const k of ['engine', 'provider', 'endpoint']) if (!isStr(r[k])) e.push(k);
+  const q = r.request;
+  if (!isObj(q) || !pmidList(q.pmids, PMID_PATTERN) || q.pmids.length === 0 || new Set(q.pmids).size !== q.pmids.length
+    || !isObj(q.context) || !isStr(q.context.plan_ref) || !isStr(q.context.read_id) || typeof q.context_sha256 !== 'string'
+    || q.declared_by !== 'agent' || typeof q.api_key_used !== 'boolean' || typeof q.email_used !== 'boolean') e.push('request');
+  const t = r.transport;
+  if (!isObj(t) || !isStr(t.method) || !(t.http_status === null || isInt(t.http_status)) || !(t.bytes_received === null || isInt(t.bytes_received))
+    || !(t.raw_response_sha256 === null || isSha(t.raw_response_sha256))) e.push('transport');
+  if (!isObj(r.limits) || !isInt(r.limits.max_pmids, 1) || !isInt(r.limits.structured_content_max_bytes, 1)) e.push('limits');
+  if (!(r.failure === null || (isObj(r.failure) && isStr(r.failure.code) && typeof r.failure.message === 'string'))) e.push('failure');
+  if (!isObj(r.status) || !['verified', 'failed', 'unsupported'].includes(r.status.record_identity)
+    || !['complete', 'partial', 'failed'].includes(r.status.delivery)) e.push('status');
+  if (!Array.isArray(r.problems) || !r.problems.every((v) => typeof v === 'string')) e.push('problems');
+  if (!Array.isArray(r.pending_pmids) || !r.pending_pmids.every((x) => isObj(x) && typeof x.pmid === 'string' && isStr(x.reason))) e.push('pending_pmids');
+  if (!Array.isArray(r.results)) e.push('results');
+  else r.results.forEach((x, i) => { const bad = resultShapeError(x); if (bad) e.push(`results[${i}]: ${bad}`); });
+  return e;
+}
+
+/**
+ * Coherencia de un recibo de lectura con forma válida (§3.3, §3.6) y de cada abstract entregado. Separa
+ * el texto íntegro del abstract ATRIBUIBLE (R2): un recibo con identidad o entrega fallidas, o con
+ * contradicciones, no acredita ningún registro; un registro con otro returned_pmid, tampoco el suyo.
+ * Devuelve los defectos, los PMID cuyo resultado es atribuible y los abstracts comprobados.
+ */
 async function fetchDefects(r) {
   const d = [];
-  const pmids = r.request?.pmids;
-  if (!Array.isArray(pmids) || pmids.length === 0 || !pmids.every((p) => typeof p === 'string' && PMID_PATTERN.test(p))
-    || new Set(pmids).size !== pmids.length) {
-    return { defects: ['request.pmids no es una lista válida de PMID'], abstracts: [] };
-  }
+  const pmids = r.request.pmids;
   const ctx = r.request.context;
-  if (!isObj(ctx) || !isStr(ctx.plan_ref) || !isStr(ctx.read_id)
-    || await sha256(JSON.stringify({ plan_ref: ctx.plan_ref, read_id: ctx.read_id })) !== r.request.context_sha256) {
+  if (await sha256(JSON.stringify({ plan_ref: ctx.plan_ref, read_id: ctx.read_id })) !== r.request.context_sha256) {
     d.push('request.context o context_sha256 no corresponden');
   }
-  if (!Array.isArray(r.results) || !Array.isArray(r.pending_pmids)) return { defects: [...d, 'results o pending_pmids no son listas'], abstracts: [] };
-  const delivered = r.results.map((x) => x?.requested_pmid);
-  const pending = r.pending_pmids.map((x) => x?.pmid);
+  const delivered = r.results.map((x) => x.requested_pmid);
+  const pending = r.pending_pmids.map((x) => x.pmid);
   const all = [...delivered, ...pending];
   const inOrder = (list) => list.every((p, i) => i === 0 || pmids.indexOf(list[i - 1]) < pmids.indexOf(p));
   if (all.length !== pmids.length || new Set(all).size !== all.length || !all.every((p) => pmids.includes(p))
     || !inOrder(delivered) || !inOrder(pending)) {
     d.push('resultados y pendientes no son una partición ordenada de lo pedido');
   }
-  if (!r.pending_pmids.every((x) => isObj(x) && isStr(x.reason))) d.push('pendiente sin motivo');
-  const { record_identity: identity, delivery } = r.status ?? {};
-  if (!['verified', 'failed', 'unsupported'].includes(identity) || !['complete', 'partial', 'failed'].includes(delivery)) {
-    d.push('status.record_identity o status.delivery desconocidos');
-  }
-  const errors = r.results.filter((x) => x?.record_status === 'error');
-  const found = r.results.filter((x) => x?.record_status === 'with_abstract' || x?.record_status === 'without_abstract');
+  const { record_identity: identity, delivery } = r.status;
+  const errors = r.results.filter((x) => x.record_status === 'error');
+  const found = r.results.filter((x) => x.record_status === 'with_abstract' || x.record_status === 'without_abstract');
+  const times = [r.received_at, r.executed_at, r.completed_at].filter((t) => t !== null).map((t) => Date.parse(t));
   const contradictions = [
     delivery === 'complete' && (pending.length || errors.length) && 'complete con pendientes o errores',
     delivery === 'partial' && !pending.length && !errors.length && 'partial sin pendientes ni errores',
     delivery === 'failed' && (found.length || pending.length) && 'failed con registros entregados o pendientes',
     identity === 'failed' && delivery !== 'failed' && 'identidad failed con entrega no failed',
-    identity === 'verified' && r.results.some((x) => ['identity_uncertain', 'unsupported_record'].includes(x?.reason))
+    (r.failure !== null) !== (delivery === 'failed') && 'failure y delivery no concuerdan',
+    identity === 'verified' && r.results.some((x) => ['identity_uncertain', 'unsupported_record'].includes(x.reason))
       && 'identidad verified con registros de identidad incierta o no soportados',
+    r.results.some((x) => x.record_status === 'with_abstract') && (r.transport.http_status !== 200 || r.transport.raw_response_sha256 === null)
+      && 'abstracts entregados sin respuesta HTTP 200 con huella',
+    times.some((t, i) => i > 0 && t < times[i - 1]) && 'tiempos fuera de orden',
+    pmids.length > r.limits.max_pmids && 'más PMID pedidos que el límite del recibo',
   ].filter(Boolean);
   for (const c of contradictions) d.push(`estados contradictorios: ${c}`);
+  const receiptTrusted = d.length === 0 && identity !== 'failed' && delivery !== 'failed';
+  const attributable = new Set();
   const abstracts = [];
   for (const x of r.results) {
-    if (!isObj(x) || !RECORD_STATUSES.includes(x.record_status)) { d.push('resultado con record_status desconocido'); continue; }
     if (x.record_status === 'error' && !isStr(x.reason)) d.push(`PMID ${x.requested_pmid}: error sin reason`);
-    if ((x.record_status === 'with_abstract' || x.record_status === 'without_abstract') && x.returned_pmid !== x.requested_pmid) {
+    const ownId = x.record_status === 'not_found' ? x.returned_pmid === null : x.returned_pmid === x.requested_pmid;
+    if ((x.record_status === 'with_abstract' || x.record_status === 'without_abstract') && !ownId) {
       d.push(`PMID ${x.requested_pmid}: returned_pmid distinto (${x.returned_pmid})`);
     }
+    if (receiptTrusted && ownId) attributable.add(x.requested_pmid);
     if (x.record_status !== 'with_abstract') continue;
     const problems = [];
     if (x.abstract_format !== ABSTRACT_FORMAT) problems.push(`formato ${x.abstract_format} no soportado`);
@@ -269,9 +369,9 @@ async function fetchDefects(r) {
       if (utf8Length(x.abstract_canonical) !== x.abstract_bytes) problems.push('abstract_bytes no coincide con la cadena recibida');
       if (await sha256(x.abstract_canonical) !== x.abstract_sha256) problems.push('abstract_sha256 no coincide con la cadena recibida');
     }
-    abstracts.push({ pmid: x.requested_pmid, sha256: x.abstract_sha256, ok: problems.length === 0, problems, dois: Array.isArray(x.dois) ? x.dois : [] });
+    abstracts.push({ pmid: x.requested_pmid, sha256: x.abstract_sha256, ok: problems.length === 0, problems });
   }
-  return { defects: d, abstracts };
+  return { defects: d, attributable, abstracts };
 }
 
 // --- Usos (D4) --------------------------------------------------------------------------------------
@@ -308,7 +408,7 @@ const sourceError = (s) => {
  * Citas nativas resueltas o registro lateral de uso (§4.4). Cada uso se ata a un fragmento de LA
  * respuesta conservada; un ancla que no está es un defecto, un uso sin ancla verificable no suma D4.
  */
-function checkUses(json, label, { responseSha, responseText, abstractsBySha }) {
+function checkUses(json, label, { responseSha, responseText, abstractRefs }) {
   const defects = [];
   const accredited = [];
   const unverified = [];
@@ -329,8 +429,8 @@ function checkUses(json, label, { responseSha, responseText, abstractsBySha }) {
     if (!anchored) { defects.push(`${at}: el fragmento no está ${hasOffsets ? 'en ese intervalo de' : 'en'} la respuesta`); return; }
     if (u.abstract_ref !== undefined && u.abstract_ref !== null) {
       const ref = u.abstract_ref;
-      const hit = isObj(ref) && abstractsBySha.get(ref.abstract_sha256);
-      if (!hit || hit.pmid !== ref.pmid) { defects.push(`${at}: abstract_ref no resuelve a un abstract íntegro conservado`); return; }
+      // Se comprueba el PAR [pmid, huella]: un texto canónico no es exclusivo de un documento (R5).
+      if (!isObj(ref) || !abstractRefs.has(tuple(ref.pmid, ref.abstract_sha256))) { defects.push(`${at}: abstract_ref no resuelve a un abstract íntegro conservado`); return; }
     }
     accredited.push({ source: { type: u.source.type, value: u.source.value }, fragment: u.fragment, via: label, declared_by: declaredBy });
   });
@@ -363,8 +463,21 @@ function order(a, b, clock) {
 /**
  * `load(path)` devuelve los bytes del archivo (Uint8Array) o null si no existe. Todo lo demás sale del
  * manifiesto. Devuelve el resultado completo; no escribe nada.
+ *
+ * Red de seguridad (revisión de Codex, R1): la forma de cada pieza se valida antes de usarla, pero si aun
+ * así una entrada imprevista lanza una excepción, el resultado es `inconclusive` con su causa, nunca un
+ * comprobador caído sin veredicto ni, desde luego, un aprobado.
  */
 export async function checkDossier(manifest, load) {
+  try {
+    return await checkDossierUnguarded(manifest, load);
+  } catch (err) {
+    return finish({ manifest: manifestErrors(manifest).length ? null : manifest, defects: [], notices: [], exclusions: [],
+      uncertainties: [{ code: 'checker_exception', detail: `entrada no prevista: ${String(err?.message ?? err).slice(0, 200)}` }] });
+  }
+}
+
+async function checkDossierUnguarded(manifest, load) {
   const defects = [];
   const uncertainties = [];
   const notices = [];
@@ -439,12 +552,24 @@ export async function checkDossier(manifest, load) {
   // 3. Intentos: lectura, envoltura, clase, duplicados.
   const admitted = new Map(manifest.plans.map((p) => [p.plan_ref, new Set(p.passes)]));
   const attempts = [];
+  const unanswered = [];
   const byIdentity = new Map();
   for (const a of manifest.attempts) {
     const entry = { attempt_ref: a.attempt_ref, tool: a.tool, external_id: a.external_id ?? null, captured: a.captured ?? null,
       kind: null, status: 'ok', duplicate_of: null, sequence: sequenceOf.get(a.external_id) ?? null };
     attempts.push(entry);
-    if (!a.file) { entry.status = 'no_response'; entry.kind = 'no_response'; notices.push(`${a.attempt_ref}: intento sin respuesta (${a.absent_reason})`); continue; }
+    if (!a.file) {
+      entry.status = 'no_response';
+      entry.kind = 'no_response';
+      notices.push(`${a.attempt_ref}: intento sin respuesta (${a.absent_reason})`);
+      // Una lectura sin respuesta no desaparece (revisión de Codex, R3): con la petición conservada, sus PMID
+      // quedan por resolver; sin ella, no se sabe qué se pidió y el dossier no puede aprobar.
+      if (a.tool === 'pubmed_fetch_exact') {
+        if (a.request) unanswered.push({ attempt_ref: a.attempt_ref, pmids: a.request.pmids, seq: entry.sequence });
+        else uncertain('reading_without_response', `${a.attempt_ref}: lectura sin respuesta y sin la petición conservada: no se sabe qué PMID quedaron sin leer`);
+      }
+      continue;
+    }
     const bytes = await readRef(`attempt ${a.attempt_ref}`, a);
     if (!bytes) { entry.status = 'file_defect'; continue; }
     const json = decodeJson(bytes, `attempt ${a.attempt_ref}`);
@@ -458,6 +583,13 @@ export async function checkDossier(manifest, load) {
     const expectedTool = { search: 'pubmed_search_exact', search_error: 'pubmed_search_exact', fetch: 'pubmed_fetch_exact', fetch_rejected: 'pubmed_fetch_exact' }[entry.kind];
     if (entry.kind === 'unknown') { uncertain('unsupported_input', `${a.attempt_ref}: formato de respuesta no reconocido`); entry.status = 'unreadable'; continue; }
     if (expectedTool !== a.tool) { defect('tool_mismatch', `${a.attempt_ref}: el inventario dice ${a.tool} y el archivo es ${entry.kind}`); entry.status = 'tool_mismatch'; continue; }
+    // La forma, antes de leer ningún campo (R1): lo que no la tiene no se interpreta ni tumba el comprobador.
+    const shape = entry.kind === 'search' ? searchShapeErrors(payload) : entry.kind === 'fetch' ? fetchShapeErrors(payload) : [];
+    if (shape.length) {
+      uncertain('unsupported_input', `${a.attempt_ref}: recibo sin la forma de ${entry.kind === 'search' ? 'pubmed_search_exact 1.13+' : `${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}`} (${shape.slice(0, 8).join(', ')})`);
+      entry.status = 'unsupported';
+      continue;
+    }
     // Identidad del intento: la del inventario, o la del propio recibo. Una copia repetida no cuenta dos veces.
     const identity = a.external_id ? tuple('ext', a.external_id)
       : entry.kind === 'fetch' || entry.kind === 'fetch_rejected' ? tuple('fetch', payload.attempt_id)
@@ -548,6 +680,9 @@ export async function checkDossier(manifest, load) {
     for (const c of conflicts) defect('walk_conflict', `[${w.plan_ref}, ${w.pass_id}${w.walk_id ? `, ${w.walk_id}` : ''}]: ${c}`);
     const counts = w.pages.map((pg) => ({ attempt_ref: pg.attempt_ref, retstart: pg.receipt.request?.retstart ?? 0, result_count: pg.receipt.result_count }));
     const distinct = [...new Set(counts.map((c) => c.result_count).filter((c) => c !== null))];
+    // Recuentos distintos en una pasada: conflicto sin elegir y defecto del dossier, aunque otra pasada
+    // sí se mida y aunque no se declarara recuperación completa (revisión de Codex, R4).
+    if (distinct.length > 1) defect('count_conflict', `[${w.plan_ref}, ${w.pass_id}${w.walk_id ? `, ${w.walk_id}` : ''}]: recuentos distintos entre páginas (${distinct.join(', ')})`);
     const pmids = sortPmids(w.pages.flatMap((pg) => pg.receipt.pmids));
     let union = null;
     if (w.reading_paths.has('complete_retrieval')) {
@@ -579,14 +714,15 @@ export async function checkDossier(manifest, load) {
   // 5. Lectura: recibos, abstracts, versiones.
   const reads = live.filter((e) => e.kind === 'fetch');
   const perPmid = new Map();
-  const abstractsBySha = new Map();
+  // Abstracts íntegros y atribuibles, por PAR [pmid, huella]: dos PMID pueden tener el mismo texto (R5).
+  const abstractRefs = new Set();
   const readIds = new Map();
-  for (const e of live.filter((x) => x.kind === 'fetch_rejected')) notices.push(`${e.attempt_ref}: lectura rechazada antes de NCBI (${e.payload.error})`);
+  const slotOf = (pmid) => perPmid.get(pmid) ?? perPmid.set(pmid, { attempts: [], outcomes: [], versions: new Map(), dois: new Set() }).get(pmid);
+  for (const e of live.filter((x) => x.kind === 'fetch_rejected')) notices.push(`${e.attempt_ref}: lectura rechazada antes de NCBI (${String(e.payload.error).slice(0, 160)})`);
   for (const e of reads) {
     const p = e.payload;
-    const { defects: fd, abstracts } = await fetchDefects(p);
+    const { defects: fd, attributable, abstracts } = await fetchDefects(p);
     for (const d of fd) defect('fetch_receipt', `${e.attempt_ref}: ${d}`);
-    if (fd.some((d) => /request\.pmids|no son listas/.test(d))) { e.status = 'invalid'; continue; }
     const plan = p.request.context?.plan_ref;
     if (!admitted.has(plan)) defect('outside_plan', `${e.attempt_ref}: plan_ref «${plan}» no es un plan admitido en el dossier`);
     const rid = p.request.context?.read_id;
@@ -597,11 +733,13 @@ export async function checkDossier(manifest, load) {
     const goodSha = new Map(abstracts.filter((x) => x.ok).map((x) => [x.pmid, x]));
     for (const x of abstracts.filter((y) => !y.ok)) defect('abstract_gap', `${e.attempt_ref}: PMID ${x.pmid}: ${x.problems.join('; ')}`);
     for (const pmid of p.request.pmids) {
-      const slot = perPmid.get(pmid) ?? perPmid.set(pmid, { attempts: [], outcomes: [], versions: new Map(), dois: new Set() }).get(pmid);
+      const slot = slotOf(pmid);
       slot.attempts.push(e);
       const result = p.results.find((r) => r.requested_pmid === pmid);
       const pend = p.pending_pmids.find((r) => r.pmid === pmid);
       let outcome = pend ? 'pending' : result?.record_status ?? 'missing';
+      // Un registro o una ausencia que no se pueden atribuir válidamente a este PMID no cuentan (R2).
+      if (['with_abstract', 'without_abstract', 'not_found'].includes(outcome) && !attributable.has(pmid)) outcome = 'not_attributable';
       if (outcome === 'with_abstract') {
         const good = goodSha.get(pmid);
         if (!good) outcome = 'abstract_gap';
@@ -610,22 +748,31 @@ export async function checkDossier(manifest, load) {
           if (v.attempts.length) notices.push(`PMID ${pmid}: ${e.attempt_ref} repite idéntico el abstract de ${v.attempts[0]}; cuenta una vez`);
           v.attempts.push(e.attempt_ref);
           v.completed_at.push(p.completed_at ?? null);
-          abstractsBySha.set(good.sha256, { pmid });
+          abstractRefs.add(tuple(pmid, good.sha256));
         }
       }
-      if (result && Array.isArray(result.dois) && ['with_abstract', 'without_abstract'].includes(result.record_status)) {
+      if (result && attributable.has(pmid) && ['with_abstract', 'without_abstract'].includes(result.record_status)) {
         for (const doi of result.dois) if (typeof doi === 'string') slot.dois.add(doi.toLowerCase());
       }
       slot.outcomes.push({ attempt_ref: e.attempt_ref, outcome, reason: pend?.reason ?? result?.reason ?? null });
     }
   }
-  const RANK = ['with_abstract', 'without_abstract', 'not_found', 'error', 'pending', 'abstract_gap', 'missing'];
+  // Lecturas sin respuesta con la petición conservada: sus PMID quedan por resolver, salvo que otra
+  // lectura los resuelva (R3). Sin hora de servidor, su orden solo sale de la secuencia de la captura.
+  for (const u of unanswered) {
+    for (const pmid of u.pmids) {
+      const slot = slotOf(pmid);
+      slot.attempts.push({ window: { start: NaN, end: NaN, seq: u.seq } });
+      slot.outcomes.push({ attempt_ref: u.attempt_ref, outcome: 'no_response', reason: 'sin respuesta conservada' });
+    }
+  }
+  const RANK = ['with_abstract', 'without_abstract', 'not_found', 'error', 'pending', 'abstract_gap', 'not_attributable', 'no_response', 'missing'];
   const finalOf = (slot) => (slot.versions.size ? 'obtained'
     : RANK.slice(1).find((r) => slot.outcomes.some((o) => o.outcome === r)) ?? 'missing');
   const requestedPmids = sortPmids(perPmid.keys());
-  const classes = { obtained: [], without_abstract: [], not_found: [], error: [], pending: [], abstract_gap: [], missing: [] };
+  const classes = { obtained: [], without_abstract: [], not_found: [], error: [], pending: [], abstract_gap: [], not_attributable: [], no_response: [], missing: [] };
   for (const pmid of requestedPmids) classes[finalOf(perPmid.get(pmid))].push(pmid);
-  const unresolved = [...classes.error, ...classes.pending, ...classes.abstract_gap, ...classes.missing];
+  const unresolved = [...classes.error, ...classes.pending, ...classes.abstract_gap, ...classes.not_attributable, ...classes.no_response, ...classes.missing];
   if (unresolved.length) defect('reading_incomplete', `lecturas pedidas sin registro completo ni ausencia contabilizada: ${unresolved.join(', ')}`);
   const multiVersion = requestedPmids.filter((p) => perPmid.get(p).versions.size > 1);
   for (const p of multiVersion) notices.push(`PMID ${p}: ${perPmid.get(p).versions.size} versiones completas distintas; se conservan separadas y cuenta una vez`);
@@ -651,7 +798,7 @@ export async function checkDossier(manifest, load) {
     const json = bytes && decodeJson(bytes, k);
     if (json === undefined || json === null) continue;
     if (responseText === null) { uncertain('d4_unanchored', `${k}: no hay respuesta conservada contra la que comprobar las anclas`); continue; }
-    const r = checkUses(json, k, { responseSha, responseText, abstractsBySha });
+    const r = checkUses(json, k, { responseSha, responseText, abstractRefs });
     if (r.unreadable) { uncertain('unreadable', r.unreadable); continue; }
     for (const d of r.defects) defect('use_anchor', d);
     useSources.push(r);
@@ -682,11 +829,18 @@ export async function checkDossier(manifest, load) {
   const U = sortPmids(docList.flatMap((d) => d.pmids));
   const linkedKeys = new Set(accredited.map((u) => find(sourceKey(u.source))));
   const mentionsWithoutUse = candidates.filter((c) => !linkedKeys.has(find(c.type === 'doi' ? `doi:${c.value}` : `pmid:${c.value}`)));
-  const d4Measured = responseText !== null && useSources.length > 0;
+  // D4 se mide con usos resueltos o con cero usos declarado explícitamente (`uses: []`). Usos declarados sin
+  // ancla comprobable no son cero usos demostrados (revisión de Codex, R9): si no se acredita ninguno, D4
+  // no se mide; si solo parte, queda parcial. En los dos casos el dossier no aprueba.
+  const unverifiedUses = useSources.flatMap((r) => r.unverified);
+  const d4Measured = responseText !== null && useSources.length > 0 && !(accredited.length === 0 && unverifiedUses.length > 0);
   if (!d4Measured) {
     uncertain('d4_not_measured', responseText === null
       ? 'sin respuesta conservada: D4 no medido'
-      : 'sin citas nativas resueltas ni registro de uso: las menciones quedan como candidatos y D4 no se mide');
+      : useSources.length === 0 ? 'sin citas nativas resueltas ni registro de uso: las menciones quedan como candidatos y D4 no se mide'
+        : `${unverifiedUses.length} uso(s) declarado(s) sin ancla comprobable y ninguno acreditado: D4 no se mide`);
+  } else if (unverifiedUses.length) {
+    uncertain('d4_partial', `${unverifiedUses.length} uso(s) declarado(s) sin ancla comprobable: D4 cuenta solo lo acreditado`);
   }
   const anchorFailures = defects.filter((d) => d.code === 'use_anchor').length;
 
@@ -769,13 +923,14 @@ export async function checkDossier(manifest, load) {
     D3: { value: classes.obtained.length, unit: 'PMID únicos con abstract íntegro conservado', status: d3Status,
       requested_unique: requestedPmids.length, attempts: reads.length, obtained: classes.obtained, without_abstract: classes.without_abstract,
       not_found: classes.not_found, error: classes.error, pending: classes.pending, abstract_gap: classes.abstract_gap,
-      multiple_versions: multiVersion },
+      not_attributable: classes.not_attributable, no_response: classes.no_response, multiple_versions: multiVersion },
     D4: d4Measured
-      ? { value: docList.length, unit: 'documentos únicos con uso anclado en la respuesta', status: anchorFailures ? 'partial' : 'measured',
+      ? { value: docList.length, unit: 'documentos únicos con uso anclado en la respuesta', status: anchorFailures || unverifiedUses.length ? 'partial' : 'measured',
         pmid_sources: docList.filter((d) => d.pmids.length).length, other_sources: docList.filter((d) => !d.pmids.length).length,
         documents: docList, used_without_preserved_abstract: U.filter((p) => !classes.obtained.includes(p)),
         mentions_without_use_evidence: mentionsWithoutUse, uses: useReports }
-      : { value: null, unit: 'documentos únicos con uso anclado en la respuesta', status: 'not_measured', mentions_without_use_evidence: mentionsWithoutUse },
+      : { value: null, unit: 'documentos únicos con uso anclado en la respuesta', status: 'not_measured', mentions_without_use_evidence: mentionsWithoutUse,
+        declared_unverified: unverifiedUses },
   };
   if (!passes.some((p) => p.d1.status === 'measured')) uncertain('d1_not_measured', 'ninguna pasada tiene D1 medido');
 

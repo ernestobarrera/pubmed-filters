@@ -16,7 +16,7 @@
 
 import { sha256 } from './exact-core.mjs';
 import { efetch, EFETCH_URL, EFETCH_TRANSPORT, FetchTransportError } from './efetch.mjs';
-import { parseXml, childNamed, childrenNamed } from './xml-lite.mjs';
+import { parseXml, childNamed, childrenNamed, clip } from './xml-lite.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, hasAbstractText, utf8Length } from './abstract-canonical.mjs';
 
 export const FETCH_RECEIPT_TYPE = 'pubmed_fetch_exact';
@@ -75,9 +75,16 @@ class RecordError extends Error {
   constructor(reason, detail) {
     super(detail);
     this.reason = reason;
-    this.detail = detail;
+    // Lo que viene de la respuesta (nombres de elementos) se acota: un diagnóstico no rompe el presupuesto.
+    this.detail = clip(detail, MAX_DIAGNOSTIC);
   }
 }
+
+/** Longitud máxima de un diagnóstico que incluye texto de la respuesta (revisión de Codex, R8). */
+export const MAX_DIAGNOSTIC = 300;
+
+/** Texto plano de un elemento y sus descendientes, para diagnósticos (no para registros). */
+const textOf = (el) => el.children.map((c) => (typeof c === 'string' ? c : textOf(c))).join('');
 
 const lf = (text) => text.replace(/\r\n?/g, '\n');
 const PASS_THROUGH = new Set(['b', 'i', 'u']);
@@ -256,7 +263,14 @@ async function interpret(bytes, pmids) {
     return { failure: { code: 'invalid_xml', message: e.message } };
   }
   if (doc.root.name !== 'PubmedArticleSet') {
-    return { failure: { code: 'unexpected_root', message: `raíz <${doc.root.name}>, no <PubmedArticleSet>` } };
+    return { failure: { code: 'unexpected_root', message: `raíz <${clip(doc.root.name)}>, no <PubmedArticleSet>` } };
+  }
+  // Un <ERROR> de NCBI dentro del conjunto invalida la respuesta entera ANTES de atribuir registros o
+  // decidir ausencias: con él, ni lo entregado ni lo que falta se pueden certificar (revisión de Codex, R6).
+  const ncbiErrors = doc.root.children.filter((c) => typeof c !== 'string' && c.name === 'ERROR');
+  if (ncbiErrors.length) {
+    const said = ncbiErrors.map((c) => clip(textOf(c), 200)).join(' | ');
+    return { failure: { code: 'ncbi_error', message: `NCBI devolvió <ERROR> dentro de la respuesta: ${said}` } };
   }
   const requested = new Set(pmids);
   const found = new Map();
@@ -276,7 +290,7 @@ async function interpret(bytes, pmids) {
     } else {
       unknown = true;
       const inside = descendantPmids(c);
-      if (inside.size !== 1) { unknownUnattributed.push(c.name); continue; }
+      if (inside.size !== 1) { unknownUnattributed.push(clip(c.name)); continue; }
       [pmid] = inside;
     }
     if (!requested.has(pmid)) identity.push(`registro no pedido: PMID ${pmid}`);
@@ -284,7 +298,7 @@ async function interpret(bytes, pmids) {
     else found.set(pmid, { el: c, supported });
   }
   if (identity.length) {
-    return { failure: { code: 'identity_uncertain', message: `no se puede certificar la correspondencia: ${identity.join('; ')}` } };
+    return { failure: { code: 'identity_uncertain', message: clip(`no se puede certificar la correspondencia: ${identity.join('; ')}`, MAX_DIAGNOSTIC) } };
   }
   const results = new Map();
   const problems = [];
@@ -292,10 +306,10 @@ async function interpret(bytes, pmids) {
     const f = found.get(pmid);
     if (!f) {
       results.set(pmid, unknownUnattributed.length
-        ? errorRecord(pmid, 'identity_uncertain', `la respuesta trae elementos no soportados sin PMID atribuible (${unique(unknownUnattributed).join(', ')})`)
+        ? errorRecord(pmid, 'identity_uncertain', clip(`la respuesta trae elementos no soportados sin PMID atribuible (${unique(unknownUnattributed).join(', ')})`, MAX_DIAGNOSTIC))
         : notFound(pmid));
     } else if (!f.supported) {
-      results.set(pmid, errorRecord(pmid, 'unsupported_record', `<${f.el.name}> no es un formato soportado`, pmid));
+      results.set(pmid, errorRecord(pmid, 'unsupported_record', `<${clip(f.el.name)}> no es un formato soportado`, pmid));
     } else {
       try {
         results.set(pmid, await extractRecord(f.el, pmid));
@@ -397,12 +411,24 @@ function fitToBudget(env, parts, records, max) {
   // Defensa: la prueba de cada paso ya mide la configuración final; si no cupiera, sale otro pendiente.
   while (jsonBytes(receipt) > max) {
     const last = content.filter((p) => delivered.has(p)).at(-1);
-    if (last === undefined) throw new Error('la envoltura del recibo no cabe en su presupuesto');
+    if (last === undefined) return null; // ni sin registros cabe: lo resuelve bounded() con un fallo compacto
     delivered.delete(last);
     pending.add(last);
     receipt = build(pending);
   }
   return receipt;
+}
+
+/**
+ * Última defensa del presupuesto (revisión de Codex, R8): ninguna salida, tampoco la de un fallo, lo
+ * supera ni escapa como excepción. Los diagnósticos ya vienen acotados en origen; si aun así no cabe, un
+ * fallo compacto explícito, sin ningún registro: nunca un registro cortado para aparentar entrega.
+ */
+function bounded(env, receipt, transport, max) {
+  if (receipt && jsonBytes(receipt) <= max) return receipt;
+  const message = `el recibo no cabía en ${max} bytes ni sin registros: no se entrega ninguno`;
+  return assemble(env, { transport, failure: { code: 'receipt_too_large', message }, identity: 'failed', problems: [message],
+    results: env.request.pmids.map((p) => errorRecord(p, 'receipt_too_large')), pending: [] });
 }
 
 const options = (o) => ({
@@ -423,14 +449,15 @@ export async function fetchFailureReceipt(pmids, context, opts, { code, message,
   env.executed_at = executedAt ?? env.executed_at;
   env.completed_at = o.now().toISOString();
   const safe = redact(message, o);
-  return assemble(env, {
-    transport: { method: EFETCH_TRANSPORT, http_status: httpStatus, bytes_received: bytesReceived, raw_response_sha256: null },
+  const transport = { method: EFETCH_TRANSPORT, http_status: httpStatus, bytes_received: bytesReceived, raw_response_sha256: null };
+  return bounded(env, assemble(env, {
+    transport,
     failure: { code, message: safe },
     identity: 'failed',
     problems: [safe],
     results: pmids.map((p) => errorRecord(p, code)),
     pending: [],
-  });
+  }), transport, o.maxStructuredBytes);
 }
 
 /**
@@ -459,8 +486,9 @@ export async function runFetch(pmids, context, opts = {}) {
   env.completed_at = o.now().toISOString();
   if (read.failure) {
     const safe = redact(read.failure.message, o);
-    return assemble(env, { transport, failure: { code: read.failure.code, message: safe }, identity: 'failed',
-      problems: [safe], results: pmids.map((p) => errorRecord(p, read.failure.code)), pending: [] });
+    return bounded(env, assemble(env, { transport, failure: { code: read.failure.code, message: safe }, identity: 'failed',
+      problems: [safe], results: pmids.map((p) => errorRecord(p, read.failure.code)), pending: [] }), transport, o.maxStructuredBytes);
   }
-  return fitToBudget(env, { transport, identity: read.identity, problems: read.problems }, read.results, o.maxStructuredBytes);
+  return bounded(env, fitToBudget(env, { transport, identity: read.identity, problems: read.problems }, read.results, o.maxStructuredBytes),
+    transport, o.maxStructuredBytes);
 }

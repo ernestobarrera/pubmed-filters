@@ -269,6 +269,48 @@ check('F9', xmlOk.doctype?.systemId === 'x.dtd' && xmlOk.root.attrs.a === '1 & 2
   `analizador XML: DOCTYPE reconocido sin cargarlo, entidades y atributos; sin cerrar, cruzado, dos raíces, texto fuera, entidad no definida, subconjunto interno o 300 niveles = XmlError${
     xmlFallos.length ? ` — aceptados: ${xmlFallos.join(' | ')}` : ''}`);
 
+// --- F10-F12. Revisión de Codex del 25/10 (R6-R8): casos sintéticos de defensa del contrato, no respuestas
+// observadas en NCBI real.
+
+// F10 (R7). Caracteres fuera de XML en texto, CDATA, atributo o comentario, y declaraciones mal formadas o
+// con otra codificación: XmlError. Las declaraciones válidas, también con comillas simples y standalone, pasan.
+const r7Malos = { nulo: '<r>a\u0000b</r>', nuloEnCdata: '<r><![CDATA[a\u0001b]]></r>', nuloEnAtributo: '<r a="\u0002"/>', nuloEnComentario: '<r><!-- \u0003 --></r>',
+  sustitutoSuelto: '<r>\ud800</r>', fffe: '<r>￾</r>', declaracionBasura: '<?xml nonsense?><r/>', declaracionSinVersion: '<?xml encoding="UTF-8"?><r/>',
+  otraCodificacion: '<?xml version="1.0" encoding="ISO-8859-1"?><r/>' };
+const r7Aceptados = Object.entries(r7Malos).filter(([, x]) => { try { parseXml(x); return true; } catch (err) { return !(err instanceof XmlError); } }).map(([k]) => k);
+const r7Buenos = ['<?xml version="1.0" ?><r/>', "<?xml version='1.0' encoding='utf-8' standalone='yes'?><r/>", '<r>\t\n🔬</r>']
+  .filter((x) => { try { parseXml(x); return false; } catch { return true; } });
+const controlLiteral = await fetchWith(['11', '22'], ncbi(xmlSet(article({ pmid: '11', abstract: [{ text: 'a\u0000b' }] }))));
+check('F10', r7Aceptados.length === 0 && r7Buenos.length === 0 && controlLiteral.failure?.code === 'invalid_xml'
+  && controlLiteral.results.every((x) => x.record_status === 'error'),
+  `caracteres no XML en texto, CDATA, atributo o comentario y declaraciones mal formadas o no UTF-8 se rechazan; las válidas pasan${
+    r7Aceptados.length ? ` — aceptados: ${r7Aceptados.join(', ')}` : ''}${r7Buenos.length ? ` — rechazados por error: ${r7Buenos.length}` : ''}`);
+
+// F11 (R6). Un <ERROR> de NCBI dentro del conjunto invalida la respuesta entera antes de atribuir registros o
+// decidir ausencias, lleve o no un PMID dentro y venga o no con registros válidos.
+const errorMixto = await fetchWith(['11', '22'], ncbi(xmlSet(article({ pmid: '11' }), '<ERROR>Provider failed</ERROR>')));
+const errorConPmid = await fetchWith(['11', '22'], ncbi(xmlSet('<ERROR><PMID>11</PMID></ERROR>')));
+check('F11', [errorMixto, errorConPmid].every((r) => r.failure?.code === 'ncbi_error' && r.status.delivery === 'failed'
+  && r.status.record_identity === 'failed' && r.results.every((x) => x.record_status === 'error' && x.reason === 'ncbi_error'))
+  && /Provider failed/.test(errorMixto.failure.message),
+  'un <ERROR> dentro de PubmedArticleSet, con registros válidos o con un PMID dentro, es fallo de la llamada: ni registros ni ausencias certificados');
+
+// F12 (R8). Lo que viene de la respuesta se acota en los diagnósticos: un nombre de 30.000 caracteres, una
+// entidad o un <ERROR> enormes dan un recibo estructurado dentro del presupuesto, nunca una excepción.
+const gigante = 'X'.repeat(30000);
+const r8 = {
+  nombre: await fetchWith(['11', '22'], ncbi(xmlSet(`<${gigante}/>`))),
+  entidad: await fetchWith(['11'], ncbi(xmlSet(article({ pmid: '11', abstract: [{ text: `&${gigante};` }] })))),
+  error: await fetchWith(['11'], ncbi(xmlSet(`<ERROR>${gigante}</ERROR>`))),
+  marcado: await fetchWith(['11'], ncbi(xmlSet(article({ pmid: '11', abstract: [{ text: `<${gigante}/>` }] })))),
+};
+check('F12', Object.values(r8).every((r) => bytesOf(r) < 4000)
+  && r8.nombre.status.record_identity === 'unsupported' && r8.nombre.results.every((x) => x.reason === 'identity_uncertain')
+  && r8.entidad.failure?.code === 'invalid_xml' && r8.error.failure?.code === 'ncbi_error'
+  && resultOf(r8.marcado, '11')?.reason === 'unsupported_abstract_content',
+  `diagnósticos acotados: nombre, entidad, <ERROR> y marcado de 30.000 caracteres dan recibos estructurados de ${
+    Object.values(r8).map(bytesOf).join(', ')} bytes`);
+
 // --- X. dossier-check ---------------------------------------------------------------------------------
 // Una excepción aquí (p. ej. porque una mutación rompió el transporte y un recibo no trae lo esperado) es
 // un fallo declarado: no puede llevarse por delante el informe de las comprobaciones F, que ya corrieron.
@@ -318,7 +360,7 @@ try {
       const ref = a.raw === undefined ? {} : await put(`intentos/${i}.json`, a.raw);
       list.push({ attempt_ref: a.ref ?? `a${i}`, tool: a.tool, external_id: a.ext === undefined ? `call-${i}` : a.ext,
         ...(a.raw === undefined ? { absent_reason: 'conexión cortada antes de la respuesta' } : { ...ref, captured: a.captured ?? 'on_receipt' }),
-        ...(a.plan ? { plan_ref: a.plan } : {}), ...(a.pass ? { pass_id: a.pass } : {}), ...(a.walk ? { walk_id: a.walk } : {}) });
+        ...(a.plan ? { plan_ref: a.plan } : {}), ...(a.pass ? { pass_id: a.pass } : {}), ...(a.walk ? { walk_id: a.walk } : {}), ...(a.request ? { request: a.request } : {}) });
     }
     const m = {
       format: 'pubmed-dossier-manifest', format_version: 1, dossier_id: 'D-1', case: 'S', condition: 'test', profile,
@@ -493,6 +535,7 @@ try {
     && x5.dosRecorridos.denominators.D2.value === 4 && !codes(x5.dosRecorridos).includes('walk_conflict')
     && codes(x5.colision).includes('walk_conflict') && pasada(x5.colision, 'p1')[0].status === 'conflict'
     && pasada(x5.conteos, 'p1')[0].status === 'conflict' && pasada(x5.conteos, 'p1')[0].value === null && pasada(x5.conteos, 'p1')[0].observed.length === 2
+    && x5.conteosEntrePaginas.verdict === 'incomplete' && codes(x5.conteosEntrePaginas).includes('count_conflict')
     && pasada(x5.conteosEntrePaginas, 'p1')[0].status === 'conflict' && pasada(x5.conteosEntrePaginas, 'p1')[0].value === null
     && !codes(x5.conteosEntrePaginas).includes('walk_conflict') && x5.conteosEntrePaginas.denominators.D2.value === 4
     && codes(x5.reciboRetocado).includes('search_receipt') && !codes(x5.reciboRetocado).includes('hash_mismatch') && x5.reciboRetocado.denominators.D2.value === 0
@@ -650,6 +693,113 @@ try {
     && x10.ilegible.verdict === 'inconclusive' && x10.ilegible.uncertainties.some((u) => u.code === 'unreadable')
     && x10.manifiestoRoto.verdict === 'inconclusive' && x10.manifiestoRoto.uncertainties.some((u) => /ruta relativa/.test(u.detail)),
     'llamadas con otro conector, registradas como ruta alternativa y nunca como lectura exacta; entradas ilegibles o manifiesto con rutas fuera de su carpeta, inconclusive');
+
+  // --- X11-X16. Contraejemplos de la revisión de Codex del 25/10 (R1-R5, R9), cada uno contra un control
+  // positivo que da consistent. Sintéticos: prueban el contrato, no son fallos observados en ChatGPT.
+  queries.clear(); records.clear();
+  queries.set('ctl[tiab]', { ids: ['11', '22'] });
+  const ctlS = await buscar('ctl[tiab]');
+  const ctlF = await leer(['11', '22'], 'lc');
+  const respuestaCtl = 'According to PMID 11.';
+  const usoCtl = (uses = [{ source: { type: 'pmid', value: '11' }, fragment: 'PMID 11' }]) => ({ declared_by: 'agent', uses });
+  const tocar = (env, fn) => {
+    const c = structuredClone(env);
+    fn(c.result.structuredContent);
+    c.result.content[0].text = JSON.stringify(c.result.structuredContent);
+    return c;
+  };
+  const control = async ({ s = ctlS, f = ctlF, usage = usoCtl(), extra = [] } = {}) => (await dossier({
+    attempts: [S(s), F(f), ...extra], response: respuestaCtl, usage, closure: true })).result;
+  const ctl = await control();
+
+  // X11 (R1). La forma y las relaciones del recibo se validan antes de usarlo: lo que no tiene la forma es
+  // incertidumbre, una contradicción demostrable es defecto, y nada tumba el comprobador.
+  const knownMal = structuredClone(ctlS);
+  knownMal.result.structuredContent.selection_record.record.known_pmids = { pmid: '11' };
+  knownMal.result.structuredContent.selection_record.sha256 = await sha256(JSON.stringify(knownMal.result.structuredContent.selection_record.record));
+  knownMal.result.content[0].text = JSON.stringify(knownMal.result.structuredContent);
+  const x11 = {
+    sinProcedencia: await control({ f: tocar(ctlF, (sc) => { for (const k of ['run', 'attempt_id', 'received_at', 'executed_at', 'completed_at', 'engine', 'provider', 'endpoint', 'transport', 'limits']) delete sc[k]; }) }),
+    resultadoNull: await control({ f: tocar(ctlF, (sc) => { sc.results[0] = null; }) }),
+    knownMalformado: await control({ s: knownMal }),
+    recuentoMenor: await control({ s: tocar(ctlS, (sc) => { sc.result_count = 0; }) }),
+    retmaxIncompatible: await control({ s: tocar(ctlS, (sc) => { sc.request.retmax_sent = 0; }) }),
+    continuacionFalsa: await control({ s: tocar(ctlS, (sc) => { sc.next_retstart = 2; sc.next_retstart_reason = null; }) }),
+    completoFalso: await control({ s: tocar(ctlS, (sc) => { sc.records_complete = false; }) }),
+  };
+  const formaMala = ['sinProcedencia', 'resultadoNull', 'knownMalformado'];
+  const relacionMala = ['recuentoMenor', 'retmaxIncompatible', 'continuacionFalsa', 'completoFalso'];
+  check('X11', ctl.verdict === 'consistent'
+    && formaMala.every((k) => x11[k].verdict === 'inconclusive' && x11[k].uncertainties.some((u) => u.code === 'unsupported_input')
+      && !x11[k].uncertainties.some((u) => u.code === 'checker_exception'))
+    && x11.sinProcedencia.denominators.D3.value === 0
+    && relacionMala.every((k) => x11[k].verdict === 'incomplete' && codes(x11[k]).includes('search_receipt') && x11[k].denominators.D2.value === 0),
+    `forma antes que uso: sin procedencia, resultado null o known_pmids malformado, inconclusive sin excepción; recuento menor que la lista, retmax incompatible, continuación o completitud falsas, incomplete — ${
+      Object.entries(x11).map(([k, v]) => `${k}:${v.verdict}`).join(', ')}`);
+
+  // X12 (R2). Solo suma D3 el abstract íntegro atribuible a su PMID; un recibo con la identidad o la entrega
+  // fallidas no acredita ninguno. Un unsupported con registros bien atribuidos sí los acredita.
+  const x12 = {
+    returnedDistinto: await control({ f: tocar(ctlF, (sc) => { sc.results[0].returned_pmid = '99'; }) }),
+    identidadFailed: await control({ f: tocar(ctlF, (sc) => { sc.status = { record_identity: 'failed', delivery: 'failed' }; }) }),
+    unsupportedAtribuible: await control({ f: tocar(ctlF, (sc) => { sc.status.record_identity = 'unsupported'; }) }),
+  };
+  check('X12', x12.returnedDistinto.denominators.D3.value === 1 && x12.returnedDistinto.denominators.D3.obtained.join() === '22'
+    && x12.returnedDistinto.denominators.D3.not_attributable.join() === '11' && x12.returnedDistinto.verdict === 'incomplete'
+    && x12.identidadFailed.denominators.D3.value === 0 && x12.identidadFailed.verdict === 'incomplete'
+    && x12.unsupportedAtribuible.denominators.D3.value === 2,
+    `D3 solo con identidad válida: returned_pmid distinto, D3 ${x12.returnedDistinto.denominators.D3.value}; identidad failed, D3 ${
+      x12.identidadFailed.denominators.D3.value}; unsupported bien atribuido, D3 ${x12.unsupportedAtribuible.denominators.D3.value}`);
+
+  // X13 (R3). Una lectura sin respuesta no desaparece: sin la petición, inconclusive; con ella, sus PMID quedan
+  // por resolver (incomplete) salvo que otra lectura conservada los resuelva.
+  const x13 = {
+    sinPeticion: await control({ extra: [{ tool: 'pubmed_fetch_exact' }] }),
+    conPeticion: await control({ extra: [{ tool: 'pubmed_fetch_exact', request: { pmids: ['33'] } }] }),
+    resueltaPorOtra: await control({ extra: [{ tool: 'pubmed_fetch_exact', request: { pmids: ['22'] } }] }),
+  };
+  check('X13', x13.sinPeticion.verdict === 'inconclusive' && x13.sinPeticion.uncertainties.some((u) => u.code === 'reading_without_response')
+    && x13.conPeticion.verdict === 'incomplete' && x13.conPeticion.denominators.D3.no_response.join() === '33'
+    && x13.resueltaPorOtra.verdict === 'consistent',
+    `lectura sin respuesta: sin petición ${x13.sinPeticion.verdict}, con petición ${x13.conPeticion.verdict}, resuelta por otra lectura ${x13.resueltaPorOtra.verdict}`);
+
+  // X14 (R4). Recuentos distintos entre páginas de una pasada: defecto, aunque otra pasada tenga D1 medido.
+  queries.set('cc[tiab]', { ids: ['41', '42', '43', '44'], count: 4 });
+  const cc1 = await buscar('cc[tiab]', { retmax: 2 });
+  queries.set('cc[tiab]', { ids: ['41', '42', '43', '44'], count: 5 });
+  const cc2 = await buscar('cc[tiab]', { retmax: 2, retstart: 2 });
+  const ccOtra = await buscar('ctl[tiab]', { pass: 'p2' });
+  const x14 = (await dossier({ attempts: [S(cc1), S(cc2), S(ccOtra), F(ctlF)], response: respuestaCtl, usage: usoCtl(), closure: true })).result;
+  check('X14', x14.verdict === 'incomplete' && codes(x14).includes('count_conflict')
+    && pasada(x14, 'p1')[0].status === 'conflict' && pasada(x14, 'p1')[0].value === null && pasada(x14, 'p2')[0].status === 'measured',
+    `D1 en conflicto en una pasada impide aprobar aunque otra pasada mida D1 — ${x14.verdict}`);
+
+  // X15 (R5). Dos PMID con el mismo abstract canónico: una referencia de uso se comprueba por el par
+  // [pmid, huella], no por la huella sola.
+  records.set('11', article({ pmid: '11', abstract: [{ text: 'Identical abstract.' }] }));
+  records.set('22', article({ pmid: '22', abstract: [{ text: 'Identical abstract.' }] }));
+  const gemelos = await leer(['11', '22'], 'lg');
+  const [g11, g22] = gemelos.result.structuredContent.results;
+  const x15 = await control({ f: gemelos, usage: usoCtl([{ source: { type: 'pmid', value: '11' }, fragment: 'PMID 11',
+    abstract_ref: { pmid: '11', abstract_sha256: g11.abstract_sha256 } }]) });
+  const x15otro = await control({ f: gemelos, usage: usoCtl([{ source: { type: 'pmid', value: '11' }, fragment: 'PMID 11',
+    abstract_ref: { pmid: '33', abstract_sha256: g11.abstract_sha256 } }]) });
+  check('X15', g11.abstract_sha256 === g22.abstract_sha256 && x15.verdict === 'consistent' && x15.denominators.D4.value === 1
+    && codes(x15otro).includes('use_anchor'),
+    `misma huella en dos PMID: la referencia al par de 11 resuelve (${x15.verdict}, D4 ${x15.denominators.D4.value}); a un PMID que no la tiene, no`);
+  records.clear();
+
+  // X16 (R9). Usos declarados sin ancla no son cero usos medidos; cero usos declarado explícitamente sí.
+  const x16 = {
+    sinAncla: await control({ usage: usoCtl([{ source: { type: 'pmid', value: '11' } }]) }),
+    ceroExplicito: await control({ usage: usoCtl([]) }),
+    parcial: await control({ usage: usoCtl([{ source: { type: 'pmid', value: '11' }, fragment: 'PMID 11' }, { source: { type: 'pmid', value: '22' } }]) }),
+  };
+  check('X16', x16.sinAncla.denominators.D4.status === 'not_measured' && x16.sinAncla.denominators.D4.value === null
+    && x16.sinAncla.denominators.D4.declared_unverified.length === 1 && x16.sinAncla.verdict === 'inconclusive'
+    && x16.ceroExplicito.denominators.D4.status === 'measured' && x16.ceroExplicito.denominators.D4.value === 0 && x16.ceroExplicito.verdict === 'consistent'
+    && x16.parcial.denominators.D4.status === 'partial' && x16.parcial.denominators.D4.value === 1 && x16.parcial.verdict === 'inconclusive',
+    `D4: sin ancla ${x16.sinAncla.denominators.D4.status}, cero explícito ${x16.ceroExplicito.denominators.D4.status} (${x16.ceroExplicito.verdict}), parcial ${x16.parcial.denominators.D4.status} (${x16.parcial.verdict})`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }
