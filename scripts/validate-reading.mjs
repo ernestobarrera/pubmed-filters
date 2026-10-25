@@ -800,6 +800,51 @@ try {
     && x16.ceroExplicito.denominators.D4.status === 'measured' && x16.ceroExplicito.denominators.D4.value === 0 && x16.ceroExplicito.verdict === 'consistent'
     && x16.parcial.denominators.D4.status === 'partial' && x16.parcial.denominators.D4.value === 1 && x16.parcial.verdict === 'inconclusive',
     `D4: sin ancla ${x16.sinAncla.denominators.D4.status}, cero explícito ${x16.ceroExplicito.denominators.D4.status} (${x16.ceroExplicito.verdict}), parcial ${x16.parcial.denominators.D4.status} (${x16.parcial.verdict})`);
+
+  // --- X17-X19. Revisión de Codex del delta (25/10, Δ1-Δ3), cada uno con su control positivo.
+  // X17 (Δ1). Una ausencia o un registro sin abstract solo los acredita una respuesta ejecutada, HTTP 200 y con huella.
+  const ausentes = (sc) => { sc.results = sc.request.pmids.map((p) => ({ requested_pmid: p, returned_pmid: null, record_status: 'not_found', reason: null, detail: null })); };
+  const sinAbstract = (sc) => { for (const x of sc.results) Object.assign(x, { record_status: 'without_abstract', abstract_format: null, abstract_bytes: null, abstract_sha256: null, abstract_canonical: null }); };
+  const http = (status) => (sc) => { sc.transport.http_status = status; };
+  const sinHuella = (sc) => { sc.transport.raw_response_sha256 = null; };
+  const sinEjecutar = (sc) => { sc.executed_at = null; };
+  const variante = (estado, ...cambios) => control({ f: tocar(ctlF, (sc) => { estado(sc); for (const c of cambios) c(sc); }) });
+  const x17 = {
+    ausentesOk: await variante(ausentes),
+    ausentes500: await variante(ausentes, http(500), sinHuella),
+    ausentes500ConHuella: await variante(ausentes, http(500)),
+    ausentesSinHuella: await variante(ausentes, sinHuella),
+    ausentesSinEjecutar: await variante(ausentes, sinEjecutar),
+    sinAbstractOk: await variante(sinAbstract),
+    sinAbstract500: await variante(sinAbstract, http(500)),
+  };
+  const malos17 = ['ausentes500', 'ausentes500ConHuella', 'ausentesSinHuella', 'ausentesSinEjecutar', 'sinAbstract500'];
+  check('X17', x17.ausentesOk.verdict === 'consistent' && x17.ausentesOk.denominators.D3.not_found.length === 2
+    && x17.sinAbstractOk.verdict === 'consistent' && x17.sinAbstractOk.denominators.D3.without_abstract.length === 2
+    && malos17.every((k) => x17[k].verdict === 'incomplete' && codes(x17[k]).includes('fetch_receipt')
+      && x17[k].denominators.D3.not_found.length === 0 && x17[k].denominators.D3.without_abstract.length === 0),
+    `ausencias y registros sin abstract: con HTTP 200 y huella, consistent; con HTTP 500, sin huella o sin ejecutar, defecto y no se acreditan — ${
+      Object.entries(x17).map(([k, v]) => `${k}:${v.verdict}`).join(', ')}`);
+
+  // X18 (Δ2). Una página vacía pedida tras el final, tal como la produce el MCP, no es una página fuera del recuento.
+  queries.set('vt[tiab]', { ids: ['11', '22'] });
+  const vacia = await buscar('vt[tiab]', { retstart: 3, retmax: 2 });
+  const vsc = vacia.result.structuredContent;
+  const x18 = await control({ s: vacia });
+  check('X18', vsc.pmids.length === 0 && vsc.result_count === 2 && vsc.records_complete === false && vsc.request.retstart === 3
+    && x18.verdict === 'consistent' && !codes(x18).includes('search_receipt') && pasada(x18, 'p1')[0].status === 'measured' && pasada(x18, 'p1')[0].value === 2
+    && x11.recuentoMenor.verdict === 'incomplete',
+    `página vacía tras el final (retstart 3, recuento 2): ${x18.verdict}, D1 ${pasada(x18, 'p1')[0].value}; una página no vacía fuera del recuento sigue siendo defecto`);
+
+  // X19 (Δ3). Un rechazo previo a NCBI se reconoce solo con su forma mínima (run, intento, hora y motivo).
+  const rechazo = await call('pubmed_fetch_exact', { pmids: ['abc'], context: { plan_ref: 'plan-1', read_id: 'lr' } });
+  const x19 = {
+    valido: await control({ extra: [F(rechazo)] }),
+    sinContrato: await control({ extra: [F(tocar(rechazo, (sc) => { for (const k of ['run', 'attempt_id', 'received_at', 'error']) delete sc[k]; }))] }),
+  };
+  check('X19', rechazo.result.structuredContent.rejected_before_ncbi === true && x19.valido.verdict === 'consistent'
+    && x19.sinContrato.verdict === 'inconclusive' && x19.sinContrato.uncertainties.some((u) => u.code === 'unsupported_input'),
+    `rechazo previo a NCBI: el del MCP, ${x19.valido.verdict} sin exigir lectura; sin run, intento, hora ni motivo, ${x19.sinContrato.verdict}`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }

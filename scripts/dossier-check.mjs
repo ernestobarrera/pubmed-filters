@@ -259,7 +259,8 @@ async function searchDefects(r) {
   const pageOk = n === 0 ? r.page === null : r.page?.first === start + 1 && r.page?.last === start + n;
   if (!pageOk) d.push('page no corresponde a retstart y a la lista');
   if (count !== null && String(count) !== r.count_raw) d.push(`result_count (${count}) no corresponde a count_raw (${r.count_raw})`);
-  if (count !== null && start + n > count) d.push(`la página llega más allá del recuento (${start} + ${n} > ${count})`);
+  // Una página vacía pedida tras el final (o tras encoger el conjunto) no devuelve nada fuera de posición (Δ2).
+  if (count !== null && n > 0 && start + n > count) d.push(`la página llega más allá del recuento (${start} + ${n} > ${count})`);
   if (r.records_complete !== (start === 0 && count !== null && n === count)) d.push('records_complete no corresponde a recuento y lista');
   if (r.request.retmax_sent !== Math.min(r.request.retmax_requested, ESEARCH_WINDOW - start)) d.push('retmax_sent no corresponde a lo pedido');
   const next = continuation({ integrity: r.status.query_integrity, retstart: start, retmaxRequested: r.request.retmax_requested,
@@ -312,6 +313,19 @@ function fetchShapeErrors(r) {
 }
 
 /**
+ * Forma mínima del rechazo previo a NCBI (Δ3): la que produce mcp/protocol.mjs. No se le exige la envoltura
+ * de una lectura ejecutada, pero sin run, intento, hora y motivo no es un rechazo reconocible.
+ */
+function rejectionShapeErrors(r) {
+  const e = [];
+  if (!isObj(r.run)) e.push('run');
+  if (!isStr(r.attempt_id)) e.push('attempt_id');
+  if (!isIso(r.received_at)) e.push('received_at');
+  if (!isStr(r.error)) e.push('error');
+  return e;
+}
+
+/**
  * Coherencia de un recibo de lectura con forma válida (§3.3, §3.6) y de cada abstract entregado. Separa
  * el texto íntegro del abstract ATRIBUIBLE (R2): un recibo con identidad o entrega fallidas, o con
  * contradicciones, no acredita ningún registro; un registro con otro returned_pmid, tampoco el suyo.
@@ -344,8 +358,11 @@ async function fetchDefects(r) {
     (r.failure !== null) !== (delivery === 'failed') && 'failure y delivery no concuerdan',
     identity === 'verified' && r.results.some((x) => ['identity_uncertain', 'unsupported_record'].includes(x.reason))
       && 'identidad verified con registros de identidad incierta o no soportados',
-    r.results.some((x) => x.record_status === 'with_abstract') && (r.transport.http_status !== 200 || r.transport.raw_response_sha256 === null)
-      && 'abstracts entregados sin respuesta HTTP 200 con huella',
+    // Un abstract, su falta o la ausencia del registro solo los acredita una respuesta ejecutada, HTTP 200 y con
+    // huella (revisión del delta, Δ1). Un fallo de transporte se representa como error, nunca como ausencia.
+    r.results.some((x) => ['with_abstract', 'without_abstract', 'not_found'].includes(x.record_status))
+      && (r.executed_at === null || r.transport.http_status !== 200 || r.transport.raw_response_sha256 === null)
+      && 'registros o ausencias sin respuesta ejecutada, HTTP 200 y con huella',
     times.some((t, i) => i > 0 && t < times[i - 1]) && 'tiempos fuera de orden',
     pmids.length > r.limits.max_pmids && 'más PMID pedidos que el límite del recibo',
   ].filter(Boolean);
@@ -584,9 +601,12 @@ async function checkDossierUnguarded(manifest, load) {
     if (entry.kind === 'unknown') { uncertain('unsupported_input', `${a.attempt_ref}: formato de respuesta no reconocido`); entry.status = 'unreadable'; continue; }
     if (expectedTool !== a.tool) { defect('tool_mismatch', `${a.attempt_ref}: el inventario dice ${a.tool} y el archivo es ${entry.kind}`); entry.status = 'tool_mismatch'; continue; }
     // La forma, antes de leer ningún campo (R1): lo que no la tiene no se interpreta ni tumba el comprobador.
-    const shape = entry.kind === 'search' ? searchShapeErrors(payload) : entry.kind === 'fetch' ? fetchShapeErrors(payload) : [];
+    const shape = entry.kind === 'search' ? searchShapeErrors(payload) : entry.kind === 'fetch' ? fetchShapeErrors(payload)
+      : entry.kind === 'fetch_rejected' ? rejectionShapeErrors(payload) : [];
     if (shape.length) {
-      uncertain('unsupported_input', `${a.attempt_ref}: recibo sin la forma de ${entry.kind === 'search' ? 'pubmed_search_exact 1.13+' : `${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}`} (${shape.slice(0, 8).join(', ')})`);
+      const expected = { search: 'pubmed_search_exact 1.13+', fetch: `${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}`,
+        fetch_rejected: `rechazo de ${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}` }[entry.kind];
+      uncertain('unsupported_input', `${a.attempt_ref}: recibo sin la forma de ${expected} (${shape.slice(0, 8).join(', ')})`);
       entry.status = 'unsupported';
       continue;
     }
