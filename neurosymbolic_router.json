@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.14.0",
+  "schema_version": "1.14.1",
   "metadata": {
     "id": "pubmed-neurosymbolic-router",
     "name": "Neurosymbolic Search Composition Router",
     "architecture_role": "scientific_retrieval_harness",
-    "version": "1.14.0",
+    "version": "1.14.1",
     "language": "en",
     "repository": "ernestobarrera/pubmed-filters",
     "purpose": "Translate conversational clinical or scientific intent into reproducible, adaptive and evidence-aware PubMed search plans using curated repository filters."
@@ -46,7 +46,7 @@
     ]
   },
   "conformance": {
-    "contract_version": "1.14.0",
+    "contract_version": "1.14.1",
     "reference_parser": "scripts/parse-filter.mjs",
     "reference_executor": "scripts/pubmed-exact.mjs",
     "test_suite": "scripts/validate-router.mjs",
@@ -242,6 +242,12 @@
       "why": "Dropping a component is legitimate and often right; never returning to it turns a broad answer into an answer to a different question.",
       "measured": "2026-09-16: dropping 'metformin' was the right call for the landscape, but the exact question still had 44 records with metformin and 5 with an explicit second-line restriction. None of them were searched for.",
       "declare": "State which component was dropped, in which passes, and what the pass that restored it found."
+    },
+    "condition_guideline_pass": {
+      "rule": "For a treatment or management question, the guidelines_or_consensus lane is searched at the level of the condition, without the intervention: a guideline grades interventions that its title and abstract do not name. A guideline lane restricted to the intervention behaves as a replacing_pass (coverage_check) and loses them. It is the landscape side of exact_applicability_pass: the intervention stays in the core and is dropped only here.",
+      "deferred": "A lane declared to be covered outside PubMed (guideline bodies, regulators, the web) counts as not run until its result reaches the answer with its source. If it does not, the answer says that the lane was not covered. Deferring it is no reason to skip the PubMed lane for a class that PubMed indexes.",
+      "measured": "2026-10-26, muscle relaxants for acute low back pain: the multidisciplinary guideline of September 2026 (PMID 42687437) recommends them as second line but does not name them in its title or abstract. The core 'low back pain AND muscle relaxants' did not contain it (checked by UID). A guideline pass on acute low back pain without the intervention returned it on its first page. The agent had dropped the guideline filter 'to check guidelines outside PubMed', and that check never reached the answer.",
+      "declare": "State the guideline pass and its query, or why the question needs none; for a deferred lane, its source and what it found."
     }
   },
   "filter_registry": {
@@ -677,7 +683,15 @@
       "exploration_only": "To see the size and shape of a set and plan the next pass. Never counted as a read corpus. Reading records from that batch afterwards is documented as a separate step, not attributed to the earlier record."
     },
     "ordered_sample_is_not_the_set": "The first N records of a truncated list, in any order, do not represent the set. They feed reading only inside a declared focused_selection with its reason, or as one page of a complete_retrieval. No sort is required: when a pass is retrieved whole the order does not change coverage, and keeping the default order of a partial list can be a deliberate choice. Measured 2026-10-17/18: ESearch returns the most recent entries first by default, and the trials that answered three of five behaviour-test questions were outside the lists the agent read; sort relevance put 5/5 within the first 150 in J and 0/11 within the first 30 in A2, so it is an option, not a guarantee.",
+    "order_hides_by_age": {
+      "rule": "Each order hides something by age. The default order puts the most recently indexed entries first and pushes older pivotal records down; relevance rewards accumulated signals and pushes records indexed in recent months down. A focused_selection that truncates a pass states which order it took and what that order can hide.",
+      "when_both_matter": "When the claim needs the pivotal evidence and also whatever may have replaced it (a treatment question resting on a synthesis or a guideline), read the head of the same query in both orders, or retrieve the whole list when it fits in one call and screen it. Same sent_query in both calls, not a different query.",
+      "cost": "A search receipt carries PMIDs, not titles: screening a whole list means reading its records, declared as reading. The cost is in reading, not in retrieving.",
+      "measured": "2026-10-26, muscle relaxants for acute low back pain: a synthesis pass of 59 records was read at retmax 15 by relevance. A systematic review published a month earlier (PMID 42799684), inside that pass and able to change the conclusion, sat 17th by relevance and 1st by default order. A guideline of the same month sat 47th of 729 by relevance and 10th by default in a guideline pass. The 2021 review that anchored the answer was within the first 10 in both orders.",
+      "not_a_rule_for": "It does not make the default order better than relevance, nor ask for both heads on every pass: a pass retrieved whole, or a claim that does not depend on what is current, does not need it."
+    },
     "pagination": {
+      "order_recommendation": "For a multi-page complete_retrieval, prefer omitting sort rather than using relevance. Identical relevance requests have returned different ordered lists. This precaution does not freeze the default order or the set: keep the drift controls and the no-snapshot limit. When one call returns the whole set, order does not change membership coverage.",
       "rule": "Pages are independent calls with retstart (and the same sort). The server keeps nothing, so a set of pages carries no snapshot guarantee: each page proves the integrity of its query, its list and the position requested, not that the set stayed the same between pages.",
       "drift_controls": [
         "same sent_query_sha256 and same request.sort on every page",
@@ -710,6 +724,7 @@
       "additional_retrieval_has_low_expected_information_gain"
     ],
     "never_use_fixed_article_count_as_saturation": true,
+    "recency_before_closing": "recent_evidence_may_change_older_syntheses is checked, not assumed. Before closing on a synthesis or a guideline, look for a newer one of the same class for the question, in the default-order head of the synthesis and guideline passes (reading_and_drilldown.order_hides_by_age), and report what was found or that nothing newer appeared. Newer does not outrank older by date alone: compare population, comparators, included trials and outcomes.",
     "not_applicable_to": "routing.corpus_definition, which needs complete retrieval of a declared population, not conceptual saturation."
   },
   "coverage_check": {

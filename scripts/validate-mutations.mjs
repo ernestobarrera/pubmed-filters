@@ -971,6 +971,38 @@ const MUTACIONES = [
     a: '',
     rompe: 'K8',
   },
+  {
+    id: 'K9-UNA-SOLA-CABEZA',
+    porque: 'vuelve a bastar la cabeza de un orden: la revisión de 2026 quedaba 17.ª por relevancia con 15 leídos',
+    fichero: 'neurosymbolic_router.json',
+    de: 'read the head of the same query in both orders,',
+    a: 'read the head of the same query,',
+    rompe: 'K9',
+  },
+  {
+    id: 'K9-GUIAS-CON-INTERVENCION',
+    porque: 'la pasada de guías vuelve a exigir la intervención: la guía que no nombra el fármaco queda fuera',
+    fichero: 'neurosymbolic_router.json',
+    de: 'is searched at the level of the condition, without the intervention:',
+    a: 'is searched with the core:',
+    rompe: 'K9',
+  },
+  {
+    id: 'K9-APLAZADA-COMO-HECHA',
+    porque: 'una vía declarada fuera de PubMed vuelve a contar como hecha aunque su resultado no llegue',
+    fichero: 'neurosymbolic_router.json',
+    de: 'counts as not run until its result reaches the answer with its source.',
+    a: 'counts as covered.',
+    rompe: 'K9',
+  },
+  {
+    id: 'K9-SIN-RECENCIA',
+    porque: 'la recencia vuelve a ser una condición para seguir buscando que nada comprueba',
+    fichero: 'neurosymbolic_router.json',
+    de: '"recency_before_closing":',
+    a: '"recency_before_closing_retirada":',
+    rompe: 'K9',
+  },
   // Lectura con recibo y dossier-check (1.14.0, especificación 29- y adenda de Codex del 24/10). Una por
   // control de §5: cada forma de dar por leído lo que no se leyó, o por medido lo que no se midió.
   {

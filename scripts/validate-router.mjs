@@ -655,6 +655,27 @@ check('K8', k8Fallos.length === 0,
     ? 'tres recorridos definidos, la muestra ordenada no es el conjunto, seis controles de deriva con su límite, cuatro denominadores y los motivos sin continuación'
     : k8Fallos.join('; ')}`);
 
+// Orden, guías y recencia (1.14.1, auditoría de lumbalgia del 26/10). Estructurales, como K8: rechazan
+// vacío y relleno, no prueban que una superficie las cumpla.
+const ohba = rd.order_hides_by_age ?? {};
+const cgp = router.evidence_landscape_policy?.condition_guideline_pass ?? {};
+const k9Fallos = [
+  !(sustantivo(ohba.rule) && /default order/.test(ohba.rule ?? '') && /relevance/.test(ohba.rule ?? '')
+    && sustantivo(ohba.when_both_matter) && /both orders/.test(ohba.when_both_matter ?? '') && sustantivo(ohba.measured))
+    && 'order_hides_by_age no dice qué esconde cada orden o cuándo leer las dos cabezas',
+  !(sustantivo(cgp.rule) && /without the intervention/.test(cgp.rule ?? '')
+    && sustantivo(cgp.deferred) && /not run/.test(cgp.deferred ?? ''))
+    && 'condition_guideline_pass no saca la intervención de la pasada de guías o da por hecha una vía aplazada',
+  !(sustantivo(router.saturation_policy?.recency_before_closing)
+    && /order_hides_by_age/.test(router.saturation_policy?.recency_before_closing ?? ''))
+    && 'saturation_policy no comprueba la recencia antes de cerrar',
+  !sustantivo(pag.order_recommendation) && 'la paginación no recomienda el orden para una recuperación de varias páginas',
+].filter(Boolean);
+check('K9', k9Fallos.length === 0,
+  `orden y guías: ${k9Fallos.length === 0
+    ? 'cada orden dice qué esconde, la pasada de guías va sin la intervención, una vía aplazada no cuenta como hecha y la recencia se comprueba antes de cerrar'
+    : k9Fallos.join('; ')}`);
+
 // La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
 const casosEval = JSON.parse(read('scripts/eval/cases.json'));
 const conformidadEval = roleConformance(casosEval, roleOf);
