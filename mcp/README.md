@@ -1,9 +1,9 @@
 # MCP: búsqueda PubMed literal con recibo
 
-Un servidor MCP con cuatro herramientas de solo lectura. La central es `pubmed_search_exact`;
-`pubmed_fetch_exact` lee por PMID con recibo (contrato 1.14.0), y las otras dos sirven la **fuente
-simbólica** para que una superficie sin terminal no tenga que extraer filtros a mano ni pueda
-reconstruirlos de memoria:
+Un servidor MCP con cinco herramientas de solo lectura. La central es `pubmed_search_exact`;
+`pubmed_fetch_exact` lee por PMID con recibo (contrato 1.14.0), `pubmed_summary_exact` criba por título
+(contrato 1.15.0), y las otras dos sirven la **fuente simbólica** para que una superficie sin terminal no
+tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
 
 - `pubmed_fetch_exact` (1.14.0, especificación 29-): de 1 a 5 PMID en cadena y un `context` con `plan_ref` y
   `read_id`. Cada PMID sale `with_abstract` (abstract completo en `abstract_canonical`, con su SHA-256),
@@ -14,6 +14,15 @@ reconstruirlos de memoria:
   su `run`. Su texto es el mismo JSON compacto que `structuredContent`, así que el mensaje entero lleva el
   recibo dos veces (medido: unos 40 KB para cinco abstracts de 3.000 caracteres). Detalle y comprobador de
   dossier en el [README principal](../README.md).
+- `pubmed_summary_exact` (1.15.0, diseño 33-): de 1 a 50 PMID en cadena y un `context` con `plan_ref` y
+  `screen_id`. Por ESummary (JSON, POST) devuelve título, año, tipos de publicación, revista, DOI y si NCBI
+  marca que hay abstract; **nunca el abstract**. Es para cribar una lista entera por título y decidir qué
+  se lee: no convierte un registro en hallazgo (para eso, `pubmed_fetch_exact`), y lo apartado se cuenta
+  aparte (`counts_as: titles_screened`). Cada PMID sale `found`, `not_found` (solo con la marca exacta de
+  NCBI, en **esta** respuesta) o `error` con `reason` (`absent_from_response` si NCBI no dice nada de él).
+  Mismo presupuesto de 24 KiB, misma cola y mismo `run`; un título nunca se corta y lo que no cabe va a
+  `pending_pmids`. Medido el 26/10 con PubMed real: 50 registros, 22,7 y 24,3 KB. El JSON se lee con un
+  analizador estricto que rechaza claves repetidas. `dossier-check` aún no lee estos recibos.
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición
@@ -275,9 +284,11 @@ node mcp/test.mjs     # protocolo y transporte HTTP, sin red (también corre en 
 
 La fuente simbólica (catálogo, filtro canónico y `filter_fidelity`) se prueba en M12-M17 y W8, también
 sin red; el registro de selección en el recibo, en M18-M20; orden, páginas y recorrido de lectura, en
-M21-M22; la lectura por PMID, en M23-M26 y W9. Probado desde ChatGPT el 2026-10-17/18 con el contrato
-1.11 (sin `selection_record`) y el 2026-10-19 con la 1.12 (caso P); la 1.13 no se ha probado todavía desde
-ninguna superficie. La 1.14 (lectura por PMID) no está desplegada ni probada desde ninguna superficie.
+M21-M22; la lectura por PMID, en M23-M26 y W9; el cribado por PMID, en M28-M29 y W10 (y su núcleo en
+S1-S11 de `scripts/validate-reading.mjs`). Probado desde ChatGPT el 2026-10-17/18 con el contrato 1.11 (sin
+`selection_record`) y el 2026-10-19 con la 1.12 (caso P); la 1.13 no se ha probado todavía desde ninguna
+superficie. La 1.14.0 se desplegó el 2026-10-26 y ChatGPT leyó un PMID con ella. La 1.15 (cribado) no está
+desplegada ni probada desde ninguna superficie.
 
 Probado a mano el 2026-10-08 con el cliente oficial del SDK de MCP (1.32.1), por stdio y por HTTP,
 contra PubMed real. Sin probar todavía dentro de `workerd` contra PubMed, ni desde claude.ai o ChatGPT.

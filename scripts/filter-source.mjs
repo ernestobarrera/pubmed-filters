@@ -39,6 +39,8 @@ export const GUIDANCE_PATHS = {
   pagination_order_recommendation: 'reading_and_drilldown.pagination.order_recommendation',
   condition_guideline_pass: 'evidence_landscape_policy.condition_guideline_pass',
   recency_before_closing: 'saturation_policy.recency_before_closing',
+  // 1.15.0: cribar por título decide qué se lee, nunca qué se destaca (diseño 33-, §3).
+  title_screen: 'reading_and_drilldown.title_screen',
 };
 
 /** El valor del router en una ruta con puntos, o undefined si algún tramo no existe. */

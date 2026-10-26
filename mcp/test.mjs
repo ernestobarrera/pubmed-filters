@@ -72,10 +72,10 @@ check('M1', iniPropia.result.protocolVersion === '2025-06-18' && ini.result.prot
   'anuncia solo la versión que cumple (2025-06-18) y la ofrece a quien pida otra');
 
 const lista = await h({ jsonrpc: '2.0', id: 3, method: 'tools/list' });
-check('M2', lista.result.tools.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_fetch_exact'
+check('M2', lista.result.tools.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_fetch_exact,pubmed_summary_exact'
   && lista.result.tools.every((t) => t.annotations.readOnlyHint === true)
   && lista.result.tools[0].inputSchema.required.includes('query'),
-  'sin catálogo, buscar y leer por PMID: de solo lectura, con query obligatoria');
+  'sin catálogo, buscar, leer y cribar por PMID: de solo lectura, con query obligatoria');
 
 check('M3', await h({ jsonrpc: '2.0', method: 'notifications/initialized' }) === null
   && await h({ jsonrpc: '2.0', id: 9, result: {} }) === null
@@ -187,7 +187,7 @@ const usar = (id, name, args) => conFuente({ jsonrpc: '2.0', id, method: 'tools/
 
 const listaFuente = (await conFuente({ jsonrpc: '2.0', id: 30, method: 'tools/list' })).result.tools;
 const iniFuente = (await conFuente({ jsonrpc: '2.0', id: 31, method: 'initialize', params: { protocolVersion: '2025-06-18' } })).result;
-check('M12', listaFuente.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_filter_catalog,pubmed_get_filter,pubmed_fetch_exact'
+check('M12', listaFuente.map((t) => t.name).join() === 'pubmed_search_exact,pubmed_filter_catalog,pubmed_get_filter,pubmed_fetch_exact,pubmed_summary_exact'
   && listaFuente.every((t) => t.annotations.readOnlyHint === true)
   && /pubmed_filter_catalog/.test(iniFuente.instructions) && !/pubmed_filter_catalog/.test(ini.result.instructions),
   'con el paquete de filtros anuncia catálogo y extracción, de solo lectura; sin él, solo ejecuta y no lo promete');
@@ -503,6 +503,63 @@ check('M26', lecturasOcupadas.length > 0 && lecturasOcupadas.every((r) => r.resu
   && enviadas.length + lecturasOcupadas.length + mezcla.slice(0, 6).filter((r) => /SERVICIO_OCUPADO/.test(r.result.structuredContent.error ?? '')).length === 12,
   `búsqueda y lectura comparten la cola: tras seis búsquedas, ${lecturasOcupadas.length} de seis lecturas se rechazan como servicio ocupado, con error por PMID y nunca como ausencia`);
 
+// --- Cribado por PMID con recibo (1.15.0, diseño 33-) ---------------------------------------------
+const { SUMMARY_TOOL } = await import('./protocol.mjs');
+const docsum = (p) => ({ uid: p, pubdate: '2021 Mar', source: 'Synth J', title: `Synthetic ${p}.`, pubtype: ['Journal Article'],
+  articleids: [{ idtype: 'doi', value: `10.5555/${p}` }], attributes: ['Has Abstract'], doctype: 'citation', booktitle: '' });
+const ncbiCriba = (status = 200) => async (url, init = {}) => {
+  enviadas.push({ url: String(url), method: init.method, body: init.body?.toString() ?? '' });
+  const ids = new URLSearchParams(init.body?.toString() ?? '').get('id')?.split(',') ?? [];
+  if (/esummary/.test(String(url))) {
+    return new Response(status === 200 ? JSON.stringify({ header: { type: 'esummary', version: '0.3' },
+      result: { uids: ids, ...Object.fromEntries(ids.map((p) => [p, docsum(p)])) } }) : '', { status });
+  }
+  return ncbiLectura()(url, init);
+};
+const cribarCon = (handler, id, args) => handler({ jsonrpc: '2.0', id, method: 'tools/call', params: { name: 'pubmed_summary_exact', arguments: args } });
+const SCTX = { plan_ref: 'plan-1/r1', screen_id: 's1' };
+
+const sp = SUMMARY_TOOL.inputSchema.properties;
+const descBusqueda = listaFuente.find((t) => t.name === 'pubmed_search_exact').description;
+enviadas.length = 0;
+const hCriba = createMcpHandler({ fetcher: ncbiCriba(), run: { contract_version: 'x' } });
+const malosCriba = [{ pmids: [], context: SCTX }, { pmids: Array.from({ length: 51 }, (_, i) => String(i + 1)), context: SCTX },
+  { pmids: ['1', '1'], context: SCTX }, { pmids: [1], context: SCTX }, { pmids: ['01'], context: SCTX }, { pmids: ['1'] },
+  { pmids: ['1'], context: CTX }, { pmids: ['1'], context: SCTX, include_abstract: true }, { pmids: ['1'], context: { ...SCTX, extra: 1 } }];
+const rechazosCriba = await Promise.all(malosCriba.map((args, i) => cribarCon(hCriba, 600 + i, args)));
+check('M28', sp.pmids.maxItems === 50 && sp.pmids.minItems === 1 && sp.pmids.uniqueItems === true && sp.pmids.items.pattern === '^[1-9][0-9]{0,8}$'
+  && SUMMARY_TOOL.inputSchema.additionalProperties === false && sp.context.additionalProperties === false
+  && sp.context.required.join() === 'plan_ref,screen_id' && SUMMARY_TOOL.inputSchema.required.join() === 'pmids,context'
+  && !Object.keys(sp).some((k) => /abstract|offset|continu|retstart|url|format|db/.test(k)) && SUMMARY_TOOL.annotations.readOnlyHint === true
+  && /never the abstract/.test(SUMMARY_TOOL.description) && /never turns a record into a finding/.test(SUMMARY_TOOL.description)
+  && /pubmed_fetch_exact/.test(SUMMARY_TOOL.description) && /titles_screened/.test(SUMMARY_TOOL.description)
+  && /pubmed_summary_exact/.test(descBusqueda) && /pubmed_summary_exact/.test(ini.result.instructions)
+  && rechazosCriba.every((r) => r.result.isError === true && r.result.structuredContent.rejected_before_ncbi === true
+    && /^[0-9a-f-]{36}$/.test(r.result.structuredContent.attempt_id) && r.result.structuredContent.receipt_type === 'pubmed_summary_exact')
+  && enviadas.length === 0,
+  `pubmed_summary_exact: 1-50 PMID en cadena, contexto con screen_id, sin abstract ni claves libres; la búsqueda y las instrucciones la nombran; ${
+    rechazosCriba.length} argumentos inválidos rechazados con attempt_id y sin llamar a NCBI`);
+
+enviadas.length = 0;
+const hCribaMixto = createMcpHandler({ fetcher: ncbiCriba(), run: RUN, filters: paquete });
+const criba = (await cribarCon(hCribaMixto, 620, { pmids: Array.from({ length: 50 }, (_, i) => String(1000 + i)), context: SCTX })).result;
+const busquedaCriba = (await hCribaMixto(llamada(621, 'asthma[tiab]'))).result;
+const cribaFallida = (await cribarCon(createMcpHandler({ fetcher: ncbiCriba(503), run: RUN }), 622, { pmids: ['11', '22'], context: SCTX })).result;
+const hColaCriba = createMcpHandler({ fetcher: ncbiCriba(), maxQueueMs: 1000 });
+const mezclaCriba = await Promise.all([...Array.from({ length: 6 }, (_, i) => hColaCriba(llamada(630 + i, 'x[tiab]'))),
+  ...Array.from({ length: 6 }, (_, i) => cribarCon(hColaCriba, 640 + i, { pmids: [String(100 + i)], context: SCTX }))]);
+const cribasOcupadas = mezclaCriba.slice(6).filter((r) => r.result.structuredContent.failure?.code === 'service_busy');
+check('M29', criba.isError === false && criba.content[0].text === JSON.stringify(criba.structuredContent)
+  && criba.structuredContent.run === busquedaCriba.structuredContent.run && criba.structuredContent.engine === 'mcp'
+  && criba.structuredContent.status.delivery === 'complete' && criba.structuredContent.results.length === 50
+  && criba.structuredContent.counts_as === 'titles_screened' && Buffer.byteLength(JSON.stringify(criba.structuredContent)) <= MAX_STRUCTURED_BYTES
+  && cribaFallida.isError === true && cribaFallida.structuredContent.status.delivery === 'failed'
+  && cribaFallida.structuredContent.results.every((r) => r.record_status === 'error' && r.reason === 'http_status')
+  && cribasOcupadas.length > 0 && cribasOcupadas.every((r) => r.result.isError === true
+    && r.result.structuredContent.results.every((x) => x.record_status === 'error' && x.reason === 'service_busy')),
+  `cribado de 50 en una llamada (${Buffer.byteLength(JSON.stringify(criba.structuredContent))} B), compacto e idéntico en texto, con el run de la búsqueda; un 503 es error declarado;`
+  + ` comparte la cola con la búsqueda: ${cribasOcupadas.length} de seis cribados, servicio ocupado`);
+
 // --- Canal de llegada a la superficie (1.14.1, plan 32- U2) ----------------------------------------
 // Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
 // `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de
@@ -685,10 +742,10 @@ try {
   const wLista = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 50, method: 'tools/list' })).json();
   const wFiltro = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 51, method: 'tools/call',
     params: { name: 'pubmed_get_filter', arguments: { path: 'filters/scope/spanish.txt' } } })).json();
-  check('W8', wLista.result.tools.length === 4
+  check('W8', wLista.result.tools.length === 5
     && wFiltro.result.structuredContent.query === paquete.filters['filters/scope/spanish.txt'].query
     && wFiltro.result.structuredContent.catalog_sha256 === paquete.catalog_sha256,
-    'el Worker anuncia las cuatro herramientas y sirve la consulta canónica sellada, idéntica a la del repositorio');
+    'el Worker anuncia las cinco herramientas y sirve la consulta canónica sellada, idéntica a la del repositorio');
 
   // La lectura por el Worker: el sello del despliegue, su motor y su tiempo máximo, con la cola compartida.
   globalThis.fetch = ncbiLectura();
@@ -700,6 +757,16 @@ try {
     && ['scripts/fetch-core.mjs', 'scripts/efetch.mjs', 'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs'].every((f) => typeof sello.code_sha256[f] === 'string')
     && wl.status.delivery === 'complete' && wLectura.result.content[0].text === JSON.stringify(wl),
     'el Worker lee por PMID con su sello, su motor y su tiempo máximo, y el sello cubre los ficheros de la lectura');
+
+  // El cribado por el Worker: el mismo sello y su motor, y el sello cubre los dos ficheros nuevos (1.15.0).
+  globalThis.fetch = ncbiCriba();
+  const wCriba = await (await post(`/mcp/${K1}`, { jsonrpc: '2.0', id: 53, method: 'tools/call',
+    params: { name: 'pubmed_summary_exact', arguments: { pmids: ['11', '22'], context: SCTX } } })).json();
+  const wc = wCriba.result?.structuredContent;
+  check('W10', wc?.engine === 'mcp/worker.mjs' && wc.limits.timeout_ms === 25000 && wc.run?.repository_commit === sello.repository_commit
+    && ['scripts/summary-core.mjs', 'scripts/esummary.mjs'].every((f) => typeof sello.code_sha256[f] === 'string')
+    && wc.status.delivery === 'complete' && wCriba.result.content[0].text === JSON.stringify(wc),
+    'el Worker criba por PMID con su sello, su motor y su tiempo máximo, y el sello cubre los ficheros del cribado');
 } finally {
   globalThis.fetch = realFetch;
 }

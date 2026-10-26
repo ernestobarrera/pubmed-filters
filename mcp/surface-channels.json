@@ -118,6 +118,21 @@
         }
       ]
     },
+    "reading_and_drilldown.title_screen": {
+      "guidance": "title_screen",
+      "tool_text": [
+        {
+          "tool": "pubmed_search_exact",
+          "field": "description",
+          "fragment": "a title screen decides what to read, never what to report"
+        },
+        {
+          "tool": "pubmed_summary_exact",
+          "field": "description",
+          "fragment": "a title screen never turns a record into a finding"
+        }
+      ]
+    },
     "reading_and_drilldown.pagination": {
       "guidance": "pagination_order_recommendation",
       "tool_text": [

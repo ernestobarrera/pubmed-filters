@@ -137,6 +137,17 @@ cabe en lo que queda va a `pending_pmids`, y lo que no cabe ni solo es `record_t
 hay continuación por tramos. Lleva el mismo `run` que la búsqueda y comparte su cuota. Acredita lo que NCBI
 devolvió y lo que se entregó, **nunca** que se leyera o se entendiera. No lee texto completo de PMC.
 
+### Cribado por PMID con recibo (1.15.0)
+
+`pubmed_summary_exact`, solo en el MCP, criba de 1 a 50 PMID por ESummary (JSON, POST): título, año, tipos,
+revista, DOI y si NCBI marca que hay abstract, nunca el abstract. Sirve para mirar la lista entera de una
+pasada por título y decidir qué leer, en una llamada donde antes hacían falta unas 12 lecturas de abstracts
+(diseño 33-). Un título cribado **no** es un registro leído: destacarlo exige leerlo con
+`pubmed_fetch_exact`, y lo apartado se cuenta aparte (`reading_and_drilldown.title_screen`, quinto recuento
+en `provenance.denominators`). Mismas reglas de recibo que la lectura: por PMID, nunca cortado, pendientes
+explícitos, `run` y cuota compartidos. `dossier-check.mjs` todavía no lee estos recibos: dentro de un
+dossier salen como entrada no reconocida, nunca como lectura.
+
 `dossier-check.mjs` es local y sin red, hermano de `page-union.mjs`. Une recibos de búsqueda y de lectura,
 la respuesta final y sus usos documentados, y mide sobre **lo conservado** los cuatro denominadores (D1
 encontrados por pasada, sin sumar pasadas; D2 PMID únicos devueltos; D3 abstracts íntegros conservados; D4
@@ -178,7 +189,8 @@ la puerta de mutación).
 ### Desde un chat sin terminal: MCP
 
 `mcp/` envuelve este mismo ejecutor en un servidor MCP (`pubmed_search_exact` y, desde la 1.14.0,
-`pubmed_fetch_exact`, más el catálogo de filtros), que devuelve los mismos recibos. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
+`pubmed_fetch_exact` y, desde la 1.15.0, `pubmed_summary_exact`, más el catálogo de filtros), que devuelve
+los mismos recibos. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
 Workers, y en ese caso claude.ai o ChatGPT se conectan con una URL. Instrucciones paso a paso en
 [`mcp/README.md`](mcp/README.md). No forma parte del router: es un adaptador más.
 
