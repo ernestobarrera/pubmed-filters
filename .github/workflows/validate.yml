@@ -31,3 +31,7 @@ jobs:
       # El MCP (mcp/) comparte el ejecutor de referencia; sus pruebas no usan red ni dependencias.
       - name: Pruebas del MCP
         run: node mcp/test.mjs
+
+      # Lectura por PMID con recibo y comprobador de dossier (1.14.0), sin red.
+      - name: Pruebas de lectura y dossier
+        run: node scripts/validate-reading.mjs

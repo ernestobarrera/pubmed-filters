@@ -727,16 +727,22 @@ check('C11', ciega.length > 0 && ciegaMal.length === 0
 //      (tema de 950 caracteres + filtro de síntesis), y se exige POST, `term` fuera de la URL y el
 //      cuerpo idéntico a la consulta. Así caen un GET, un GET condicional para consultas cortas y un
 //      truncado. Un 414 simulado debe acabar en fallo de transporte, nunca en un recuento.
+// Desde la 1.14.0 hay un segundo servicio, EFetch, con su propio módulo (scripts/efetch.mjs): cada
+// módulo de transporte nombra solo el suyo, y nadie más nombra E-utilities.
 const ESEARCH_MODULE = 'scripts/esearch.mjs';
+const EFETCH_MODULE = 'scripts/efetch.mjs';
 const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.endsWith('.mjs'))
   .map((f) => `scripts/${f}`)
-  .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE
-    && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi/.test(read(f)));
+  .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE && f !== EFETCH_MODULE
+    && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi|efetch\.fcgi/.test(read(f)));
+const cruzados = [[ESEARCH_MODULE, /efetch\.fcgi/], [EFETCH_MODULE, /esearch\.fcgi/]].filter(([f, otro]) => otro.test(read(f))).map(([f]) => f);
 const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/exact-core.mjs']
-  .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)));
-check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0,
-  `ESearch solo se llama desde ${ESEARCH_MODULE}: ${scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0
-    ? 'sí' : `servicio nombrado fuera ${JSON.stringify(scriptsConServicio)} / sin el módulo ${JSON.stringify(ejecutanSinModulo)}`}`);
+  .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)))
+  .concat(/from '\.\/efetch\.mjs'/.test(read('scripts/fetch-core.mjs')) ? [] : ['scripts/fetch-core.mjs']);
+check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0 && cruzados.length === 0,
+  `ESearch solo se llama desde ${ESEARCH_MODULE} y EFetch desde ${EFETCH_MODULE}: ${scriptsConServicio.length === 0
+    && ejecutanSinModulo.length === 0 && cruzados.length === 0 ? 'sí'
+    : `servicio nombrado fuera ${JSON.stringify(scriptsConServicio)} / sin el módulo ${JSON.stringify(ejecutanSinModulo)} / cruzados ${JSON.stringify(cruzados)}`}`);
 
 const { esearch, TransportError } = await import('./esearch.mjs');
 const entregadas = [];

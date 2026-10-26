@@ -10,12 +10,18 @@
  * El mismo `createMcpHandler()` lo usan el transporte stdio (`stdio.mjs`, en tu ordenador) y el HTTP
  * (`worker.mjs`, en Cloudflare Workers): dos transportes, un solo comportamiento.
  *
+ * Lee también registros por PMID con recibo (`pubmed_fetch_exact`, contrato 1.14.0, especificación 29-):
+ * cada PMID pedido sale completo, pendiente o con su error, nunca cortado (scripts/fetch-core.mjs).
+ *
  * Lo que este servidor NO hace, y por qué: no reescribe, sanea ni trocea la consulta (por eso existe);
- * no busca en ninguna otra fuente; no lee abstracts; no guarda nada. Es de solo lectura sobre PubMed.
+ * no busca en ninguna otra fuente; no acredita que algo se leyera o se entendiera; no guarda nada. Es de
+ * solo lectura sobre PubMed.
  */
 
 import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
+import { runFetch, fetchFailureReceipt, fetchRequestError, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION,
+  MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID } from '../scripts/fetch-core.mjs';
 import { dateLimitTags } from '../scripts/parse-filter.mjs';
 
 export const SERVER_NAME = 'pubmed-filters-exact';
@@ -315,6 +321,52 @@ export const TOOL = {
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
 };
 
+/**
+ * Lectura por PMID con recibo (1.14.0, especificación 29- y adenda de Codex del 24/10). Medido en las
+ * pruebas de superficie del 21-23/10: se confundían PMID pedidos con abstracts conservados, y un tramo
+ * final de un texto llegaba marcado «no truncado». Aquí cada registro va entero o no va, y lo dice.
+ */
+export const FETCH_TOOL = {
+  name: 'pubmed_fetch_exact',
+  title: 'Read PubMed records by PMID, with a delivery receipt',
+  description: [
+    `Fetch 1 to ${MAX_FETCH_PMIDS} PubMed records by PMID through NCBI EFetch (XML, HTTP POST) and return each one`,
+    'whole, or say why not. It never searches, widens the list, follows references or swaps a PMID for a DOI,',
+    'a title or a neighbouring PMID. Per PMID, record_status is: with_abstract (abstract_canonical holds the',
+    'complete abstract as JSON: every block and section in order, OtherAbstract kept apart, superscripts as',
+    '^(...) and subscripts as _(...), with abstract_sha256 over it); without_abstract (record found, no',
+    'abstract text); not_found (absent from THIS EFetch response, not proof that the article does not exist:',
+    'request it alone); error (reason says why; never an absent abstract). Records are never cut: one that',
+    'does not fit in what is left of the response goes to pending_pmids (request it again); one that does not',
+    'fit even alone is error record_too_large. status.delivery is complete, partial or failed;',
+    'status.record_identity is verified, failed or unsupported. Search and reading share the same rate limit.',
+    'This receipt says what PubMed returned and what was delivered, never that it was read or understood.',
+    'Read-only; queries PubMed only.',
+  ].join(' '),
+  inputSchema: {
+    type: 'object',
+    properties: {
+      pmids: {
+        type: 'array', minItems: 1, maxItems: MAX_FETCH_PMIDS, uniqueItems: true,
+        items: { type: 'string', pattern: '^[1-9][0-9]{0,8}$' },
+        description: 'PMIDs as strings, in the order you want them back. Never converted or corrected.',
+      },
+      context: {
+        type: 'object',
+        properties: {
+          plan_ref: str(MAX_PLAN_REF, { description: 'The plan_ref of your search plan, as in selection_record.' }),
+          read_id: str(MAX_READ_ID, { description: 'Your id for this reading operation: a retry keeps it, another reading uses another.' }),
+        },
+        required: ['plan_ref', 'read_id'],
+        additionalProperties: false,
+      },
+    },
+    required: ['pmids', 'context'],
+    additionalProperties: false,
+  },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+};
+
 export const CATALOG_TOOL = {
   name: 'pubmed_filter_catalog',
   title: 'Catalog of curated PubMed filters, with the role of each one',
@@ -474,7 +526,8 @@ function filterView(bundle, p) {
 
 const INSTRUCTIONS = 'Literal PubMed execution for the pubmed-filters neurosymbolic router '
   + '(github.com/ernestobarrera/pubmed-filters). Every call returns a receipt; '
-  + 'status.query_integrity decides whether the count may be used.';
+  + 'status.query_integrity decides whether the count may be used. To read records by PMID use '
+  + 'pubmed_fetch_exact: each one comes back whole, pending or as an error with its reason, never cut.';
 const SOURCE_INSTRUCTIONS = 'Before composing, call pubmed_filter_catalog and check every facet of the '
   + 'question against it; fetch each chosen filter with pubmed_get_filter, paste it unchanged, and '
   + 'declare it in filters_used so the receipt can check status.filter_fidelity. Send your selection_record '
@@ -512,9 +565,36 @@ function makeThrottle(minMs, maxQueueMs = MAX_QUEUE_MS) {
 export function createMcpHandler({
   apiKey = '', email = '', run = null, engine = 'mcp', fetcher, now, timeoutMs, maxQueueMs, filters = null,
 } = {}) {
+  // Un solo limitador para búsqueda y lectura: dos cuotas independientes duplicarían el ritmo real a NCBI.
   const throttle = makeThrottle(apiKey ? 110 : 350, maxQueueMs);
-  const tools = filters ? [TOOL, CATALOG_TOOL, GET_FILTER_TOOL] : [TOOL];
+  const tools = filters ? [TOOL, CATALOG_TOOL, GET_FILTER_TOOL, FETCH_TOOL] : [TOOL, FETCH_TOOL];
   const textResult = (structured) => ({ content: [{ type: 'text', text: JSON.stringify(structured, null, 2) }], structuredContent: structured, isError: false });
+  // El recibo de lectura va como JSON compacto también en el texto: es el que mide el presupuesto (29-, §3.6).
+  const compactResult = (structured, isError) => ({ content: [{ type: 'text', text: JSON.stringify(structured) }], structuredContent: structured, isError });
+
+  /**
+   * Lectura por PMID. La hora y el `attempt_id` se toman al recibir, antes de validar: un rechazo de
+   * esquema también queda identificado. Lo inválido se rechaza antes de la cola y de NCBI.
+   */
+  async function callFetch(args) {
+    const receivedAt = (now ? now() : new Date()).toISOString();
+    const attemptId = globalThis.crypto.randomUUID();
+    const extra = args === null || typeof args !== 'object' || Array.isArray(args) ? ['(los argumentos no son un objeto)']
+      : Object.keys(args).filter((k) => !Object.hasOwn(FETCH_TOOL.inputSchema.properties, k));
+    const invalid = extra.length ? `argumentos no admitidos: ${extra.join(', ')}` : fetchRequestError(args.pmids, args.context);
+    if (invalid) {
+      return compactResult({ run, receipt_type: FETCH_RECEIPT_TYPE, receipt_version: FETCH_RECEIPT_VERSION, attempt_id: attemptId,
+        received_at: receivedAt, rejected_before_ncbi: true, error: invalid }, true);
+    }
+    const opts = { run, apiKey, email, tool: 'pubmed-filters-mcp', engine, fetcher, now, timeoutMs, attemptId, receivedAt };
+    if (!(await throttle())) {
+      const busy = await fetchFailureReceipt(args.pmids, args.context, opts, { code: 'service_busy',
+        message: 'SERVICIO_OCUPADO: demasiadas llamadas en cola; vuelve a intentarlo en unos segundos' });
+      return compactResult(busy, true);
+    }
+    const receipt = await runFetch(args.pmids, args.context, opts);
+    return compactResult(receipt, receipt.status.delivery === 'failed');
+  }
 
   function callSourceTool(name, args) {
     const extra = Object.keys(args).filter((k) => !(k in (name === CATALOG_TOOL.name ? CATALOG_TOOL : GET_FILTER_TOOL).inputSchema.properties));
@@ -534,6 +614,7 @@ export function createMcpHandler({
     if (filters && (params?.name === CATALOG_TOOL.name || params?.name === GET_FILTER_TOOL.name)) {
       return { result: callSourceTool(params.name, params.arguments ?? {}) };
     }
+    if (params?.name === FETCH_TOOL.name) return { result: await callFetch(params.arguments ?? {}) };
     if (params?.name !== TOOL.name) return { error: [-32602, `Herramienta desconocida: ${params?.name}`] };
     const args = params.arguments ?? {};
     const extra = Object.keys(args).filter((k) => !(k in TOOL.inputSchema.properties));

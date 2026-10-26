@@ -120,10 +120,65 @@ Detrás de un proxy (como en los entornos cloud), `fetch` de Node no lo usa por 
 NODE_USE_ENV_PROXY=1 node scripts/pubmed-exact.mjs '…'
 ```
 
+### Lectura por PMID con recibo y comprobador de dossier (1.14.0)
+
+```
+node scripts/pubmed-fetch-exact.mjs --plan-ref plan-1/r1 --read-id lectura-1 12848631 16040284
+node scripts/dossier-check.mjs dossier/manifiesto.json
+```
+
+`pubmed-fetch-exact.mjs` (y `pubmed_fetch_exact` en el MCP) lee de 1 a 5 PMID por EFetch, por POST y en
+XML, y devuelve cada uno **entero o con el motivo de que no**: `with_abstract` (el abstract completo en
+`abstract_canonical`, formato `pubmed-abstract-v1`: todos los bloques y secciones en orden, los
+`OtherAbstract` aparte, superíndices `^(...)` y subíndices `_(...)`, con su SHA-256), `without_abstract`,
+`not_found` (no vino en **esta** respuesta, que no prueba que no exista) o `error` con `reason`. Nunca
+asocia por posición ni convierte un error en una ausencia. El recibo estructurado cabe en 24 KiB: lo que no
+cabe en lo que queda va a `pending_pmids`, y lo que no cabe ni solo es `record_too_large`; nada se corta y no
+hay continuación por tramos. Lleva el mismo `run` que la búsqueda y comparte su cuota. Acredita lo que NCBI
+devolvió y lo que se entregó, **nunca** que se leyera o se entendiera. No lee texto completo de PMC.
+
+`dossier-check.mjs` es local y sin red, hermano de `page-union.mjs`. Une recibos de búsqueda y de lectura,
+la respuesta final y sus usos documentados, y mide sobre **lo conservado** los cuatro denominadores (D1
+encontrados por pasada, sin sumar pasadas; D2 PMID únicos devueltos; D3 abstracts íntegros conservados; D4
+documentos con uso anclado en la respuesta), la procedencia de cada PMID (`returned`, `known_only`, `both`
+o `unattributed`, que es «sin procedencia acreditable», no memoria del modelo), su temporalidad y la
+retención frente a una referencia. Sale 0 `consistent`, 1 `incomplete` (un defecto demostrado: huella o
+archivo que falta, hueco de texto, conflicto, lectura pedida sin resolver, recuperación completa que no pasa
+la unión) o 2 `inconclusive` (sin defecto, pero sin cierre de captura acreditado, sin D4 medible o con
+entradas ilegibles). Cuatro formatos JSON, todos con `format` y `format_version: 1`:
+
+- **`pubmed-dossier-manifest`**: `dossier_id`, `case`, `condition`, `profile` (`bench` | `surface`),
+  `capture` (`method`, `inventory_by`, `closure` y `clock`), `plans` admitidos con sus pasadas y
+  `attempts`, uno por llamada, con `tool`, `external_id`, `file` + `sha256` + `captured` (`on_receipt` |
+  `transcribed`) o `absent_reason`, y, para recibos sin registro de selección, `plan_ref` y `pass_id`
+  (`walk_id` separa dos recorridos con la misma etiqueta). Una lectura sin respuesta lleva su `request`
+  (`{ pmids }`) si se conservó: sus PMID quedan por resolver; sin ella, el dossier no puede aprobar. Opcionales: `response`, `citations`, `usage_log`,
+  `reference` (con `case_id` si es `scripts/eval/cases.json`) e `intersections`. Rutas relativas a la
+  carpeta del manifiesto, sin salir de ella.
+- **`pubmed-dossier-capture-log`**: la evidencia externa de cierre (`dossier_id`, `closed: true`, `calls`
+  con `external_id`, `tool` y `sequence`). Sin ella, o si no coincide llamada a llamada con el inventario,
+  no hay `consistent`, diga lo que diga `profile`. `clock` (`skew_bound_ms` con `justification`) solo
+  permite ordenar sucesos separados por más que esa cota; sin cota, el orden es `unknown`.
+- **`pubmed-dossier-uses`**: citas nativas resueltas (`declared_by: native_export`) o registro lateral
+  (`agent` | `human`), atado a la respuesta por `response_sha256`, con `uses` (`source` pmid | doi | url,
+  `fragment` exacto y, si se quiere, `start`/`end` en unidades UTF-16 y `abstract_ref`) e `identity_links`
+  PMID-DOI. Una mención de un PMID en la respuesta es un candidato, no un uso: sin esto, D4 no se mide.
+  `uses: []` declara cero usos; un uso sin `fragment` queda sin comprobar y deja D4 no medido o parcial.
+- **`pubmed-dossier-reference`**: `reference_id`, `version`, `source`, `partial`, `target_pmids` y
+  `synthesis_pmids` aparte.
+
+Antes de usar un recibo, el comprobador valida su forma (lo que no la tiene es una entrada no soportada) y
+recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y continuación, con el criterio del
+ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
+a su PMID.
+
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, X1-X16 dossier; también en la CI y en
+la puerta de mutación).
+
 ### Desde un chat sin terminal: MCP
 
-`mcp/` envuelve este mismo ejecutor en un servidor MCP de una sola herramienta, `pubmed_search_exact`,
-que devuelve el mismo recibo. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
+`mcp/` envuelve este mismo ejecutor en un servidor MCP (`pubmed_search_exact` y, desde la 1.14.0,
+`pubmed_fetch_exact`, más el catálogo de filtros), que devuelve los mismos recibos. Funciona en local (Claude Desktop, Claude Code, VS Code) o en Cloudflare
 Workers, y en ese caso claude.ai o ChatGPT se conectan con una URL. Instrucciones paso a paso en
 [`mcp/README.md`](mcp/README.md). No forma parte del router: es un adaptador más.
 
