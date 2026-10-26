@@ -17,7 +17,10 @@ reconstruirlos de memoria:
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición
-  por papel del router. No llama a PubMed.
+  por papel del router. No llama a PubMed. Desde la 1.14.1, `guidance` lleva también, tal cual del router,
+  qué esconde cada orden, el orden recomendado al paginar, la pasada de guías al nivel de la condición y
+  la recencia antes de cerrar. Qué regla del router llega por qué canal (`guidance`, una descripción o
+  ninguno) lo declara `surface-channels.json`, y `test.mjs` (M27) lo comprueba.
 - `pubmed_get_filter`: la consulta de un filtro tal como la extrae el parser de referencia (todas las
   líneas, sin el bloque de metadatos), con su SHA-256, su papel y cómo componerla. No llama a PubMed.
 - `pubmed_search_exact` admite `filters_used`: el recibo comprueba que cada filtro declarado está en

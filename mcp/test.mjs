@@ -503,6 +503,110 @@ check('M26', lecturasOcupadas.length > 0 && lecturasOcupadas.every((r) => r.resu
   && enviadas.length + lecturasOcupadas.length + mezcla.slice(0, 6).filter((r) => /SERVICIO_OCUPADO/.test(r.result.structuredContent.error ?? '')).length === 12,
   `búsqueda y lectura comparten la cola: tras seis búsquedas, ${lecturasOcupadas.length} de seis lecturas se rechazan como servicio ocupado, con error por PMID y nunca como ausencia`);
 
+// --- Canal de llegada a la superficie (1.14.1, plan 32- U2) ----------------------------------------
+// Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
+// `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de
+// la 1.14.1 estaban escritas donde no se sirve. Aquí cada regla de retrieval_policy declara su canal en
+// mcp/surface-channels.json y la declaración se comprueba contra lo que se anuncia de verdad. No prueba
+// que la superficie lea la regla ni que la cumpla.
+
+const { GUIDANCE_PATHS, routerValue } = await import('../scripts/filter-source.mjs');
+const ROUTER = JSON.parse(readFileSync(join(RAIZ_REPO, 'neurosymbolic_router.json'), 'utf8'));
+const CANALES = JSON.parse(readFileSync(join(HERE, 'surface-channels.json'), 'utf8'));
+const esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/** El texto que anuncia una herramienta: su descripción, o la de un parámetro por ruta con puntos. */
+function textoAnunciado(tools, tool, field) {
+  const t = Array.isArray(tools) ? tools.find((x) => x?.name === tool) : undefined;
+  if (!t || typeof field !== 'string') return null;
+  if (field === 'description') return typeof t.description === 'string' ? t.description : null;
+  let nodo = { properties: t.inputSchema?.properties };
+  for (const k of field.split('.')) nodo = esObjeto(nodo?.properties) && Object.hasOwn(nodo.properties, k) ? nodo.properties[k] : undefined;
+  return typeof nodo?.description === 'string' ? nodo.description : null;
+}
+
+/** Problemas del inventario de canales frente al router, a `guidance` servida y a tools/list. */
+function problemasDeCanal(router, guidance, rutas, tools, canales) {
+  const problemas = [];
+  const politica = router?.rule_classification?.retrieval_policy;
+  if (!Array.isArray(politica) || !esObjeto(canales) || !esObjeto(canales.reglas) || !esObjeto(guidance) || !esObjeto(rutas)) {
+    return ['el router, el inventario, guidance o la tabla de rutas no tienen la forma esperada'];
+  }
+  // Primero lo global: toda ruta de guidance existe y sale literal, y no se sirve nada sin ruta.
+  for (const [clave, ruta] of Object.entries(rutas)) {
+    const valor = typeof ruta === 'string' ? routerValue(router, ruta) : undefined;
+    if (valor === undefined || valor === null) problemas.push(`guidance.${clave} sale vacía: ${ruta} no existe en el router`);
+    else if (JSON.stringify(guidance[clave]) !== JSON.stringify(valor)) problemas.push(`guidance.${clave} no es literal a ${ruta}`);
+  }
+  for (const clave of Object.keys(guidance)) if (!Object.hasOwn(rutas, clave)) problemas.push(`guidance.${clave} se sirve sin ruta declarada`);
+  const universo = politica.flatMap((s) => (esObjeto(router[s]) ? Object.keys(router[s]).map((k) => `${s}.${k}`) : [s]));
+  const reglas = canales.reglas;
+  for (const r of universo) if (!Object.hasOwn(reglas, r)) problemas.push(`${r}: regla sin canal declarado`);
+  for (const r of Object.keys(reglas)) if (!universo.includes(r)) problemas.push(`${r}: declarada y no existe en el router`);
+  const dentro = (ruta, regla) => typeof ruta === 'string' && (ruta === regla || ruta.startsWith(`${regla}.`));
+  for (const [regla, canal] of Object.entries(reglas)) {
+    if (canal === 'not_served') continue;
+    if (!esObjeto(canal) || Object.keys(canal).length === 0 || Object.keys(canal).some((k) => !['guidance', 'tool_text'].includes(k))) {
+      problemas.push(`${regla}: canal no reconocido`);
+      continue;
+    }
+    if (Object.hasOwn(canal, 'guidance') && !(typeof canal.guidance === 'string' && dentro(rutas[canal.guidance], regla))) {
+      problemas.push(`${regla}: guidance.${canal.guidance} no sirve esta regla`);
+    }
+    if (Object.hasOwn(canal, 'tool_text')) {
+      const textos = Array.isArray(canal.tool_text) && canal.tool_text.length ? canal.tool_text : [null];
+      for (const x of textos) {
+        const texto = esObjeto(x) ? textoAnunciado(tools, x.tool, x.field) : null;
+        if (!(typeof x?.fragment === 'string' && x.fragment.length >= 12 && typeof texto === 'string' && texto.includes(x.fragment))) {
+          problemas.push(`${regla}: el fragmento no está en ${x?.tool ?? '?'}.${x?.field ?? '?'}`);
+        }
+      }
+    }
+  }
+  // Y al revés: lo que guidance sirve de retrieval_policy está declarado por la regla que lo contiene.
+  for (const [clave, ruta] of Object.entries(rutas)) {
+    if (typeof ruta !== 'string' || !politica.includes(ruta.split('.')[0])) continue;
+    if (!Object.entries(reglas).some(([regla, canal]) => esObjeto(canal) && canal.guidance === clave && dentro(ruta, regla))) {
+      problemas.push(`guidance.${clave} se sirve y ninguna regla lo declara`);
+    }
+  }
+  return problemas;
+}
+
+const herramientasAnunciadas = listaFuente;
+const canalReal = problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, CANALES);
+const valores = Object.values(CANALES.reglas);
+const cuantas = { guidance: valores.filter((v) => esObjeto(v) && v.guidance).length,
+  tool_text: valores.filter((v) => esObjeto(v) && v.tool_text).length, not_served: valores.filter((v) => v === 'not_served').length };
+// Controles negativos: cada forma de perder el canal en silencio tiene que aparecer como problema, sin lanzar.
+const clon = (o) => JSON.parse(JSON.stringify(o));
+const sinRegla = clon(CANALES); delete sinRegla.reglas['saturation_policy.recency_before_closing'];
+const routerNuevo = clon(ROUTER); routerNuevo.saturation_policy.regla_nueva = 'A new rule for the surface.';
+const rutaRota = { ...GUIDANCE_PATHS, recency_before_closing: 'saturation_policy.recency_before_close' };
+const guiaVaciada = { ...cat.guidance, order_hides_by_age: null };
+const sinFrase = clon(herramientasAnunciadas);
+sinFrase.find((x) => x.name === 'pubmed_search_exact').inputSchema.properties.sort.description = 'Omit for the default order.';
+const canalMalo = clon(CANALES); canalMalo.reglas['provenance.denominators'] = 'guidance';
+const textoMalo = clon(CANALES); textoMalo.reglas['provenance.denominators'] = { tool_text: 'records_retrieved' };
+const guiaSinDeclarar = clon(CANALES); guiaSinDeclarar.reglas['saturation_policy.recency_before_closing'] = 'not_served';
+const controles = [
+  ['regla sin canal', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, sinRegla), /recency_before_closing: regla sin canal/],
+  ['regla nueva en el router', problemasDeCanal(routerNuevo, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, CANALES), /regla_nueva: regla sin canal/],
+  ['ruta rota', problemasDeCanal(ROUTER, cat.guidance, rutaRota, herramientasAnunciadas, CANALES), /recency_before_closing sale vacía/],
+  ['guidance vaciada', problemasDeCanal(ROUTER, guiaVaciada, GUIDANCE_PATHS, herramientasAnunciadas, CANALES), /order_hides_by_age no es literal/],
+  ['frase quitada', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, sinFrase, CANALES), /order_hides_by_age: el fragmento no está en pubmed_search_exact\.sort/],
+  ['canal mal escrito', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, canalMalo), /denominators: canal no reconocido/],
+  ['tool_text sin lista', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, textoMalo), /denominators: el fragmento no está/],
+  ['guidance sin declarar', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, guiaSinDeclarar), /recency_before_closing se sirve y ninguna regla/],
+  ['inventario que no es objeto', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, []), /forma esperada/],
+].filter(([, p, patron]) => !p.some((x) => patron.test(x))).map(([nombre]) => nombre);
+check('M27', canalReal.length === 0 && controles.length === 0 && cuantas.guidance >= 4
+  && ['order_hides_by_age', 'pagination_order_recommendation', 'condition_guideline_pass', 'recency_before_closing']
+    .every((k) => typeof cat.guidance[k] === 'string' || esObjeto(cat.guidance[k])),
+  canalReal.length === 0 && controles.length === 0
+    ? `cada regla de retrieval_policy declara su canal (${valores.length}: ${cuantas.guidance} en guidance, ${cuantas.tool_text} en descripciones, ${cuantas.not_served} sin servir) y la declaración se cumple; el orden, las guías y la recencia de la 1.14.1 salen en el catálogo`
+    : `canal: ${[...canalReal, ...controles.map((c) => `control sin detectar: ${c}`)].join('; ')}`);
+
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 
 const realFetch = globalThis.fetch;

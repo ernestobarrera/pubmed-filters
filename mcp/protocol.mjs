@@ -245,6 +245,15 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
   return { status: problems.length ? 'inconsistent' : 'declared', problems, notes };
 }
 
+/**
+ * Qué esconde cada orden (1.14.1, auditoría de lumbalgia del 26/10). El aviso iba en un solo sentido, y
+ * una revisión de 2026 quedó 17.ª por relevancia con 15 leídos. La misma frase en la herramienta y en
+ * `sort`, que es donde se decide el orden; la regla entera va en `guidance` del catálogo.
+ */
+const ORDER_HIDES_BY_AGE = 'Each order hides something by age: the default order pushes older pivotal records'
+  + ' down, relevance pushes records indexed in recent months down (guidance.order_hides_by_age in'
+  + ' pubmed_filter_catalog).';
+
 export const TOOL = {
   name: 'pubmed_search_exact',
   title: 'PubMed literal search with integrity receipt',
@@ -263,7 +272,9 @@ export const TOOL = {
     'result_count is what PubMed counts; records_retrieved is how many PMIDs came back',
     `(retmax, default 0, max ${MCP_MAX_RETMAX}); neither means anything was read.`,
     'PMIDs come in PubMed\'s default order (most recent entry first) unless you send sort "relevance";',
-    'the first N of a truncated list are not the set, in any order. For the next page send retstart =',
+    'the first N of a truncated list are not the set, in any order.',
+    ORDER_HIDES_BY_AGE,
+    'For the next page send retstart =',
     'next_retstart from the receipt; when it is null, next_retstart_reason says why (end_of_set,',
     'window_limit, count_only, empty_page, not_verified, page_adjusted), and null never means everything',
     'was retrieved. Pages are independent calls: joining them is an operational retrieval without a fixed',
@@ -302,7 +313,7 @@ export const TOOL = {
         type: 'string',
         enum: ['relevance'],
         description: 'Omit for PubMed\'s default order (most recent entry first). "relevance" is Best Match. Neither'
-          + ' order makes a truncated list representative of the set.',
+          + ' order makes a truncated list representative of the set. ' + ORDER_HIDES_BY_AGE,
       },
       filters_used: {
         type: 'array',

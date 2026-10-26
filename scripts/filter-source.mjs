@@ -19,11 +19,36 @@ import { parseFilter } from './parse-filter.mjs';
 import { buildCatalog, serialize } from './catalog.mjs';
 import { sha256 } from './exact-core.mjs';
 
+/**
+ * Qué parte del router viaja en `guidance`, por ruta. Con las descripciones de las herramientas, es lo
+ * único del router que lee una superficie sin terminal: medido el 2026-10-26, 6,6 de 87 KB. Cada clave
+ * se sirve tal cual, sin segunda redacción. Qué regla llega por qué canal lo declara
+ * `mcp/surface-channels.json`, y `mcp/test.mjs` (M27) lo comprueba.
+ */
+export const GUIDANCE_PATHS = {
+  roles: 'composition.roles',
+  facet_roles: 'composition.facet_roles',
+  scope_roles: 'composition.scope_roles',
+  catalog_check: 'composition.catalog_check',
+  geographic_filters: 'composition.geographic_filters',
+  negation_rule: 'composition.negation_filters.rule',
+  embedded_date_rule: 'composition.embedded_date_limits.rule',
+  // 1.14.1: orden, guías y recencia (auditoría de lumbalgia del 26/10). Escritas solo en la prosa del
+  // router, no tenían ninguna vía de llegada a ChatGPT.
+  order_hides_by_age: 'reading_and_drilldown.order_hides_by_age',
+  pagination_order_recommendation: 'reading_and_drilldown.pagination.order_recommendation',
+  condition_guideline_pass: 'evidence_landscape_policy.condition_guideline_pass',
+  recency_before_closing: 'saturation_policy.recency_before_closing',
+};
+
+/** El valor del router en una ruta con puntos, o undefined si algún tramo no existe. */
+export const routerValue = (router, path) => path.split('.').reduce((o, k) =>
+  (o !== null && typeof o === 'object' && Object.hasOwn(o, k) ? o[k] : undefined), router);
+
 export async function buildFilterBundle(root) {
   const read = (p) => readFileSync(join(root, p), 'utf8');
   const router = JSON.parse(read('neurosymbolic_router.json'));
   const catalog = buildCatalog(root);
-  const c = router.composition ?? {};
 
   const filters = {};
   for (const f of catalog.filters) {
@@ -41,15 +66,7 @@ export async function buildFilterBundle(root) {
   return {
     contract_version: router.conformance?.contract_version ?? null,
     catalog_sha256: await sha256(serialize(catalog)),
-    guidance: {
-      roles: c.roles ?? null,
-      facet_roles: c.facet_roles ?? null,
-      scope_roles: c.scope_roles ?? null,
-      catalog_check: c.catalog_check ?? null,
-      geographic_filters: c.geographic_filters ?? null,
-      negation_rule: c.negation_filters?.rule ?? null,
-      embedded_date_rule: c.embedded_date_limits?.rule ?? null,
-    },
+    guidance: Object.fromEntries(Object.entries(GUIDANCE_PATHS).map(([k, p]) => [k, routerValue(router, p) ?? null])),
     catalog,
     filters,
   };

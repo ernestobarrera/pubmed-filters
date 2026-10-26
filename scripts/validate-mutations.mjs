@@ -1538,6 +1538,56 @@ const MUTACIONES = [
     a: '    this.detail = detail;',
     rompe: 'F12',
   },
+  // Canal de llegada a la superficie (1.14.1, plan 32- U2). Medido el 26/10: las cuatro reglas de la
+  // 1.14.1 estaban escritas donde ningún canal del servidor las servía. Cada forma de volver a eso.
+  {
+    id: 'M27-GUIA-SIN-ORDEN',
+    porque: 'la regla de qué esconde cada orden deja de viajar en guidance y el inventario sigue diciendo que viaja',
+    fichero: 'scripts/filter-source.mjs',
+    de: "order_hides_by_age: 'reading_and_drilldown.order_hides_by_age',",
+    a: '',
+    rompe: 'M27',
+  },
+  {
+    id: 'M27-RUTA-ROTA',
+    porque: 'una ruta de guidance apunta a una clave que no existe y la regla sale como null, en silencio',
+    fichero: 'scripts/filter-source.mjs',
+    de: "'saturation_policy.recency_before_closing',",
+    a: "'saturation_policy.recency_before_close',",
+    rompe: 'M27',
+  },
+  {
+    id: 'M27-REGLA-SIN-CANAL',
+    porque: 'una regla del router cambia de nombre (o nace) sin declarar por qué canal llega a la superficie',
+    fichero: 'neurosymbolic_router.json',
+    de: '"drill_down_decision_owner":',
+    a: '"drill_down_owner":',
+    rompe: 'M27',
+  },
+  {
+    id: 'M27-INVENTARIO-FANTASMA',
+    porque: 'el inventario declara una regla que el router no tiene y deja sin canal la que sí tiene',
+    fichero: 'mcp/surface-channels.json',
+    de: '"saturation_policy.recency_before_closing": {',
+    a: '"saturation_policy.recency_before_closing_x": {',
+    rompe: 'M27',
+  },
+  {
+    id: 'M27-SORT-SIN-AVISO',
+    porque: 'el parámetro sort vuelve a avisar en un solo sentido, que es donde se decide el orden',
+    fichero: 'mcp/protocol.mjs',
+    de: "+ ' order makes a truncated list representative of the set. ' + ORDER_HIDES_BY_AGE,",
+    a: "+ ' order makes a truncated list representative of the set.',",
+    rompe: 'M27',
+  },
+  {
+    id: 'M27-DESCRIPCION-SIN-AVISO',
+    porque: 'la descripción de la búsqueda pierde qué esconde cada orden y el inventario sigue declarándolo',
+    fichero: 'mcp/protocol.mjs',
+    de: '    ORDER_HIDES_BY_AGE,',
+    a: '',
+    rompe: 'M27',
+  },
 ];
 
 // ---------------------------------------------------------------------------------------------
