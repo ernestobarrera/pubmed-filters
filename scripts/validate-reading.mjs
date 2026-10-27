@@ -532,6 +532,9 @@ const s12 = {
   ajeno: await cribar12(sumBody({ 10: docsum('10'), [CLAVE12]: docsum(CLAVE12) }), ['10']),
   claveRepetida: await cribar12(`${CAB}{"uids":["10"],"10":${JSON.stringify(docsum('10'))},"${CLAVE12}":1,"${CLAVE12}":2}}`, ['10']),
   cabecera: await cribar12(JSON.stringify({ header: { type: CONTACTO12 }, result: { uids: ['10'], 10: docsum('10') } }), ['10']),
+  // Δ1 (revisión del delta 1.15): uid sin entrada con la credencial justo sobre el límite del mensaje.
+  sinEntradaClave: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CLAVE12}`] } }), ['10']),
+  sinEntradaContacto: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CONTACTO12}`] } }), ['10']),
 };
 const fuga12 = (r) => [JSON.stringify(r.structuredContent), r.content[0].text]
   .some((t) => t.includes(CLAVE12.slice(0, 8)) || t.includes(CONTACTO12.slice(0, 12)));
@@ -541,9 +544,12 @@ check('S12', Object.values(s12).every((r) => !fuga12(r))
   && resultOf(s12.registro.structuredContent, '20')?.record_status === 'found'
   && resultOf(s12.uid.structuredContent, '10')?.reason === 'pmid_mismatch'
   && s12.globalEnElBorde.structuredContent.failure?.code === 'ncbi_error' && s12.ajeno.structuredContent.failure?.code === 'identity_uncertain'
-  && s12.claveRepetida.structuredContent.failure?.code === 'invalid_json' && s12.cabecera.structuredContent.failure?.code === 'unexpected_shape',
+  && s12.claveRepetida.structuredContent.failure?.code === 'invalid_json' && s12.cabecera.structuredContent.failure?.code === 'unexpected_shape'
+  && [s12.sinEntradaClave, s12.sinEntradaContacto].every((r) => r.structuredContent.failure?.code === 'identity_uncertain'
+    && /uid sin entrada: 10, x{20}…/.test(r.structuredContent.failure.message) && !r.structuredContent.failure.message.includes('x'.repeat(21))),
   'la clave y el contacto se ocultan en el error de un registro, en un uid, en un error global cortado justo en el secreto, en un uid ajeno,'
-  + ' en una clave repetida y en la cabecera; el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
+  + ' en una clave repetida, en la cabecera y en un uid sin entrada que lleva la clave o el contacto al borde del mensaje (acotado a 20);'
+  + ' el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
 
 // S13 (revisión de Codex del lote 1.15, R4). Clave y uid de acuerdo, pero articleids nombra otro PMID: la
 // respuesta deja de certificar a quién pertenece cada resumen. Sin articleids de tipo pubmed no se exige.

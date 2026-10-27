@@ -1901,6 +1901,17 @@ const MUTACIONES = [
     a: "export const describeKeys = (keys) => keys.join(', ');",
     rompe: 'M30',
   },
+  // Revisión de Codex del delta 1.15 (27/10), Δ1. El mensaje de identidad vuelve a pasar por `diag` como
+  // defensa, así que quitar solo la protección de la pieza no deja ver la clave: lo que la delata es que la
+  // pieza deja de estar acotada. La defensa del mensaje no tiene mutación propia, como la cota final de R3.
+  {
+    id: 'S12-UID-SIN-ENTRADA-CRUDO',
+    porque: 'los uid sin entrada vuelven a unirse sin pasar por diag: ni se ocultan antes del recorte ni se acotan',
+    fichero: 'scripts/summary-core.mjs',
+    de: "identity.push(`uid sin entrada: ${unlisted.map((u) => diag(u, 20)).join(', ')}`);",
+    a: "identity.push(`uid sin entrada: ${unlisted.join(', ')}`);",
+    rompe: 'S12',
+  },
 ];
 
 // ---------------------------------------------------------------------------------------------

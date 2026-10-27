@@ -220,7 +220,9 @@ const TOP_KEYS = ['header', 'result'];
  *
  * Todo texto que viene de la respuesta y acaba en un diagnóstico pasa por `diag`: primero `clean` (que
  * oculta la clave y el contacto) y después el recorte, para que un recorte no deje a la vista medio
- * secreto (revisión de Codex del lote 1.15, R2: la vía de error de cada registro no ocultaba nada).
+ * secreto (revisión de Codex del lote 1.15, R2: la vía de error de cada registro no ocultaba nada; Δ1:
+ * los uid sin entrada se unían sin pasar por `diag`). Cada pieza se acota a su tamaño, y el mensaje que
+ * las junta vuelve a pasar por `diag` como defensa: con las piezas ya limpias, no tiene caso que la alcance.
  */
 function interpret(bytes, pmids, clean = (t) => t) {
   const diag = (text, max = MAX_DIAGNOSTIC) => clip(clean(String(text)), max);
@@ -243,7 +245,7 @@ function interpret(bytes, pmids, clean = (t) => t) {
     .concat(isObj(doc.result) && Object.hasOwn(doc.result, 'error') ? ['result.error'] : []);
   if (globalErrors.length) {
     const said = globalErrors.map((k) => diag(JSON.stringify(k === 'result.error' ? doc.result.error : doc[k]), 200)).join(' | ');
-    return { failure: { code: 'ncbi_error', message: clip(`NCBI devolvió un error global: ${said}`, MAX_DIAGNOSTIC) } };
+    return { failure: { code: 'ncbi_error', message: diag(`NCBI devolvió un error global: ${said}`) } };
   }
   const extraTop = Object.keys(doc).filter((k) => !TOP_KEYS.includes(k));
   if (extraTop.length || doc.header?.type !== 'esummary' || !isObj(doc.result)) {
@@ -263,7 +265,7 @@ function interpret(bytes, pmids, clean = (t) => t) {
     const orphan = entries.filter((k) => !uids.includes(k));
     if (orphan.length) identity.push(`entrada sin uid en la lista: ${orphan.map((k) => diag(k, 20)).join(', ')}`);
     const unlisted = uids.filter((u) => !Object.hasOwn(doc.result, u));
-    if (unlisted.length) identity.push(`uid sin entrada: ${unlisted.join(', ')}`);
+    if (unlisted.length) identity.push(`uid sin entrada: ${unlisted.map((u) => diag(u, 20)).join(', ')}`);
     // Identidad dentro de cada resumen (revisión de Codex del lote 1.15, R4): clave y uid pueden coincidir y
     // articleids nombrar otro PMID. Esa contradicción no se aísla en un registro: con ella, la respuesta
     // entera deja de certificar a quién pertenece cada resumen. Si no hay articleids de tipo pubmed, no se exige.
@@ -275,7 +277,7 @@ function interpret(bytes, pmids, clean = (t) => t) {
     }
   }
   if (identity.length) {
-    return { failure: { code: 'identity_uncertain', message: clip(`no se puede certificar la correspondencia: ${identity.join('; ')}`, MAX_DIAGNOSTIC) } };
+    return { failure: { code: 'identity_uncertain', message: diag(`no se puede certificar la correspondencia: ${identity.join('; ')}`) } };
   }
   const results = new Map();
   for (const pmid of pmids) {
