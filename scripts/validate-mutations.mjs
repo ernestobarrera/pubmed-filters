@@ -1219,8 +1219,9 @@ const MUTACIONES = [
     id: 'W9-SELLO-SIN-LECTURA',
     porque: 'el sello del despliegue deja fuera los ficheros de la lectura: su código no quedaría identificado',
     fichero: 'mcp/stamp.mjs',
-    de: "'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs'];",
-    a: '];',
+    // Desde la 1.15.0 la lista sigue con los ficheros del cribado: se quitan solo los de la lectura.
+    de: "'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs', 'scripts/summary-core.mjs'",
+    a: "'scripts/summary-core.mjs'",
     rompe: 'W9',
   },
   {
