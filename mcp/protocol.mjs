@@ -23,8 +23,8 @@
 import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 import { runFetch, fetchFailureReceipt, fetchRequestError, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION,
-  MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID } from '../scripts/fetch-core.mjs';
-import { runSummary, summaryFailureReceipt, summaryRequestError, SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION,
+  MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID, MAX_STRUCTURED_BYTES } from '../scripts/fetch-core.mjs';
+import { runSummary, summaryFailureReceipt, summaryRequestError, describeKeys, SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION,
   MAX_SUMMARY_PMIDS, MAX_SCREEN_ID } from '../scripts/summary-core.mjs';
 import { dateLimitTags } from '../scripts/parse-filter.mjs';
 
@@ -252,11 +252,12 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
 /**
  * Qué esconde cada orden (1.14.1, auditoría de lumbalgia del 26/10). El aviso iba en un solo sentido, y
  * una revisión de 2026 quedó 17.ª por relevancia con 15 leídos. La misma frase en la herramienta y en
- * `sort`, que es donde se decide el orden; la regla entera va en `guidance` del catálogo.
+ * `sort`, que es donde se decide el orden; la regla entera va en `guidance` del catálogo. Es un riesgo
+ * observado, no una ley de la edad (revisión de Codex del lote 1.15, R1): por eso «can», no «hides».
  */
-const ORDER_HIDES_BY_AGE = 'Each order hides something by age: the default order pushes older pivotal records'
-  + ' down, relevance pushes records indexed in recent months down (guidance.order_hides_by_age in'
-  + ' pubmed_filter_catalog).';
+const ORDER_HIDES_BY_AGE = 'Either order can leave important records out of a truncated head: the default order'
+  + ' sorts by entry date (not publication date) and pushes older pivotal records down; relevance can also push'
+  + ' recent records down (guidance.order_hides_by_age in pubmed_filter_catalog).';
 
 /**
  * Cribado por título (1.15.0, diseño 33-). La frase va en la búsqueda, que es donde se decide cuánto de
@@ -394,7 +395,7 @@ export const FETCH_TOOL = {
 /**
  * Cribado por PMID con recibo (1.15.0, diseño 33-, alternativa b). Calcado de la lectura: misma cola,
  * mismo `run`, mismo presupuesto y la misma regla de no cortar. Medido en la lumbalgia del 26/10: cribar
- * por abstracts una pasada de 59 eran unas 12 lecturas, y se leyeron 15; por título es una llamada.
+ * por abstracts una pasada de 59 eran unas 12 lecturas, y se leyeron 15; por título, dos llamadas.
  */
 export const SUMMARY_TOOL = {
   name: 'pubmed_summary_exact',
@@ -671,10 +672,16 @@ export function createMcpHandler({
     const attemptId = globalThis.crypto.randomUUID();
     const extra = args === null || typeof args !== 'object' || Array.isArray(args) ? ['(los argumentos no son un objeto)']
       : Object.keys(args).filter((k) => !Object.hasOwn(SUMMARY_TOOL.inputSchema.properties, k));
-    const invalid = extra.length ? `argumentos no admitidos: ${extra.join(', ')}` : summaryRequestError(args.pmids, args.context);
+    const invalid = extra.length ? `argumentos no admitidos: ${describeKeys(extra)}` : summaryRequestError(args.pmids, args.context);
     if (invalid) {
-      return compactResult({ run, receipt_type: SUMMARY_RECEIPT_TYPE, receipt_version: SUMMARY_RECEIPT_VERSION, attempt_id: attemptId,
-        received_at: receivedAt, rejected_before_ncbi: true, error: invalid }, true);
+      // El rechazo también cabe en el presupuesto (revisión de Codex del lote 1.15, R3). Los diagnósticos ya
+      // vienen acotados; si aun así no cupiera, sale un motivo fijo, nunca un rechazo de más de 24 KiB.
+      const rejection = { run, receipt_type: SUMMARY_RECEIPT_TYPE, receipt_version: SUMMARY_RECEIPT_VERSION, attempt_id: attemptId,
+        received_at: receivedAt, rejected_before_ncbi: true, error: invalid };
+      if (new TextEncoder().encode(JSON.stringify(rejection)).length > MAX_STRUCTURED_BYTES) {
+        rejection.error = 'petición no válida; su diagnóstico no cabía en el recibo';
+      }
+      return compactResult(rejection, true);
     }
     const opts = { run, apiKey, email, tool: 'pubmed-filters-mcp', engine, fetcher, now, timeoutMs, attemptId, receivedAt };
     if (!(await throttle())) {

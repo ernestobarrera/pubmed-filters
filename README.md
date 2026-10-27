@@ -141,12 +141,13 @@ devolvió y lo que se entregó, **nunca** que se leyera o se entendiera. No lee 
 
 `pubmed_summary_exact`, solo en el MCP, criba de 1 a 50 PMID por ESummary (JSON, POST): título, año, tipos,
 revista, DOI y si NCBI marca que hay abstract, nunca el abstract. Sirve para mirar la lista entera de una
-pasada por título y decidir qué leer, en una llamada donde antes hacían falta unas 12 lecturas de abstracts
-(diseño 33-). Un título cribado **no** es un registro leído: destacarlo exige leerlo con
+pasada por título y decidir qué leer. Los 59 de la pasada de síntesis de la lumbalgia son al menos dos
+llamadas (más si quedan pendientes), donde antes hacían falta unas 12 lecturas de abstracts (diseño 33-). Un título cribado **no** es un registro leído: destacarlo exige leerlo con
 `pubmed_fetch_exact`, y lo apartado se cuenta aparte (`reading_and_drilldown.title_screen`, quinto recuento
 en `provenance.denominators`). Mismas reglas de recibo que la lectura: por PMID, nunca cortado, pendientes
-explícitos, `run` y cuota compartidos. `dossier-check.mjs` todavía no lee estos recibos: dentro de un
-dossier salen como entrada no reconocida, nunca como lectura.
+explícitos, `run` y cuota compartidos. `dossier-check.mjs` todavía no lee estos recibos: declarados como
+búsqueda o como lectura salen como entrada no reconocida, y declarados como otra ruta se anotan como tal; en
+ningún caso cuentan como lectura.
 
 `dossier-check.mjs` es local y sin red, hermano de `page-union.mjs`. Une recibos de búsqueda y de lectura,
 la respuesta final y sus usos documentados, y mide sobre **lo conservado** los cuatro denominadores (D1

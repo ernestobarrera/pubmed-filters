@@ -5,7 +5,8 @@
  *
  * POR QUÉ EXISTE. El recibo de búsqueda trae PMID, no títulos, y cribar una pasada entera obligaba a
  * leer abstracts de cinco en cinco: en la lumbalgia del 26/10, 59 registros eran unas 12 lecturas, y
- * quedarse con 15 era la conducta racional. Con ESummary, 50 títulos caben en una llamada (33-, §2).
+ * quedarse con 15 era la conducta racional. Con ESummary van hasta 50 por llamada, y lo que no cabe en el
+ * presupuesto queda pendiente: 59 son al menos dos llamadas.
  *
  * QUÉ ACREDITA. Qué se pidió, qué devolvió NCBI y qué se entregó: por PMID pedido, título, año, tipos,
  * revista, DOI y si NCBI marca que tiene abstract; o pendiente explícito; o error con motivo. Nunca
@@ -42,6 +43,13 @@ export const NOT_FOUND_MARK = 'cannot get document summary';
 const CONTEXT_KEYS = ['plan_ref', 'screen_id'];
 
 /**
+ * Claves ajenas en un diagnóstico, acotadas (revisión de Codex del lote 1.15, R3): las cinco primeras,
+ * recortadas, y cuántas más hay. Una clave de 30.000 letras llevaba el rechazo a 30 KB, fuera del
+ * presupuesto que la herramienta promete.
+ */
+export const describeKeys = (keys) => `${keys.slice(0, 5).map((k) => clip(k, 40)).join(', ')}${keys.length > 5 ? ` y ${keys.length - 5} más` : ''}`;
+
+/**
  * La petición, antes de NCBI: 1-50 PMID en cadena, sin duplicados, sin convertir ni corregir, y el
  * contexto exacto. Devuelve el error o null.
  */
@@ -57,7 +65,7 @@ export function summaryRequestError(pmids, context) {
   if (repeated.length) return `pmids repetidos: ${repeated.join(', ')}`;
   if (context === null || typeof context !== 'object' || Array.isArray(context)) return 'context debe ser un objeto con plan_ref y screen_id';
   const extra = Object.keys(context).filter((k) => !CONTEXT_KEYS.includes(k));
-  if (extra.length) return `context: claves no admitidas ${extra.join(', ')}`;
+  if (extra.length) return `context: claves no admitidas ${describeKeys(extra)}`;
   for (const [k, max] of [['plan_ref', MAX_PLAN_REF], ['screen_id', MAX_SCREEN_ID]]) {
     if (!Object.hasOwn(context, k)) return `context: falta ${k}`;
     if (typeof context[k] !== 'string' || context[k].trim() === '' || context[k].length > max) {
@@ -75,9 +83,10 @@ export class JsonStrictError extends Error {}
  * JSON con dos diferencias frente a `JSON.parse`, las dos de identidad: una clave repetida en un objeto
  * es un error (JSON.parse se queda con la última en silencio, y así un PMID repetido con dos registros
  * distintos pasaría por uno solo), y el anidamiento tiene tope. Las cadenas se recorren a mano, sin
- * expresiones regulares sobre texto de longitud libre.
+ * expresiones regulares sobre texto de longitud libre. `describe` decide cómo sale una clave en el
+ * diagnóstico: quien tenga secretos que ocultar los oculta ANTES de recortar.
  */
-export function parseJsonStrict(text, maxDepth = MAX_DEPTH) {
+export function parseJsonStrict(text, maxDepth = MAX_DEPTH, describe = (k) => clip(k, 40)) {
   let i = 0;
   const fail = (what) => { throw new JsonStrictError(`${what} en la posición ${i}`); };
   const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
@@ -124,7 +133,7 @@ export function parseJsonStrict(text, maxDepth = MAX_DEPTH) {
         ws();
         if (text[i] !== '"') fail('se esperaba una clave');
         const key = string();
-        if (Object.hasOwn(obj, key)) fail(`clave repetida «${clip(key, 40)}»`);
+        if (Object.hasOwn(obj, key)) fail(`clave repetida «${describe(key)}»`);
         ws();
         if (text[i] !== ':') fail('se esperaba «:»');
         i++;
@@ -208,8 +217,13 @@ const TOP_KEYS = ['header', 'result'];
  * y la forma. Después, la identidad de la respuesta entera: `uids` sin repetir ni ajenos, y una entrada
  * por uid y ninguna más. Solo entonces cada PMID: su `uid` tiene que ser él; la marca exacta de NCBI es
  * `not_found`; un PMID del que NCBI no dice nada es `absent_from_response`, nunca `not_found`.
+ *
+ * Todo texto que viene de la respuesta y acaba en un diagnóstico pasa por `diag`: primero `clean` (que
+ * oculta la clave y el contacto) y después el recorte, para que un recorte no deje a la vista medio
+ * secreto (revisión de Codex del lote 1.15, R2: la vía de error de cada registro no ocultaba nada).
  */
-function interpret(bytes, pmids) {
+function interpret(bytes, pmids, clean = (t) => t) {
+  const diag = (text, max = MAX_DIAGNOSTIC) => clip(clean(String(text)), max);
   let text;
   try {
     text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -218,23 +232,23 @@ function interpret(bytes, pmids) {
   }
   let doc;
   try {
-    doc = parseJsonStrict(text);
+    doc = parseJsonStrict(text, MAX_DEPTH, (k) => diag(k, 40));
   } catch (e) {
     if (!(e instanceof JsonStrictError)) throw e;
-    return { failure: { code: 'invalid_json', message: clip(e.message, MAX_DIAGNOSTIC) } };
+    return { failure: { code: 'invalid_json', message: diag(e.message) } };
   }
   if (!isObj(doc)) return { failure: { code: 'unexpected_shape', message: 'la respuesta no es un objeto JSON' } };
   // Un error global de NCBI invalida la respuesta entera ANTES de atribuir registros (revisión de Codex, R6).
   const globalErrors = ['error', 'esummaryresult'].filter((k) => Object.hasOwn(doc, k))
     .concat(isObj(doc.result) && Object.hasOwn(doc.result, 'error') ? ['result.error'] : []);
   if (globalErrors.length) {
-    const said = globalErrors.map((k) => clip(JSON.stringify(k === 'result.error' ? doc.result.error : doc[k]), 200)).join(' | ');
+    const said = globalErrors.map((k) => diag(JSON.stringify(k === 'result.error' ? doc.result.error : doc[k]), 200)).join(' | ');
     return { failure: { code: 'ncbi_error', message: clip(`NCBI devolvió un error global: ${said}`, MAX_DIAGNOSTIC) } };
   }
   const extraTop = Object.keys(doc).filter((k) => !TOP_KEYS.includes(k));
   if (extraTop.length || doc.header?.type !== 'esummary' || !isObj(doc.result)) {
-    return { failure: { code: 'unexpected_shape', message: clip(`no es una respuesta ESummary: cabecera ${JSON.stringify(doc.header?.type ?? null)}`
-      + `${extraTop.length ? `, claves ${extraTop.join(', ')}` : ''}${isObj(doc.result) ? '' : ', sin result'}`, MAX_DIAGNOSTIC) } };
+    return { failure: { code: 'unexpected_shape', message: diag(`no es una respuesta ESummary: cabecera ${JSON.stringify(doc.header?.type ?? null)}`
+      + `${extraTop.length ? `, claves ${extraTop.join(', ')}` : ''}${isObj(doc.result) ? '' : ', sin result'}`) } };
   }
   const { uids } = doc.result;
   const requested = new Set(pmids);
@@ -242,14 +256,23 @@ function interpret(bytes, pmids) {
   if (!isStrList(uids)) identity.push('result.uids no es una lista de cadenas');
   else {
     const repeated = unique(uids.filter((u, k) => uids.indexOf(u) !== k));
-    if (repeated.length) identity.push(`uid repetido: ${repeated.join(', ')}`);
+    if (repeated.length) identity.push(`uid repetido: ${repeated.map((u) => diag(u, 20)).join(', ')}`);
     const foreign = uids.filter((u) => !requested.has(u));
-    if (foreign.length) identity.push(`registro no pedido: ${foreign.map((u) => clip(u, 20)).join(', ')}`);
+    if (foreign.length) identity.push(`registro no pedido: ${foreign.map((u) => diag(u, 20)).join(', ')}`);
     const entries = Object.keys(doc.result).filter((k) => k !== 'uids');
     const orphan = entries.filter((k) => !uids.includes(k));
-    if (orphan.length) identity.push(`entrada sin uid en la lista: ${orphan.map((k) => clip(k, 20)).join(', ')}`);
+    if (orphan.length) identity.push(`entrada sin uid en la lista: ${orphan.map((k) => diag(k, 20)).join(', ')}`);
     const unlisted = uids.filter((u) => !Object.hasOwn(doc.result, u));
     if (unlisted.length) identity.push(`uid sin entrada: ${unlisted.join(', ')}`);
+    // Identidad dentro de cada resumen (revisión de Codex del lote 1.15, R4): clave y uid pueden coincidir y
+    // articleids nombrar otro PMID. Esa contradicción no se aísla en un registro: con ella, la respuesta
+    // entera deja de certificar a quién pertenece cada resumen. Si no hay articleids de tipo pubmed, no se exige.
+    for (const u of uids.filter((x) => isObj(doc.result[x]) && Array.isArray(doc.result[x].articleids))) {
+      const other = doc.result[u].articleids.filter((a) => isObj(a) && a.idtype === 'pubmed' && a.value !== u);
+      if (other.length) {
+        identity.push(`la entrada ${diag(u, 20)} dice PMID ${other.map((a) => diag(JSON.stringify(a.value), 20)).join(', ')} en articleids`);
+      }
+    }
   }
   if (identity.length) {
     return { failure: { code: 'identity_uncertain', message: clip(`no se puede certificar la correspondencia: ${identity.join('; ')}`, MAX_DIAGNOSTIC) } };
@@ -264,12 +287,12 @@ function interpret(bytes, pmids) {
     if (!isObj(entry)) { results.set(pmid, errorRecord(pmid, 'unsupported_record', 'la entrada no es un objeto')); continue; }
     if (entry.uid !== pmid) {
       const returned = typeof entry.uid === 'string' && PMID_PATTERN.test(entry.uid) ? entry.uid : null;
-      results.set(pmid, errorRecord(pmid, 'pmid_mismatch', `la entrada de ${pmid} dice uid ${clip(JSON.stringify(entry.uid ?? null), 40)}`, returned));
+      results.set(pmid, errorRecord(pmid, 'pmid_mismatch', `la entrada de ${pmid} dice uid ${diag(JSON.stringify(entry.uid ?? null), 40)}`, returned));
       continue;
     }
     if (Object.hasOwn(entry, 'error')) {
       const exact = entry.error === NOT_FOUND_MARK && Object.keys(entry).length === 2;
-      results.set(pmid, exact ? notFound(pmid) : errorRecord(pmid, 'ncbi_record_error', `NCBI: ${JSON.stringify(entry.error)}`, pmid));
+      results.set(pmid, exact ? notFound(pmid) : errorRecord(pmid, 'ncbi_record_error', diag(`NCBI: ${JSON.stringify(entry.error)}`), pmid));
       continue;
     }
     results.set(pmid, extractRecord(entry, pmid));
@@ -448,7 +471,7 @@ export async function runSummary(pmids, context, opts = {}) {
   }
   const transport = { method: ESUMMARY_TRANSPORT, http_status: response.httpStatus, bytes_received: response.bytes.byteLength,
     raw_response_sha256: await sha256Bytes(response.bytes) };
-  const read = interpret(response.bytes, pmids);
+  const read = interpret(response.bytes, pmids, (t) => redact(t, o));
   env.completed_at = o.now().toISOString();
   if (read.failure) {
     const safe = redact(read.failure.message, o);

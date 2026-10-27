@@ -109,12 +109,12 @@
         {
           "tool": "pubmed_search_exact",
           "field": "description",
-          "fragment": "Each order hides something by age"
+          "fragment": "Either order can leave important records out of a truncated head"
         },
         {
           "tool": "pubmed_search_exact",
           "field": "sort",
-          "fragment": "Each order hides something by age"
+          "fragment": "Either order can leave important records out of a truncated head"
         }
       ]
     },

@@ -516,6 +516,53 @@ check('S10', s10Validos.every((t) => JSON.stringify(parseJsonStrict(t)) === JSON
   && !lanzaEstricto(anidado(3), 3) && lanzaEstricto(anidado(4), 3) && lanzaEstricto(anidado(100000)),
   `JSON estricto: ${s10Validos.length} válidos como JSON.parse, ${s10Invalidos.length} inválidos rechazados (clave repetida incluida), __proto__ es una clave, y el anidamiento tiene tope sin desbordar la pila`);
 
+// S12 (revisión de Codex del lote 1.15, R2). La clave y el contacto no salen en NINGÚN diagnóstico que
+// venga de la respuesta, tampoco en el de un registro, y se ocultan antes de recortar: un recorte no
+// puede dejar medio secreto a la vista. Por el MCP, en structuredContent y en su copia de texto.
+// Credenciales ficticias.
+const CLAVE12 = 'SYNTHKEY0123456789abcdef0123456789ab';
+const CONTACTO12 = 'synthetic-contact@example.invalid';
+const servidor12 = (cuerpo) => createMcpHandler({ fetcher: crudo(cuerpo), apiKey: CLAVE12, email: CONTACTO12, run: { contract_version: 'x' } });
+const cribar12 = async (cuerpo, pmids) => (await servidor12(cuerpo)({ jsonrpc: '2.0', id: 1, method: 'tools/call',
+  params: { name: 'pubmed_summary_exact', arguments: { pmids, context: SCTX } } })).result;
+const s12 = {
+  registro: await cribar12(sumBody({ 10: { uid: '10', error: `temporary failure api_key=${CLAVE12} email=${CONTACTO12}` }, 20: docsum('20') }), ['10', '20']),
+  uid: await cribar12(sumBody({ 10: { ...docsum('10'), uid: CLAVE12 } }), ['10']),
+  globalEnElBorde: await cribar12(JSON.stringify({ header: { type: 'esummary' }, error: `${'x'.repeat(190)}${CLAVE12}` }), ['10']),
+  ajeno: await cribar12(sumBody({ 10: docsum('10'), [CLAVE12]: docsum(CLAVE12) }), ['10']),
+  claveRepetida: await cribar12(`${CAB}{"uids":["10"],"10":${JSON.stringify(docsum('10'))},"${CLAVE12}":1,"${CLAVE12}":2}}`, ['10']),
+  cabecera: await cribar12(JSON.stringify({ header: { type: CONTACTO12 }, result: { uids: ['10'], 10: docsum('10') } }), ['10']),
+};
+const fuga12 = (r) => [JSON.stringify(r.structuredContent), r.content[0].text]
+  .some((t) => t.includes(CLAVE12.slice(0, 8)) || t.includes(CONTACTO12.slice(0, 12)));
+check('S12', Object.values(s12).every((r) => !fuga12(r))
+  && resultOf(s12.registro.structuredContent, '10')?.reason === 'ncbi_record_error'
+  && /temporary failure api_key=\[oculto\]/.test(resultOf(s12.registro.structuredContent, '10')?.detail ?? '')
+  && resultOf(s12.registro.structuredContent, '20')?.record_status === 'found'
+  && resultOf(s12.uid.structuredContent, '10')?.reason === 'pmid_mismatch'
+  && s12.globalEnElBorde.structuredContent.failure?.code === 'ncbi_error' && s12.ajeno.structuredContent.failure?.code === 'identity_uncertain'
+  && s12.claveRepetida.structuredContent.failure?.code === 'invalid_json' && s12.cabecera.structuredContent.failure?.code === 'unexpected_shape',
+  'la clave y el contacto se ocultan en el error de un registro, en un uid, en un error global cortado justo en el secreto, en un uid ajeno,'
+  + ' en una clave repetida y en la cabecera; el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
+
+// S13 (revisión de Codex del lote 1.15, R4). Clave y uid de acuerdo, pero articleids nombra otro PMID: la
+// respuesta deja de certificar a quién pertenece cada resumen. Sin articleids de tipo pubmed no se exige.
+const conPubmed = (pm, ...ids) => ({ ...docsum(pm), articleids: [...ids.map((v) => ({ idtype: 'pubmed', idtypen: 1, value: v })),
+  { idtype: 'doi', idtypen: 3, value: `10.5555/synthetic.${pm}` }] });
+const s13 = {
+  ajeno: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10', '20') }))),
+  colision: await summaryWith(['10', '20'], crudo(sumBody({ 10: conPubmed('10', '20'), 20: docsum('20') }))),
+  doble: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10', '10', '20') }))),
+  sinPubmed: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10') }))),
+  propio: await summaryWith(['10'], crudo(sumBody({ 10: { ...conPubmed('10', '10'), articleids: [...conPubmed('10', '10').articleids, { idtype: 'pmc', value: 'PMC1' }] } }))),
+  libro: await summaryWith(['30'], crudo(sumBody({ 30: { ...docsum('30', { title: '', booktitle: 'Synthetic Book', doctype: 'book', source: '', doi: null }),
+    articleids: [{ idtype: 'bookaccession', idtypen: 4, value: 'NBK1' }, { idtype: 'pubmed', idtypen: 1, value: '30' }] } }))),
+};
+check('S13', ['ajeno', 'colision', 'doble'].every((k) => fallidoEntero(s13[k], 'identity_uncertain') && /articleids/.test(s13[k].failure.message))
+  && ['sinPubmed', 'propio', 'libro'].every((k) => s13[k].status.record_identity === 'verified' && s13[k].status.delivery === 'complete'
+    && s13[k].results[0]?.record_status === 'found'),
+  'un articleids pubmed que contradice clave y uid tumba la respuesta entera, solo o en colisión con otro registro; sin pubmed, con el propio y otros tipos, o en un libro, found');
+
 // --- X. dossier-check ---------------------------------------------------------------------------------
 // Una excepción aquí (p. ej. porque una mutación rompió el transporte y un recibo no trae lo esperado) es
 // un fallo declarado: no puede llevarse por delante el informe de las comprobaciones F, que ya corrieron.

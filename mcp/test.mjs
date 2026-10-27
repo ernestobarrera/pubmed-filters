@@ -560,6 +560,22 @@ check('M29', criba.isError === false && criba.content[0].text === JSON.stringify
   `cribado de 50 en una llamada (${Buffer.byteLength(JSON.stringify(criba.structuredContent))} B), compacto e idéntico en texto, con el run de la búsqueda; un 503 es error declarado;`
   + ` comparte la cola con la búsqueda: ${cribasOcupadas.length} de seis cribados, servicio ocupado`);
 
+// M30 (revisión de Codex del lote 1.15, R3). Un rechazo previo a NCBI también cabe en 24 KiB, con un motivo
+// útil y su identidad mínima: clave larga, en los argumentos o en el contexto, multibyte y muchas claves.
+enviadas.length = 0;
+const largos = [{ pmids: ['1'], context: SCTX, ['a'.repeat(30000)]: 1 }, { pmids: ['1'], context: { ...SCTX, ['b'.repeat(30000)]: 1 } },
+  { pmids: ['1'], context: SCTX, ['€'.repeat(20000)]: 1 }, { pmids: ['1'], context: SCTX, ...Object.fromEntries(Array.from({ length: 2000 }, (_, i) => [`k${i}_${'x'.repeat(40)}`, 1])) }];
+const rechazosLargos = await Promise.all(largos.map((args, i) => cribarCon(hCriba, 700 + i, args)));
+const normal30 = (await cribarCon(hCriba, 710, { pmids: ['1'], context: SCTX, include_abstract: true })).result.structuredContent;
+check('M30', rechazosLargos.every(({ result: r }) => r.isError === true && r.structuredContent.rejected_before_ncbi === true
+    && Buffer.byteLength(JSON.stringify(r.structuredContent)) <= MAX_STRUCTURED_BYTES && r.content[0].text === JSON.stringify(r.structuredContent)
+    && /no admitid[ao]s/.test(r.structuredContent.error) && r.structuredContent.receipt_type === 'pubmed_summary_exact'
+    && /^[0-9a-f-]{36}$/.test(r.structuredContent.attempt_id) && typeof r.structuredContent.received_at === 'string' && r.structuredContent.run?.contract_version === 'x')
+  && /y 1995 más/.test(rechazosLargos[3].result.structuredContent.error)
+  && normal30.error === 'argumentos no admitidos: include_abstract' && enviadas.length === 0,
+  `rechazos con claves de 30.000 letras (argumentos y contexto), 20.000 «€» y 2.000 claves: ${rechazosLargos.map(({ result: r }) =>
+    Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, todos ≤ ${MAX_STRUCTURED_BYTES}, con motivo, run, intento y hora, sin NCBI; el normal sigue nombrando la clave`);
+
 // --- Canal de llegada a la superficie (1.14.1, plan 32- U2) ----------------------------------------
 // Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
 // `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de

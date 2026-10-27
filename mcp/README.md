@@ -21,8 +21,9 @@ tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
   aparte (`counts_as: titles_screened`). Cada PMID sale `found`, `not_found` (solo con la marca exacta de
   NCBI, en **esta** respuesta) o `error` con `reason` (`absent_from_response` si NCBI no dice nada de él).
   Mismo presupuesto de 24 KiB, misma cola y mismo `run`; un título nunca se corta y lo que no cabe va a
-  `pending_pmids`. Medido el 26/10 con PubMed real: 50 registros, 22,7 y 24,3 KB. El JSON se lee con un
-  analizador estricto que rechaza claves repetidas. `dossier-check` aún no lee estos recibos.
+  `pending_pmids`. Medido el 26/10 con PubMed real: 50 registros, 22,7 y 24,3 KB; con títulos largos no
+  caben los 50 y el resto queda pendiente. El JSON se lee con un analizador estricto que rechaza claves
+  repetidas, y la clave y el contacto se ocultan en todo diagnóstico. `dossier-check` aún no lee estos recibos.
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición
