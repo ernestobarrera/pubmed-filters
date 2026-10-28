@@ -14,7 +14,7 @@ tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
   su `run`. Su texto es el mismo JSON compacto que `structuredContent`, así que el mensaje entero lleva el
   recibo dos veces (medido: unos 40 KB para cinco abstracts de 3.000 caracteres). Detalle y comprobador de
   dossier en el [README principal](../README.md).
-- `pubmed_summary_exact` (1.15.0, diseño 33-): de 1 a 50 PMID en cadena y un `context` con `plan_ref` y
+- `pubmed_summary_exact` (1.15.0): de 1 a 50 PMID en cadena y un `context` con `plan_ref` y
   `screen_id`. Por ESummary (JSON, POST) devuelve título, año, tipos de publicación, revista, DOI y si NCBI
   marca que hay abstract; **nunca el abstract**. Es para cribar una lista entera por título y decidir qué
   se lee: no convierte un registro en hallazgo (para eso, `pubmed_fetch_exact`), y lo apartado se cuenta

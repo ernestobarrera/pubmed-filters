@@ -1539,7 +1539,7 @@ const MUTACIONES = [
     a: '    this.detail = detail;',
     rompe: 'F12',
   },
-  // Canal de llegada a la superficie (1.14.1, plan 32- U2). Medido el 26/10: las cuatro reglas de la
+  // Canal de llegada a la superficie (1.14.1). Medido el 26/10: las cuatro reglas de la
   // 1.14.1 estaban escritas donde ningún canal del servidor las servía. Cada forma de volver a eso.
   {
     id: 'M27-GUIA-SIN-ORDEN',
@@ -1589,8 +1589,8 @@ const MUTACIONES = [
     a: '',
     rompe: 'M27',
   },
-  // Cribado por PMID con recibo (1.15.0, diseño 33-). Una por cada forma de equivocarse que S1-S11, M28,
-  // M29, W10 y K10 dicen vigilar, con las ocho clases de 32- §5.
+  // Cribado por PMID con recibo (1.15.0). Una por cada forma de equivocarse que S1-S11, M28,
+  // M29, W10 y K10 dicen vigilar.
   {
     id: 'S1-CINCUENTA-Y-UNO',
     porque: 'el tope de 50 PMID por llamada se afloja en uno',
@@ -1860,7 +1860,7 @@ const MUTACIONES = [
     a: '',
     rompe: 'M27',
   },
-  // Revisión de Codex del lote 1.15 (27/10): R2, R3 y R4, cada una con la forma concreta de volver atrás.
+  // Ocultación en diagnósticos, rechazos acotados e identidad en articleids: cada una con la forma concreta de volver atrás.
   {
     id: 'S12-SIN-OCULTAR',
     porque: 'los diagnósticos que vienen de la respuesta dejan de ocultar la clave y el contacto',
@@ -1901,7 +1901,7 @@ const MUTACIONES = [
     a: "export const describeKeys = (keys) => keys.join(', ');",
     rompe: 'M30',
   },
-  // Revisión de Codex del delta 1.15 (27/10), Δ1. El mensaje de identidad vuelve a pasar por `diag` como
+  // Uid sin entrada. El mensaje de identidad vuelve a pasar por `diag` como
   // defensa, así que quitar solo la protección de la pieza no deja ver la clave: lo que la delata es que la
   // pieza deja de estar acotada. La defensa del mensaje no tiene mutación propia, como la cota final de R3.
   {

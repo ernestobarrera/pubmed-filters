@@ -4,9 +4,9 @@
  *
  *   node scripts/eval/run-order-age.mjs --out <carpeta>
  *
- * POR QUÉ EXISTE. `reading_and_drilldown.order_hides_by_age` sale de un solo caso (lumbalgia, 26/10): una
+ * POR QUÉ EXISTE. `reading_and_drilldown.order_hides_by_age` sale de un solo caso (lumbalgia, 2026-10-26): una
  * revisión de 2026 quedó 17.ª por relevancia y 1.ª por el orden por defecto. Antes de servirla como regla
- * hay que ver si su clase existe fuera de ese caso (plan 32-, U3; pregunta 3 de 31- §7).
+ * hay que ver si su clase existe fuera de ese caso.
  *
  * QUÉ MIDE, con la MISMA consulta y cambiando solo `sort` (omitido o `relevance`):
  *   1. en cada pasada de la unidad de `contract_1_11` (y la de síntesis del caso L tal como se envió), la
@@ -109,7 +109,7 @@ async function fetchYears(pmids, tag) {
     queue = queue.slice(5);
     await sleep(PAUSE);
     calls++;
-    const r = await runFetch(chunk, { plan_ref: 'u3-orden-clase', read_id: `${tag}-${++batch}` },
+    const r = await runFetch(chunk, { plan_ref: 'orden-clase', read_id: `${tag}-${++batch}` },
       { apiKey: KEY, run, engine: 'scripts/eval/run-order-age.mjs' });
     writeFileSync(join(OUT, 'recibos', `lectura-${tag}-${batch}.json`), `${JSON.stringify(r, null, 2)}\n`);
     for (const x of r.results ?? []) {

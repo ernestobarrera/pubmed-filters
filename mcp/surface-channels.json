@@ -7,7 +7,7 @@
     "not_served": "Ningún canal de este servidor la sirve. Es una decisión registrada, no un olvido; una regla que deba cambiar lo que hace la superficie en un punto de decisión no debería quedarse aquí."
   },
   "comprobacion": "mcp/test.mjs, M27: cada regla del router está aquí y nada de aquí falta en el router; lo declarado en guidance sale literal y no vacío; cada fragmento está en el texto que anuncia tools/list; y todo lo que sirve guidance de retrieval_policy está declarado. No prueba que la superficie lo lea ni que lo cumpla.",
-  "medido": "2026-10-26, sobre d610902: guidance eran 6,6 de 87 KB del router y las cuatro reglas de la 1.14.1 estaban escritas solo en secciones que no se sirven (plan 32-, §1.1).",
+  "medido": "2026-10-26, sobre d610902: guidance eran 6,6 de 87 KB del router y las cuatro reglas de la 1.14.1 estaban escritas solo en secciones que no se sirven.",
   "reglas": {
     "principles": "not_served",
     "defaults.time": "not_served",

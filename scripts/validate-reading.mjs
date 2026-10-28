@@ -2,8 +2,7 @@
 /**
  * Pruebas de la lectura con recibo (`pubmed_fetch_exact`) y del comprobador de dossier
  * (`scripts/dossier-check.mjs`): las de §5 de la especificación 29-, con la adenda de Codex del 24/10.
- * Desde la 1.15.0, también las del cribado por PMID (`pubmed_summary_exact`, diseño 33-): S1-S11, con las
- * ocho clases de reparos de 32- §5 desde el diseño.
+ * Desde la 1.15.0, también las del cribado por PMID (`pubmed_summary_exact`): S1-S13.
  *
  * Uso:  node scripts/validate-reading.mjs        Sale 0 si todo pasa.
  *
@@ -315,7 +314,7 @@ check('F12', Object.values(r8).every((r) => bytesOf(r) < 4000)
   `diagnósticos acotados: nombre, entidad, <ERROR> y marcado de 30.000 caracteres dan recibos estructurados de ${
     Object.values(r8).map(bytesOf).join(', ')} bytes`);
 
-// --- S. Cribado por PMID con recibo (pubmed_summary_exact, 1.15.0, diseño 33-) ----------------------
+// --- S. Cribado por PMID con recibo (pubmed_summary_exact, 1.15.0) ---------------------------------
 // Respuestas con la forma medida en NCBI el 26/10 (JSON de ESummary): cabecera, `result.uids` y una entrada
 // por PMID; un PMID sin resumen lleva solo `uid` y `error`; los errores globales van en `error` o en
 // `esummaryresult`. Los resúmenes son SINTÉTICOS.
@@ -516,7 +515,7 @@ check('S10', s10Validos.every((t) => JSON.stringify(parseJsonStrict(t)) === JSON
   && !lanzaEstricto(anidado(3), 3) && lanzaEstricto(anidado(4), 3) && lanzaEstricto(anidado(100000)),
   `JSON estricto: ${s10Validos.length} válidos como JSON.parse, ${s10Invalidos.length} inválidos rechazados (clave repetida incluida), __proto__ es una clave, y el anidamiento tiene tope sin desbordar la pila`);
 
-// S12 (revisión de Codex del lote 1.15, R2). La clave y el contacto no salen en NINGÚN diagnóstico que
+// S12. La clave y el contacto no salen en NINGÚN diagnóstico que
 // venga de la respuesta, tampoco en el de un registro, y se ocultan antes de recortar: un recorte no
 // puede dejar medio secreto a la vista. Por el MCP, en structuredContent y en su copia de texto.
 // Credenciales ficticias.
@@ -532,7 +531,7 @@ const s12 = {
   ajeno: await cribar12(sumBody({ 10: docsum('10'), [CLAVE12]: docsum(CLAVE12) }), ['10']),
   claveRepetida: await cribar12(`${CAB}{"uids":["10"],"10":${JSON.stringify(docsum('10'))},"${CLAVE12}":1,"${CLAVE12}":2}}`, ['10']),
   cabecera: await cribar12(JSON.stringify({ header: { type: CONTACTO12 }, result: { uids: ['10'], 10: docsum('10') } }), ['10']),
-  // Δ1 (revisión del delta 1.15): uid sin entrada con la credencial justo sobre el límite del mensaje.
+  // Uid sin entrada con la credencial justo sobre el límite del mensaje.
   sinEntradaClave: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CLAVE12}`] } }), ['10']),
   sinEntradaContacto: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CONTACTO12}`] } }), ['10']),
 };
@@ -551,7 +550,7 @@ check('S12', Object.values(s12).every((r) => !fuga12(r))
   + ' en una clave repetida, en la cabecera y en un uid sin entrada que lleva la clave o el contacto al borde del mensaje (acotado a 20);'
   + ' el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
 
-// S13 (revisión de Codex del lote 1.15, R4). Clave y uid de acuerdo, pero articleids nombra otro PMID: la
+// S13. Clave y uid de acuerdo, pero articleids nombra otro PMID: la
 // respuesta deja de certificar a quién pertenece cada resumen. Sin articleids de tipo pubmed no se exige.
 const conPubmed = (pm, ...ids) => ({ ...docsum(pm), articleids: [...ids.map((v) => ({ idtype: 'pubmed', idtypen: 1, value: v })),
   { idtype: 'doi', idtypen: 3, value: `10.5555/synthetic.${pm}` }] });
@@ -1107,7 +1106,7 @@ try {
     && x19.sinContrato.verdict === 'inconclusive' && x19.sinContrato.uncertainties.some((u) => u.code === 'unsupported_input'),
     `rechazo previo a NCBI: el del MCP, ${x19.valido.verdict} sin exigir lectura; sin run, intento, hora ni motivo, ${x19.sinContrato.verdict}`);
 
-  // S11. dossier-check no cambia en la 1.15.0 (33-, §7): un recibo de cribado dentro de un dossier no se cuenta
+  // S11. dossier-check no cambia en la 1.15.0: un recibo de cribado dentro de un dossier no se cuenta
   // como lectura ni como cero. Declarado como lectura o como búsqueda es entrada no reconocida y deja el
   // dossier inconclusive; declarado como otra ruta se registra como tal. Contarlo aparte es la 1.15.1.
   const criba = await call('pubmed_summary_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', screen_id: 'c1' } });

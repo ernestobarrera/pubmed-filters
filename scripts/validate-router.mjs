@@ -655,7 +655,7 @@ check('K8', k8Fallos.length === 0,
     ? 'tres recorridos definidos, la muestra ordenada no es el conjunto, seis controles de deriva con su límite, cuatro denominadores y los motivos sin continuación'
     : k8Fallos.join('; ')}`);
 
-// Orden, guías y recencia (1.14.1, auditoría de lumbalgia del 26/10). Estructurales, como K8: rechazan
+// Orden, guías y recencia (1.14.1). Estructurales, como K8: rechazan
 // vacío y relleno, no prueban que una superficie las cumpla.
 const ohba = rd.order_hides_by_age ?? {};
 const cgp = router.evidence_landscape_policy?.condition_guideline_pass ?? {};
@@ -676,7 +676,7 @@ check('K9', k9Fallos.length === 0,
     ? 'cada orden dice qué esconde, la pasada de guías va sin la intervención, una vía aplazada no cuenta como hecha y la recencia se comprueba antes de cerrar'
     : k9Fallos.join('; ')}`);
 
-// Cribado por título (1.15.0, diseño 33-). Estructural, como K8 y K9: la regla separa cribar (decide qué
+// Cribado por título (1.15.0). Estructural, como K8 y K9: la regla separa cribar (decide qué
 // se lee) de destacar (exige leer), y lo apartado por título se cuenta aparte, como quinto recuento.
 const ts = rd.title_screen ?? {};
 const k10Fallos = [

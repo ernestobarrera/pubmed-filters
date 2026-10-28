@@ -1,16 +1,16 @@
 /**
- * Núcleo del cribado por PMID con recibo, `pubmed_summary_exact` (diseño 33-, alternativa b; contrato
+ * Núcleo del cribado por PMID con recibo, `pubmed_summary_exact` (contrato
  * 1.15.0). Hermano de `fetch-core.mjs` y, como él, código PURO (fetch, Web Crypto, sin disco): lo
  * comparten el MCP local y el Worker.
  *
  * POR QUÉ EXISTE. El recibo de búsqueda trae PMID, no títulos, y cribar una pasada entera obligaba a
- * leer abstracts de cinco en cinco: en la lumbalgia del 26/10, 59 registros eran unas 12 lecturas, y
+ * leer abstracts de cinco en cinco: en el caso de lumbalgia de `scripts/eval/cases.json`, 59 registros eran unas 12 lecturas, y
  * quedarse con 15 era la conducta racional. Con ESummary van hasta 50 por llamada, y lo que no cabe en el
  * presupuesto queda pendiente: 59 son al menos dos llamadas.
  *
  * QUÉ ACREDITA. Qué se pidió, qué devolvió NCBI y qué se entregó: por PMID pedido, título, año, tipos,
  * revista, DOI y si NCBI marca que tiene abstract; o pendiente explícito; o error con motivo. Nunca
- * cortado, sustituido ni asociado por posición. QUÉ NO (33-, §5): que un título se leyera o se entendiera;
+ * cortado, sustituido ni asociado por posición. QUÉ NO: que un título se leyera o se entendiera;
  * que lo apartado por título no sea pertinente; que un registro sirva de hallazgo (para eso hay que
  * leerlo con `pubmed_fetch_exact`); que el resumen coincida campo a campo con EFetch; ninguna cobertura.
  * Por eso el recibo dice `counts_as: titles_screened`, aparte de los abstracts obtenidos.
@@ -28,7 +28,7 @@ import { sha256Bytes, PMID_PATTERN, MAX_PLAN_REF, MAX_STRUCTURED_BYTES, MAX_DIAG
 export const SUMMARY_RECEIPT_TYPE = 'pubmed_summary_exact';
 /** Versión del formato del recibo de cribado; la del contrato del router viaja en `run`. */
 export const SUMMARY_RECEIPT_VERSION = '1';
-/** 50 títulos caben medidos en el presupuesto (33-, §2: 295-350 B por registro); lo que no, queda pendiente. */
+/** 50 títulos caben medidos en el presupuesto (295-350 B por registro); lo que no, queda pendiente. */
 export const MAX_SUMMARY_PMIDS = 50;
 /** Cuerpo JSON descomprimido, medido durante la lectura: 116 KB medidos para 59 registros. */
 export const MAX_JSON_BYTES = 2 * 1024 * 1024;
@@ -43,7 +43,7 @@ export const NOT_FOUND_MARK = 'cannot get document summary';
 const CONTEXT_KEYS = ['plan_ref', 'screen_id'];
 
 /**
- * Claves ajenas en un diagnóstico, acotadas (revisión de Codex del lote 1.15, R3): las cinco primeras,
+ * Claves ajenas en un diagnóstico, acotadas : las cinco primeras,
  * recortadas, y cuántas más hay. Una clave de 30.000 letras llevaba el rechazo a 30 KB, fuera del
  * presupuesto que la herramienta promete.
  */
@@ -212,7 +212,7 @@ function extractRecord(entry, pmid) {
 const TOP_KEYS = ['header', 'result'];
 
 /**
- * Del cuerpo completo a un resultado por PMID pedido (clases 2, 5, 6 y 7 de 32- §5). Primero lo global:
+ * Del cuerpo completo a un resultado por PMID pedido. Primero lo global:
  * codificación, JSON estricto, un error de NCBI en cualquier sitio de la cabecera (antes de atribuir nada)
  * y la forma. Después, la identidad de la respuesta entera: `uids` sin repetir ni ajenos, y una entrada
  * por uid y ninguna más. Solo entonces cada PMID: su `uid` tiene que ser él; la marca exacta de NCBI es
@@ -220,8 +220,7 @@ const TOP_KEYS = ['header', 'result'];
  *
  * Todo texto que viene de la respuesta y acaba en un diagnóstico pasa por `diag`: primero `clean` (que
  * oculta la clave y el contacto) y después el recorte, para que un recorte no deje a la vista medio
- * secreto (revisión de Codex del lote 1.15, R2: la vía de error de cada registro no ocultaba nada; Δ1:
- * los uid sin entrada se unían sin pasar por `diag`). Cada pieza se acota a su tamaño, y el mensaje que
+ * secreto. Cada pieza se acota a su tamaño, y el mensaje que
  * las junta vuelve a pasar por `diag` como defensa: con las piezas ya limpias, no tiene caso que la alcance.
  */
 function interpret(bytes, pmids, clean = (t) => t) {
@@ -240,7 +239,7 @@ function interpret(bytes, pmids, clean = (t) => t) {
     return { failure: { code: 'invalid_json', message: diag(e.message) } };
   }
   if (!isObj(doc)) return { failure: { code: 'unexpected_shape', message: 'la respuesta no es un objeto JSON' } };
-  // Un error global de NCBI invalida la respuesta entera ANTES de atribuir registros (revisión de Codex, R6).
+  // Un error global de NCBI invalida la respuesta entera ANTES de atribuir registros.
   const globalErrors = ['error', 'esummaryresult'].filter((k) => Object.hasOwn(doc, k))
     .concat(isObj(doc.result) && Object.hasOwn(doc.result, 'error') ? ['result.error'] : []);
   if (globalErrors.length) {
@@ -266,7 +265,7 @@ function interpret(bytes, pmids, clean = (t) => t) {
     if (orphan.length) identity.push(`entrada sin uid en la lista: ${orphan.map((k) => diag(k, 20)).join(', ')}`);
     const unlisted = uids.filter((u) => !Object.hasOwn(doc.result, u));
     if (unlisted.length) identity.push(`uid sin entrada: ${unlisted.map((u) => diag(u, 20)).join(', ')}`);
-    // Identidad dentro de cada resumen (revisión de Codex del lote 1.15, R4): clave y uid pueden coincidir y
+    // Identidad dentro de cada resumen: clave y uid pueden coincidir y
     // articleids nombrar otro PMID. Esa contradicción no se aísla en un registro: con ella, la respuesta
     // entera deja de certificar a quién pertenece cada resumen. Si no hay articleids de tipo pubmed, no se exige.
     for (const u of uids.filter((x) => isObj(doc.result[x]) && Array.isArray(doc.result[x].articleids))) {

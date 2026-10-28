@@ -12,7 +12,7 @@
  *
  * Lee también registros por PMID con recibo (`pubmed_fetch_exact`, contrato 1.14.0, especificación 29-):
  * cada PMID pedido sale completo, pendiente o con su error, nunca cortado (scripts/fetch-core.mjs). Y
- * criba por título hasta 50 PMID con recibo (`pubmed_summary_exact`, contrato 1.15.0, diseño 33-), sin
+ * criba por título hasta 50 PMID con recibo (`pubmed_summary_exact`, contrato 1.15.0), sin
  * abstract: decide qué se lee, nunca qué se destaca (scripts/summary-core.mjs).
  *
  * Lo que este servidor NO hace, y por qué: no reescribe, sanea ni trocea la consulta (por eso existe);
@@ -250,17 +250,17 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
 }
 
 /**
- * Qué esconde cada orden (1.14.1, auditoría de lumbalgia del 26/10). El aviso iba en un solo sentido, y
+ * Qué esconde cada orden (1.14.1; medido en el caso de prueba de los relajantes musculares en lumbalgia aguda (`scripts/eval/cases.json`)). El aviso iba en un solo sentido, y
  * una revisión de 2026 quedó 17.ª por relevancia con 15 leídos. La misma frase en la herramienta y en
  * `sort`, que es donde se decide el orden; la regla entera va en `guidance` del catálogo. Es un riesgo
- * observado, no una ley de la edad (revisión de Codex del lote 1.15, R1): por eso «can», no «hides».
+ * observado, no una ley de la edad: por eso «can», no «hides».
  */
 const ORDER_HIDES_BY_AGE = 'Either order can leave important records out of a truncated head: the default order'
   + ' sorts by entry date (not publication date) and pushes older pivotal records down; relevance can also push'
   + ' recent records down (guidance.order_hides_by_age in pubmed_filter_catalog).';
 
 /**
- * Cribado por título (1.15.0, diseño 33-). La frase va en la búsqueda, que es donde se decide cuánto de
+ * Cribado por título (1.15.0). La frase va en la búsqueda, que es donde se decide cuánto de
  * la lista se mira; la regla entera, en `guidance.title_screen`.
  */
 const TITLE_SCREEN = 'To screen a whole list by title, send its PMIDs to pubmed_summary_exact (up to'
@@ -393,8 +393,8 @@ export const FETCH_TOOL = {
 };
 
 /**
- * Cribado por PMID con recibo (1.15.0, diseño 33-, alternativa b). Calcado de la lectura: misma cola,
- * mismo `run`, mismo presupuesto y la misma regla de no cortar. Medido en la lumbalgia del 26/10: cribar
+ * Cribado por PMID con recibo (1.15.0). Calcado de la lectura: misma cola,
+ * mismo `run`, mismo presupuesto y la misma regla de no cortar. Medido en el caso de lumbalgia de `scripts/eval/cases.json`: cribar
  * por abstracts una pasada de 59 eran unas 12 lecturas, y se leyeron 15; por título, dos llamadas.
  */
 export const SUMMARY_TOOL = {
@@ -674,7 +674,7 @@ export function createMcpHandler({
       : Object.keys(args).filter((k) => !Object.hasOwn(SUMMARY_TOOL.inputSchema.properties, k));
     const invalid = extra.length ? `argumentos no admitidos: ${describeKeys(extra)}` : summaryRequestError(args.pmids, args.context);
     if (invalid) {
-      // El rechazo también cabe en el presupuesto (revisión de Codex del lote 1.15, R3). Los diagnósticos ya
+      // El rechazo también cabe en el presupuesto. Los diagnósticos ya
       // vienen acotados; si aun así no cupiera, sale un motivo fijo, nunca un rechazo de más de 24 KiB.
       const rejection = { run, receipt_type: SUMMARY_RECEIPT_TYPE, receipt_version: SUMMARY_RECEIPT_VERSION, attempt_id: attemptId,
         received_at: receivedAt, rejected_before_ncbi: true, error: invalid };

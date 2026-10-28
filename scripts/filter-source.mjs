@@ -33,13 +33,13 @@ export const GUIDANCE_PATHS = {
   geographic_filters: 'composition.geographic_filters',
   negation_rule: 'composition.negation_filters.rule',
   embedded_date_rule: 'composition.embedded_date_limits.rule',
-  // 1.14.1: orden, guías y recencia (auditoría de lumbalgia del 26/10). Escritas solo en la prosa del
+  // 1.14.1: orden, guías y recencia (medido en el caso de lumbalgia de `scripts/eval/cases.json`). Escritas solo en la prosa del
   // router, no tenían ninguna vía de llegada a ChatGPT.
   order_hides_by_age: 'reading_and_drilldown.order_hides_by_age',
   pagination_order_recommendation: 'reading_and_drilldown.pagination.order_recommendation',
   condition_guideline_pass: 'evidence_landscape_policy.condition_guideline_pass',
   recency_before_closing: 'saturation_policy.recency_before_closing',
-  // 1.15.0: cribar por título decide qué se lee, nunca qué se destaca (diseño 33-, §3).
+  // 1.15.0: cribar por título decide qué se lee, nunca qué se destaca.
   title_screen: 'reading_and_drilldown.title_screen',
 };
 

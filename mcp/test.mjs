@@ -503,7 +503,7 @@ check('M26', lecturasOcupadas.length > 0 && lecturasOcupadas.every((r) => r.resu
   && enviadas.length + lecturasOcupadas.length + mezcla.slice(0, 6).filter((r) => /SERVICIO_OCUPADO/.test(r.result.structuredContent.error ?? '')).length === 12,
   `búsqueda y lectura comparten la cola: tras seis búsquedas, ${lecturasOcupadas.length} de seis lecturas se rechazan como servicio ocupado, con error por PMID y nunca como ausencia`);
 
-// --- Cribado por PMID con recibo (1.15.0, diseño 33-) ---------------------------------------------
+// --- Cribado por PMID con recibo (1.15.0) ----------------------------------------------------------
 const { SUMMARY_TOOL } = await import('./protocol.mjs');
 const docsum = (p) => ({ uid: p, pubdate: '2021 Mar', source: 'Synth J', title: `Synthetic ${p}.`, pubtype: ['Journal Article'],
   articleids: [{ idtype: 'doi', value: `10.5555/${p}` }], attributes: ['Has Abstract'], doctype: 'citation', booktitle: '' });
@@ -560,7 +560,7 @@ check('M29', criba.isError === false && criba.content[0].text === JSON.stringify
   `cribado de 50 en una llamada (${Buffer.byteLength(JSON.stringify(criba.structuredContent))} B), compacto e idéntico en texto, con el run de la búsqueda; un 503 es error declarado;`
   + ` comparte la cola con la búsqueda: ${cribasOcupadas.length} de seis cribados, servicio ocupado`);
 
-// M30 (revisión de Codex del lote 1.15, R3). Un rechazo previo a NCBI también cabe en 24 KiB, con un motivo
+// M30. Un rechazo previo a NCBI también cabe en 24 KiB, con un motivo
 // útil y su identidad mínima: clave larga, en los argumentos o en el contexto, multibyte y muchas claves.
 enviadas.length = 0;
 const largos = [{ pmids: ['1'], context: SCTX, ['a'.repeat(30000)]: 1 }, { pmids: ['1'], context: { ...SCTX, ['b'.repeat(30000)]: 1 } },
@@ -576,7 +576,7 @@ check('M30', rechazosLargos.every(({ result: r }) => r.isError === true && r.str
   `rechazos con claves de 30.000 letras (argumentos y contexto), 20.000 «€» y 2.000 claves: ${rechazosLargos.map(({ result: r }) =>
     Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, todos ≤ ${MAX_STRUCTURED_BYTES}, con motivo, run, intento y hora, sin NCBI; el normal sigue nombrando la clave`);
 
-// --- Canal de llegada a la superficie (1.14.1, plan 32- U2) ----------------------------------------
+// --- Canal de llegada a la superficie (1.14.1) -------------------------------------------------------
 // Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
 // `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de
 // la 1.14.1 estaban escritas donde no se sirve. Aquí cada regla de retrieval_policy declara su canal en

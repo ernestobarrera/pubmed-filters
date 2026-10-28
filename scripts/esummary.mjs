@@ -1,5 +1,5 @@
 /**
- * La única forma en que este repositorio llama a ESummary (diseño 33-, §4 b). Hermano de `esearch.mjs`
+ * La única forma en que este repositorio llama a ESummary. Hermano de `esearch.mjs`
  * y `efetch.mjs`: lo que aquí no se mide, el recibo no lo puede declarar.
  *
  * Una petición por llamada: `db=pubmed`, `retmode=json`, `version=2.0` y la lista exacta en `id`, por
@@ -9,7 +9,7 @@
  * entregada, no el código que la construye.
  *
  * La lectura acotada es la de `efetch.mjs`, copiada a propósito: cada servicio vive en su módulo y un
- * cambio en uno no mueve la huella del otro (diseño 33-, §4 b: «no toca nada de lo existente»).
+ * cambio en uno no mueve la huella del otro (el cribado no toca nada de lo existente).
  */
 
 export const ESUMMARY_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi';
