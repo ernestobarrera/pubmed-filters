@@ -5,7 +5,8 @@
     "risk_under_1_10": "A composition that contract 1.10.0 PERMITTED through an ambiguity, without prescribing it: AND with a scope that is \"part of the question\" (A), or a precision-first pass relied on without running the coverage reaction 1.10 already required for reports and decisions (B). It measures the risk the ambiguity left open, not what every 1.10-conformant agent would do.",
     "conformant_1_10": "A composition a careful reader of 1.10.0 would make: the ambiguity read in the favourable direction (A), or the coverage check run and its on_failed applied by falling back to the sensitive version (B). For D, J and P it is simply what 1.10 routed to.",
     "contract_1_11": "Contract 1.11.0: catalog with roles, facet roles, scope_roles (population_defining vs applicability), catalog_check, coverage_check.unit and adaptation.if_pearls_lost.",
-    "forbidden_1_11": "A composition that 1.11 explicitly forbids, run to show the loss the rule prevents."
+    "forbidden_1_11": "A composition that 1.11 explicitly forbids, run to show the loss the rule prevents.",
+    "forbidden_1_14_1": "A composition that 1.14.1 explicitly forbids (evidence_landscape_policy.condition_guideline_pass: a guideline lane restricted to the intervention), run to show the loss the rule prevents."
   },
   "unnecessary_activation": "A pass in the claim unit that ANDs a population_setting or editorial filter for a facet whose expected role is not core.",
   "topics": {
@@ -14,7 +15,9 @@
     "bzra_older": "(Benzodiazepines[mh] OR benzodiazepin*[tiab] OR \"Hypnotics and Sedatives\"[mh] OR hypnotic*[tiab] OR \"z-drug*\"[tiab] OR zolpidem[tiab] OR zopiclone[tiab] OR \"benzodiazepine receptor agonist*\"[tiab]) AND (aged[mh] OR older[tiab] OR elderly[tiab] OR geriatric*[tiab])",
     "fq_aortic": "(fluoroquinolones[mh] OR fluoroquinolone*[tiab] OR quinolone*[tiab] OR ciprofloxacin[tiab] OR levofloxacin[tiab] OR moxifloxacin[tiab]) AND (aortic aneurysm[mh] OR aortic dissection[mh] OR \"aortic aneurysm*\"[tiab] OR \"aortic dissection*\"[tiab] OR \"aortic disease*\"[tiab])",
     "sglt2_hf": "(sodium-glucose transporter 2 inhibitors[mh] OR SGLT2*[tiab] OR \"SGLT-2\"[tiab] OR empagliflozin[tiab] OR dapagliflozin[tiab] OR sotagliflozin[tiab]) AND (heart failure[mh] OR \"heart failure\"[tiab])",
-    "child_obesity_prevalence": "(obesity[mh] OR \"pediatric obesity\"[mh] OR overweight[mh] OR obes*[tiab] OR overweight[tiab] OR \"excess weight\"[tiab]) AND (child[mh] OR child*[tiab] OR schoolchild*[tiab] OR pediatric[tiab] OR paediatric[tiab]) AND (prevalence[mh] OR prevalence[tiab] OR \"cross-sectional studies\"[mh] OR survey*[tiab])"
+    "child_obesity_prevalence": "(obesity[mh] OR \"pediatric obesity\"[mh] OR overweight[mh] OR obes*[tiab] OR overweight[tiab] OR \"excess weight\"[tiab]) AND (child[mh] OR child*[tiab] OR schoolchild*[tiab] OR pediatric[tiab] OR paediatric[tiab]) AND (prevalence[mh] OR prevalence[tiab] OR \"cross-sectional studies\"[mh] OR survey*[tiab])",
+    "lbp_muscle_relaxants": "(\"Low Back Pain\"[Mesh] OR \"acute low back pain\"[tiab] OR \"nonspecific low back pain\"[tiab] OR lumbago[tiab]) AND (\"Muscle Relaxants, Central\"[Mesh] OR \"muscle relaxant*\"[tiab] OR \"skeletal muscle relaxant*\"[tiab] OR cyclobenzaprine[tiab] OR methocarbamol[tiab] OR tizanidine[tiab] OR baclofen[tiab] OR diazepam[tiab])",
+    "lbp_acute": "(\"Low Back Pain\"[Mesh] OR \"low back pain\"[tiab] OR lumbago[tiab]) AND (acute[tiab])"
   },
   "concept_vocabulary": {
     "deprescribing": "(deprescri*[tiab] OR discontinu*[tiab] OR taper*[tiab] OR withdraw*[tiab] OR cessation[tiab] OR Deprescriptions[mh])"
@@ -440,6 +443,73 @@
             "purpose": "population-defining geography treated as a mere lane (core left unrestricted)",
             "topic": "child_obesity_prevalence",
             "and": [],
+            "unit": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "L",
+      "question": "¿Son útiles los relajantes musculares en la lumbalgia aguda mecánica?",
+      "tests": "What each order hides by age, and the guideline lane at the level of the condition (1.14.1: reading_and_drilldown.order_hides_by_age, evidence_landscape_policy.condition_guideline_pass). Unlike the other cases the reference is recent: two records of September 2026 that an audited answer missed although both were retrievable. Its contract_1_11 guideline pass applies condition_guideline_pass, which 1.11 did not state.",
+      "facets": [
+        {
+          "facet": "acute low back pain",
+          "expected_role": "core"
+        },
+        {
+          "facet": "muscle relaxants",
+          "expected_role": "core"
+        },
+        {
+          "facet": "synthesis and guideline lanes (routing.treatment.parallel_background)",
+          "expected_role": "lane",
+          "filters": [
+            "filters/methodology/metaanalysis.txt",
+            "filters/methodology/gpc.txt"
+          ]
+        }
+      ],
+      "reference": {
+        "source_pmid": null,
+        "doi": null,
+        "kind": "audit_omissions",
+        "complete": false,
+        "note": "Audit of 2026-10-26 of an answer produced under the project instructions 26- (r2). 42799684: Skelly et al. 2026, the systematic review behind the guideline, inside the synthesis pass. 42687437: the multidisciplinary guideline of September 2026, which recommends muscle relaxants without naming them in its title or abstract, so it is outside the core by construction (checked by UID). Both abstracts read with pubmed_fetch_exact on 2026-10-26. Topic lbp_muscle_relaxants is the audited core byte for byte (SHA-256 95730b6f...); lbp_acute is the guideline pass of the reproduction. Not a list of everything the answer should have used.",
+        "pmids": [
+          "42799684",
+          "42687437"
+        ]
+      },
+      "strategies": {
+        "contract_1_11": [
+          {
+            "id": "synthesis",
+            "purpose": "syntheses on the treatment (routing.treatment.parallel_background)",
+            "topic": "lbp_muscle_relaxants",
+            "and": [
+              "filters/methodology/metaanalysis.txt"
+            ],
+            "unit": true
+          },
+          {
+            "id": "guidelines",
+            "purpose": "guidelines at the level of the condition, without the intervention (condition_guideline_pass)",
+            "topic": "lbp_acute",
+            "and": [
+              "filters/methodology/gpc.txt"
+            ],
+            "unit": true
+          }
+        ],
+        "forbidden_1_14_1": [
+          {
+            "id": "guidelines_with_intervention",
+            "purpose": "guideline lane restricted to the intervention, which 1.14.1 forbids",
+            "topic": "lbp_muscle_relaxants",
+            "and": [
+              "filters/methodology/gpc.txt"
+            ],
             "unit": true
           }
         ]

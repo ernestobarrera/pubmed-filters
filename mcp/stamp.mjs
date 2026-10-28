@@ -22,7 +22,7 @@ import { buildFilterBundle } from '../scripts/filter-source.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const DEPLOYED_CODE = ['mcp/worker.mjs', 'mcp/protocol.mjs', 'scripts/exact-core.mjs',
   'scripts/parse-filter.mjs', 'scripts/esearch.mjs', 'scripts/fetch-core.mjs', 'scripts/efetch.mjs',
-  'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs'];
+  'scripts/xml-lite.mjs', 'scripts/abstract-canonical.mjs', 'scripts/summary-core.mjs', 'scripts/esummary.mjs'];
 
 /** Exige un destino explícito; nunca deja que Wrangler use una sesión OAuth de respaldo. */
 export function deploymentEnvironmentError(env = process.env) {

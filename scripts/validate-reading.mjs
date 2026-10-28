@@ -2,6 +2,7 @@
 /**
  * Pruebas de la lectura con recibo (`pubmed_fetch_exact`) y del comprobador de dossier
  * (`scripts/dossier-check.mjs`): las de §5 de la especificación 29-, con la adenda de Codex del 24/10.
+ * Desde la 1.15.0, también las del cribado por PMID (`pubmed_summary_exact`): S1-S13.
  *
  * Uso:  node scripts/validate-reading.mjs        Sale 0 si todo pasa.
  *
@@ -23,9 +24,11 @@ import { fileURLToPath } from 'node:url';
 import { sha256 } from './exact-core.mjs';
 import { parseXml, XmlError } from './xml-lite.mjs';
 import { EFETCH_URL } from './efetch.mjs';
+import { ESUMMARY_URL } from './esummary.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
 import { runFetch, fetchRequestError, sha256Bytes, MAX_STRUCTURED_BYTES, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
 import { checkDossier, extractCandidates } from './dossier-check.mjs';
+import { runSummary, summaryRequestError, parseJsonStrict, JsonStrictError, SUMMARY_RECEIPT_TYPE } from './summary-core.mjs';
 import { createMcpHandler } from '../mcp/protocol.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -311,6 +314,260 @@ check('F12', Object.values(r8).every((r) => bytesOf(r) < 4000)
   `diagnósticos acotados: nombre, entidad, <ERROR> y marcado de 30.000 caracteres dan recibos estructurados de ${
     Object.values(r8).map(bytesOf).join(', ')} bytes`);
 
+// --- S. Cribado por PMID con recibo (pubmed_summary_exact, 1.15.0) ---------------------------------
+// Respuestas con la forma medida en NCBI el 26/10 (JSON de ESummary): cabecera, `result.uids` y una entrada
+// por PMID; un PMID sin resumen lleva solo `uid` y `error`; los errores globales van en `error` o en
+// `esummaryresult`. Los resúmenes son SINTÉTICOS.
+
+const SCTX = { plan_ref: 'plan-1/r1', screen_id: 's1' };
+const docsum = (pmid, { title = `Synthetic title ${pmid}.`, pubdate = '2020 Jan 5', source = 'Synth J', doctype = 'citation',
+  pubtype = ['Journal Article'], attributes = ['Has Abstract'], doi = `10.5555/synthetic.${pmid}`, booktitle = '' } = {}) => ({
+  uid: pmid, pubdate, epubdate: '', source, authors: [{ name: 'Author A', authtype: 'Author', clusterid: '' }], title,
+  sorttitle: String(title).toLowerCase(), pubtype,
+  articleids: [{ idtype: 'pubmed', idtypen: 1, value: pmid }, ...(doi ? [{ idtype: 'doi', idtypen: 3, value: doi }] : [])],
+  attributes, fulljournalname: 'Synthetic Journal', doctype, booktitle,
+});
+const sumBody = (entries, { uids } = {}) => JSON.stringify({ header: { type: 'esummary', version: '0.3' },
+  result: { uids: uids ?? Object.keys(entries), ...entries } });
+const sumById = (make) => ncbi((ids) => sumBody(Object.fromEntries(ids.map((p) => [p, make(p)])), { uids: ids }));
+const crudo = (text) => ncbi(() => text);
+const marca = (p) => ({ uid: p, error: 'cannot get document summary' });
+const summaryWith = (pmids, fetcher, extra = {}) => runSummary(pmids, SCTX, { fetcher, ...extra });
+const cincuenta = Array.from({ length: 50 }, (_, i) => String(1000 + i));
+const fallidoEntero = (r, code) => r.failure?.code === code && r.status.delivery === 'failed' && r.status.record_identity === 'failed'
+  && r.results.length === r.request.pmids.length && r.results.every((x) => x.record_status === 'error' && x.reason === code);
+
+// S1 (clases 1 y 7). La entrada se rechaza antes de NCBI, con un control positivo en cada borde.
+sent.length = 0;
+const s1Malos = [[[], SCTX], [[...cincuenta, '2000'], SCTX], [['1', '1'], SCTX], [[1], SCTX], [['01'], SCTX], [null, SCTX], [['1'], undefined],
+  [['1'], { plan_ref: 'p', read_id: 'l1' }], [['1'], { ...SCTX, extra: 'x' }], [['1'], { ...SCTX, screen_id: 'x'.repeat(41) }], [['1'], { ...SCTX, plan_ref: ' ' }]];
+const s1Lanzan = [];
+for (const [pm, c] of s1Malos) {
+  try { await runSummary(pm, c, { fetcher: ncbi('{}') }); s1Lanzan.push(false); } catch { s1Lanzan.push(true); }
+}
+check('S1', s1Malos.every(([pm, c]) => summaryRequestError(pm, c) !== null) && s1Lanzan.every(Boolean) && sent.length === 0
+  && summaryRequestError(cincuenta, SCTX) === null && summaryRequestError(['123456789'], SCTX) === null
+  && summaryRequestError(['1'], { ...SCTX, screen_id: 'x'.repeat(40) }) === null,
+  `entrada: ${s1Malos.length} formas inválidas (vacía, 51, repetidos, número, cero a la izquierda, null, sin contexto, read_id en vez de screen_id,`
+  + ' claves ajenas, screen_id de 41, plan_ref en blanco) rechazadas sin llamar a NCBI; 50 PMID, uno de 9 cifras y screen_id de 40 pasan');
+
+// S2. La petición ENTREGADA: POST a ESummary, lista exacta en el cuerpo; la clave va a NCBI y nunca al recibo.
+sent.length = 0;
+const s2 = await summaryWith(cincuenta, sumById((pm) => docsum(pm)), { apiKey: 'CLAVE-SECRETA', email: 'contacto@ejemplo.invalid' });
+const s2Body = new URLSearchParams(sent[0]?.body ?? '');
+check('S2', sent.length === 1 && sent[0].method === 'POST' && sent[0].url === ESUMMARY_URL && !new URL(sent[0].url).search
+  && s2Body.get('db') === 'pubmed' && s2Body.get('retmode') === 'json' && s2Body.get('version') === '2.0' && s2Body.get('id') === cincuenta.join(',')
+  && s2Body.get('api_key') === 'CLAVE-SECRETA' && s2.request.api_key_used === true && s2.request.email_used === true
+  && !JSON.stringify(s2).includes('CLAVE-SECRETA') && !JSON.stringify(s2).includes('contacto@ejemplo')
+  && s2.status.delivery === 'complete' && s2.results.length === 50,
+  'una petición POST a ESummary con db, retmode, versión y los 50 PMID en el cuerpo, en su orden; la clave y el contacto viajan a NCBI y nunca al recibo');
+
+// S3 (clases 2 y 5). Cada resumen se atribuye por su clave y su uid, recalculados del JSON crudo, nunca por posición.
+const s3 = {
+  orden: await summaryWith(['30', '10', '20'], crudo(sumBody({ 10: docsum('10'), 20: docsum('20'), 30: docsum('30') }, { uids: ['20', '30', '10'] }))),
+  cambiado: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10'), 20: { ...docsum('20'), uid: '10' } }))),
+  raro: await summaryWith(['10'], crudo(sumBody({ 10: { ...docsum('10'), uid: 10 } }))),
+};
+check('S3', s3.orden.results.map((r) => r.requested_pmid).join() === '30,10,20' && s3.orden.status.delivery === 'complete'
+  && s3.orden.results.every((r) => r.returned_pmid === r.requested_pmid && r.title === `Synthetic title ${r.requested_pmid}.`)
+  && resultOf(s3.cambiado, '10')?.record_status === 'found' && resultOf(s3.cambiado, '20')?.reason === 'pmid_mismatch'
+  && resultOf(s3.cambiado, '20')?.returned_pmid === '10' && s3.cambiado.status.delivery === 'partial'
+  && resultOf(s3.raro, '10')?.reason === 'pmid_mismatch' && resultOf(s3.raro, '10')?.returned_pmid === null,
+  'atribución por clave y uid, en el orden pedido aunque NCBI responda en otro; un uid que no es el de su clave es error, con el PMID devuelto solo si lo es');
+
+// S4 (clases 3 y 6). Solo la marca exacta de NCBI es not_found; lo que NCBI calla no es un cero; un error
+// global invalida la respuesta entera ANTES de atribuir nada, aunque traiga registros válidos.
+const s4 = {
+  ausente: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10'), 20: marca('20') }))),
+  soloAusente: await summaryWith(['20'], crudo(sumBody({ 20: marca('20') }))),
+  otraMarca: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10'), 20: { uid: '20', error: 'temporarily unavailable' } }))),
+  marcaConMas: await summaryWith(['20'], crudo(sumBody({ 20: { ...marca('20'), title: 'x' } }))),
+  callado: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10') }))),
+  global: await summaryWith(['10', '20'], crudo(JSON.stringify({ header: { type: 'esummary', version: '0.3' },
+    error: 'Invalid uid 20 at position= 1 api_key=CLAVE-SECRETA', result: { uids: ['10'], 10: docsum('10') } })), { apiKey: 'CLAVE-SECRETA' }),
+  esummaryresult: await summaryWith(['10'], crudo(JSON.stringify({ header: { type: 'esummary', version: '0.3' }, esummaryresult: ['Invalid db name specified: pubmd'] }))),
+  enResult: await summaryWith(['10'], crudo(JSON.stringify({ header: { type: 'esummary', version: '0.3' }, result: { uids: ['10'], 10: docsum('10'), error: 'x' } }))),
+};
+check('S4', resultOf(s4.ausente, '20')?.record_status === 'not_found' && s4.ausente.status.delivery === 'complete' && /pídelos solos/.test(s4.ausente.problems.join())
+  && resultOf(s4.soloAusente, '20')?.record_status === 'not_found' && s4.soloAusente.problems.length === 0
+  && resultOf(s4.otraMarca, '20')?.reason === 'ncbi_record_error' && /temporarily unavailable/.test(resultOf(s4.otraMarca, '20')?.detail)
+  && resultOf(s4.marcaConMas, '20')?.reason === 'ncbi_record_error'
+  && resultOf(s4.callado, '20')?.reason === 'absent_from_response' && s4.callado.status.delivery === 'partial'
+  && fallidoEntero(s4.global, 'ncbi_error') && !JSON.stringify(s4.global).includes('CLAVE-SECRETA')
+  && fallidoEntero(s4.esummaryresult, 'ncbi_error') && fallidoEntero(s4.enResult, 'ncbi_error'),
+  'solo la marca exacta es not_found (con varios PMID, «pídelos solos»); otra marca es error; lo que NCBI calla es absent_from_response;'
+  + ' un error global, en la raíz o dentro de result, invalida la respuesta entera antes de atribuir y sin la clave');
+
+// S5 (clases 4 y 5). La identidad de la respuesta entera: si una parte no cuadra, no se certifica ninguna.
+const CAB = '{"header":{"type":"esummary","version":"0.3"},"result":';
+const s5 = {
+  uidRepetido: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10'), 20: docsum('20') }, { uids: ['10', '20', '10'] }))),
+  noPedido: await summaryWith(['10'], crudo(sumBody({ 10: docsum('10'), 99: docsum('99') }))),
+  huerfana: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10'), 20: docsum('20') }, { uids: ['10'] }))),
+  sinEntrada: await summaryWith(['10', '20'], crudo(sumBody({ 10: docsum('10') }, { uids: ['10', '20'] }))),
+  uidsRaros: await summaryWith(['10'], crudo(sumBody({ 10: docsum('10') }, { uids: [10] }))),
+  claveRepetida: await summaryWith(['10', '20'], crudo(`${CAB}{"uids":["10","20"],"10":${JSON.stringify(marca('10'))},`
+    + `"20":${JSON.stringify(docsum('20'))},"10":${JSON.stringify(docsum('10'))}}}`)),
+  control: await summaryWith(['10', '20'], crudo(`${CAB}{"uids":["10","20"],"20":${JSON.stringify(docsum('20'))},"10":${JSON.stringify(docsum('10'))}}}`)),
+};
+check('S5', ['uidRepetido', 'noPedido', 'huerfana', 'sinEntrada', 'uidsRaros'].every((k) => fallidoEntero(s5[k], 'identity_uncertain'))
+  && fallidoEntero(s5.claveRepetida, 'invalid_json') && /clave repetida/.test(s5.claveRepetida.failure.message)
+  && s5.control.status.delivery === 'complete' && s5.control.results.every((r) => r.record_status === 'found'),
+  'uid repetido, registro no pedido, entrada sin uid, uid sin entrada o uids mal formados: falla la respuesta entera;'
+  + ' una clave repetida en el JSON crudo (que JSON.parse resolvería en silencio con la última) también; el mismo cuerpo sin repetir, complete');
+
+// S6 (clases 1 y 7). La forma, antes de leer ningún campo, y salidas acotadas también en los fallos.
+const sinCampo = (k) => (o) => { const c = { ...o }; delete c[k]; return c; };
+const s6 = {
+  noJson: await summaryWith(['10'], crudo('<html>Service unavailable</html>')),
+  noUtf8: await summaryWith(['10'], ncbi(new Uint8Array([0x7b, 0xff, 0x7d]))),
+  lista: await summaryWith(['10'], crudo('[]')),
+  otraCabecera: await summaryWith(['10'], crudo(JSON.stringify({ header: { type: 'efetch' }, result: { uids: ['10'], 10: docsum('10') } }))),
+  claveDeMas: await summaryWith(['10'], crudo(JSON.stringify({ header: { type: 'esummary' }, warning: 'x', result: { uids: ['10'], 10: docsum('10') } }))),
+  tituloNumero: await summaryWith(['10', '20'], crudo(sumBody({ 10: { ...docsum('10'), title: 42 }, 20: docsum('20') }))),
+  sinTipos: await summaryWith(['10'], crudo(sumBody({ 10: sinCampo('pubtype')(docsum('10')) }))),
+  idsRaros: await summaryWith(['10'], crudo(sumBody({ 10: { ...docsum('10'), articleids: [{ idtype: 'doi', value: 7 }] } }))),
+  libroRaro: await summaryWith(['10'], crudo(sumBody({ 10: { ...docsum('10'), booktitle: null } }))),
+  entradaNoObjeto: await summaryWith(['10'], crudo(sumBody({ 10: 'x' }))),
+  enorme: await summaryWith(['10'], crudo(`{"${'k'.repeat(30000)}":1}`)),
+  sinLibro: await summaryWith(['10'], crudo(sumBody({ 10: sinCampo('booktitle')(docsum('10')) }))),
+};
+check('S6', fallidoEntero(s6.noJson, 'invalid_json') && fallidoEntero(s6.noUtf8, 'invalid_encoding') && fallidoEntero(s6.lista, 'unexpected_shape')
+  && fallidoEntero(s6.otraCabecera, 'unexpected_shape') && fallidoEntero(s6.claveDeMas, 'unexpected_shape') && fallidoEntero(s6.enorme, 'unexpected_shape')
+  && resultOf(s6.tituloNumero, '10')?.reason === 'unsupported_record' && /title/.test(resultOf(s6.tituloNumero, '10')?.detail)
+  && resultOf(s6.tituloNumero, '20')?.record_status === 'found'
+  && ['sinTipos', 'idsRaros', 'libroRaro', 'entradaNoObjeto'].every((k) => resultOf(s6[k], '10')?.reason === 'unsupported_record')
+  && resultOf(s6.sinLibro, '10')?.record_status === 'found' && Object.values(s6).every((r) => bytesOf(r) < 4000),
+  `forma: JSON ilegible, no UTF-8, otra raíz, otra cabecera, una clave de más o una clave de 30.000 caracteres fallan enteros; un campo ausente o con otra forma es`
+  + ` unsupported_record solo en su PMID; sin booktitle, found; recibos de ${Math.min(...Object.values(s6).map(bytesOf))}-${Math.max(...Object.values(s6).map(bytesOf))} B`);
+
+// S7 (clases 7 y 8). Presupuesto: un título nunca se corta; lo que no cabe queda pendiente, en el orden
+// pedido; lo que no cabe ni solo es record_too_large. Control del borde: el primer pendiente no cabía.
+const titulo = (pm, n) => `${pm} `.padEnd(n, 't');
+const s7 = {
+  medianos: await summaryWith(cincuenta, sumById((pm) => docsum(pm, { title: titulo(pm, 110) }))),
+  largos: await summaryWith(cincuenta, sumById((pm) => docsum(pm, { title: titulo(pm, 1024) }))),
+  enorme: await summaryWith(['10', '20'], sumById((pm) => docsum(pm, { title: titulo(pm, pm === '10' ? 30000 : 100) }))),
+};
+const primerPendiente = s7.largos.pending_pmids[0]?.pmid;
+let noCabia = false;
+if (primerPendiente) {
+  const solo = await summaryWith([primerPendiente], sumById((pm) => docsum(pm, { title: titulo(pm, 1024) })));
+  const movido = structuredClone(s7.largos);
+  movido.pending_pmids = movido.pending_pmids.slice(1);
+  movido.results.push(solo.results[0]);
+  noCabia = bytesOf(movido) > MAX_STRUCTURED_BYTES;
+}
+const pendientes7 = new Set(s7.largos.pending_pmids.map((x) => x.pmid));
+check('S7', s7.medianos.status.delivery === 'complete' && s7.medianos.results.length === 50 && bytesOf(s7.medianos) <= MAX_STRUCTURED_BYTES
+  && bytesOf(s7.largos) <= MAX_STRUCTURED_BYTES && s7.largos.status.delivery === 'partial' && pendientes7.size > 0 && noCabia
+  && s7.largos.results.length + pendientes7.size === 50 && s7.largos.pending_pmids.every((x) => x.reason === 'response_size_limit')
+  && s7.largos.results.every((r) => r.title === titulo(r.requested_pmid, 1024))
+  && s7.largos.results.map((r) => r.requested_pmid).join() === cincuenta.filter((pm) => !pendientes7.has(pm)).join()
+  && resultOf(s7.enorme, '10')?.reason === 'record_too_large' && resultOf(s7.enorme, '10')?.record_bytes > MAX_STRUCTURED_BYTES
+  && resultOf(s7.enorme, '20')?.record_status === 'found' && bytesOf(s7.enorme) <= MAX_STRUCTURED_BYTES,
+  `presupuesto: 50 títulos de 110 caracteres caben (${bytesOf(s7.medianos)} B); con títulos de 1 KB entran ${s7.largos.results.length} enteros y`
+  + ` ${pendientes7.size} quedan pendientes, y el primero de ellos no cabía; uno de 30 KB es record_too_large`);
+
+// S8. Transporte: un fallo antes del cuerpo completo nunca es un resumen ni una ausencia.
+const cuerpo8 = sumBody({ 10: docsum('10') });
+const s8 = {
+  http429: await summaryWith(['10'], ncbi('', 429)),
+  grande: await summaryWith(['10'], crudo(cuerpo8), { maxJsonBytes: 100 }),
+  corte: await summaryWith(['10'], ncbi(() => flujo([cuerpo8.slice(0, 50)], { failAfter: true }))),
+  tiempo: await summaryWith(['10'], ncbi(() => flujo([cuerpo8.slice(0, 50)], { hang: true })), { timeoutMs: 80 }),
+  ok: await summaryWith(['10'], crudo(cuerpo8)),
+};
+check('S8', fallidoEntero(s8.http429, 'http_status') && s8.http429.transport.http_status === 429
+  && fallidoEntero(s8.grande, 'response_too_large') && s8.grande.transport.bytes_received > 100
+  && fallidoEntero(s8.corte, 'network') && fallidoEntero(s8.tiempo, 'timeout')
+  && [s8.http429, s8.grande, s8.corte, s8.tiempo].every((r) => r.transport.raw_response_sha256 === null)
+  && s8.ok.status.delivery === 'complete' && s8.ok.transport.raw_response_sha256 === await sha256Bytes(enc(cuerpo8))
+  && s8.ok.transport.bytes_received === enc(cuerpo8).length,
+  'HTTP 429, cuerpo mayor que el límite, corte a mitad y tiempo agotado: fallos declarados por PMID y sin huella; la huella es la del cuerpo recibido');
+
+// S9. El recibo: tipo, versión, qué cuenta y los campos derivados, sin abstract.
+const RUN9 = { contract_version: '1.15.0', repository_commit: 'abc' };
+const s9 = await summaryWith(['10', '20', '30', '40'], crudo(sumBody({
+  10: docsum('10', { pubdate: '2003 Jul-Aug', attributes: [], doi: null }),
+  20: docsum('20', { pubdate: '2019-2020' }),
+  30: docsum('30', { title: '', booktitle: 'Synthetic Book', doctype: 'book', source: '', pubdate: '1993' }),
+  40: { ...docsum('40'), articleids: [{ idtype: 'doi', value: '10.1/a' }, { idtype: 'doi', value: '10.1/a' }, { idtype: 'pmc', value: 'PMC1' }] },
+})), { run: RUN9 });
+check('S9', JSON.stringify(s9.run) === JSON.stringify(RUN9) && s9.receipt_type === SUMMARY_RECEIPT_TYPE && s9.receipt_version === '1'
+  && s9.counts_as === 'titles_screened' && s9.request.context.screen_id === 's1' && s9.request.context_sha256 === await sha256(JSON.stringify(SCTX))
+  && s9.limits.max_pmids === 50 && s9.limits.structured_content_max_bytes === MAX_STRUCTURED_BYTES
+  && resultOf(s9, '10')?.year === 2003 && resultOf(s9, '10')?.has_abstract === false && resultOf(s9, '10')?.dois.length === 0
+  && resultOf(s9, '20')?.year === null && resultOf(s9, '20')?.pubdate === '2019-2020'
+  && resultOf(s9, '30')?.title === null && resultOf(s9, '30')?.book_title === 'Synthetic Book' && resultOf(s9, '30')?.journal === null
+  && resultOf(s9, '30')?.record_type === 'book' && resultOf(s9, '40')?.dois.join() === '10.1/a' && resultOf(s9, '40')?.has_abstract === true
+  && s9.results.every((r) => !Object.keys(r).some((k) => /abstract_canonical|abstract_sha256|^abstract$/.test(k))),
+  'recibo pubmed_summary_exact/1 con counts_as titles_screened; año solo si pubdate trae uno; el título de un libro va aparte; DOI sin repetir; nunca el abstract');
+
+// S10 (clase 7). El analizador JSON estricto: acepta lo que JSON.parse acepta y rechaza claves repetidas y anidamiento sin tope.
+const s10Validos = ['{}', '[]', '0', '-0.5e-3', '"a\\u00e9\\n"', '{"a":[1,{"b":null}],"c":true,"d":false}', ' \n{ "x" : "y" } \t'];
+const s10Invalidos = ['{"a":1,"a":2}', '[1,]', '{"a":1}x', '"a\u0001"', '"\\x"', '01', '{a:1}', "{'a':1}", '[', '', 'NaN', '"\\u12"', '"abc'];
+const lanzaEstricto = (t, depth) => { try { parseJsonStrict(t, depth); return false; } catch (e) { return e instanceof JsonStrictError; } };
+const proto = parseJsonStrict('{"__proto__":{"x":1}}');
+const anidado = (n) => '['.repeat(n) + ']'.repeat(n);
+check('S10', s10Validos.every((t) => JSON.stringify(parseJsonStrict(t)) === JSON.stringify(JSON.parse(t)))
+  && s10Invalidos.every((t) => lanzaEstricto(t)) && Object.getPrototypeOf(proto) === Object.prototype && JSON.stringify(proto) === '{"__proto__":{"x":1}}'
+  && !lanzaEstricto(anidado(3), 3) && lanzaEstricto(anidado(4), 3) && lanzaEstricto(anidado(100000)),
+  `JSON estricto: ${s10Validos.length} válidos como JSON.parse, ${s10Invalidos.length} inválidos rechazados (clave repetida incluida), __proto__ es una clave, y el anidamiento tiene tope sin desbordar la pila`);
+
+// S12. La clave y el contacto no salen en NINGÚN diagnóstico que
+// venga de la respuesta, tampoco en el de un registro, y se ocultan antes de recortar: un recorte no
+// puede dejar medio secreto a la vista. Por el MCP, en structuredContent y en su copia de texto.
+// Credenciales ficticias.
+const CLAVE12 = 'SYNTHKEY0123456789abcdef0123456789ab';
+const CONTACTO12 = 'synthetic-contact@example.invalid';
+const servidor12 = (cuerpo) => createMcpHandler({ fetcher: crudo(cuerpo), apiKey: CLAVE12, email: CONTACTO12, run: { contract_version: 'x' } });
+const cribar12 = async (cuerpo, pmids) => (await servidor12(cuerpo)({ jsonrpc: '2.0', id: 1, method: 'tools/call',
+  params: { name: 'pubmed_summary_exact', arguments: { pmids, context: SCTX } } })).result;
+const s12 = {
+  registro: await cribar12(sumBody({ 10: { uid: '10', error: `temporary failure api_key=${CLAVE12} email=${CONTACTO12}` }, 20: docsum('20') }), ['10', '20']),
+  uid: await cribar12(sumBody({ 10: { ...docsum('10'), uid: CLAVE12 } }), ['10']),
+  globalEnElBorde: await cribar12(JSON.stringify({ header: { type: 'esummary' }, error: `${'x'.repeat(190)}${CLAVE12}` }), ['10']),
+  ajeno: await cribar12(sumBody({ 10: docsum('10'), [CLAVE12]: docsum(CLAVE12) }), ['10']),
+  claveRepetida: await cribar12(`${CAB}{"uids":["10"],"10":${JSON.stringify(docsum('10'))},"${CLAVE12}":1,"${CLAVE12}":2}}`, ['10']),
+  cabecera: await cribar12(JSON.stringify({ header: { type: CONTACTO12 }, result: { uids: ['10'], 10: docsum('10') } }), ['10']),
+  // Uid sin entrada con la credencial justo sobre el límite del mensaje.
+  sinEntradaClave: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CLAVE12}`] } }), ['10']),
+  sinEntradaContacto: await cribar12(JSON.stringify({ header: { type: 'esummary' }, result: { uids: ['10', `${'x'.repeat(160)}${CONTACTO12}`] } }), ['10']),
+};
+const fuga12 = (r) => [JSON.stringify(r.structuredContent), r.content[0].text]
+  .some((t) => t.includes(CLAVE12.slice(0, 8)) || t.includes(CONTACTO12.slice(0, 12)));
+check('S12', Object.values(s12).every((r) => !fuga12(r))
+  && resultOf(s12.registro.structuredContent, '10')?.reason === 'ncbi_record_error'
+  && /temporary failure api_key=\[oculto\]/.test(resultOf(s12.registro.structuredContent, '10')?.detail ?? '')
+  && resultOf(s12.registro.structuredContent, '20')?.record_status === 'found'
+  && resultOf(s12.uid.structuredContent, '10')?.reason === 'pmid_mismatch'
+  && s12.globalEnElBorde.structuredContent.failure?.code === 'ncbi_error' && s12.ajeno.structuredContent.failure?.code === 'identity_uncertain'
+  && s12.claveRepetida.structuredContent.failure?.code === 'invalid_json' && s12.cabecera.structuredContent.failure?.code === 'unexpected_shape'
+  && [s12.sinEntradaClave, s12.sinEntradaContacto].every((r) => r.structuredContent.failure?.code === 'identity_uncertain'
+    && /uid sin entrada: 10, x{20}…/.test(r.structuredContent.failure.message) && !r.structuredContent.failure.message.includes('x'.repeat(21))),
+  'la clave y el contacto se ocultan en el error de un registro, en un uid, en un error global cortado justo en el secreto, en un uid ajeno,'
+  + ' en una clave repetida, en la cabecera y en un uid sin entrada que lleva la clave o el contacto al borde del mensaje (acotado a 20);'
+  + ' el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
+
+// S13. Clave y uid de acuerdo, pero articleids nombra otro PMID: la
+// respuesta deja de certificar a quién pertenece cada resumen. Sin articleids de tipo pubmed no se exige.
+const conPubmed = (pm, ...ids) => ({ ...docsum(pm), articleids: [...ids.map((v) => ({ idtype: 'pubmed', idtypen: 1, value: v })),
+  { idtype: 'doi', idtypen: 3, value: `10.5555/synthetic.${pm}` }] });
+const s13 = {
+  ajeno: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10', '20') }))),
+  colision: await summaryWith(['10', '20'], crudo(sumBody({ 10: conPubmed('10', '20'), 20: docsum('20') }))),
+  doble: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10', '10', '20') }))),
+  sinPubmed: await summaryWith(['10'], crudo(sumBody({ 10: conPubmed('10') }))),
+  propio: await summaryWith(['10'], crudo(sumBody({ 10: { ...conPubmed('10', '10'), articleids: [...conPubmed('10', '10').articleids, { idtype: 'pmc', value: 'PMC1' }] } }))),
+  libro: await summaryWith(['30'], crudo(sumBody({ 30: { ...docsum('30', { title: '', booktitle: 'Synthetic Book', doctype: 'book', source: '', doi: null }),
+    articleids: [{ idtype: 'bookaccession', idtypen: 4, value: 'NBK1' }, { idtype: 'pubmed', idtypen: 1, value: '30' }] } }))),
+};
+check('S13', ['ajeno', 'colision', 'doble'].every((k) => fallidoEntero(s13[k], 'identity_uncertain') && /articleids/.test(s13[k].failure.message))
+  && ['sinPubmed', 'propio', 'libro'].every((k) => s13[k].status.record_identity === 'verified' && s13[k].status.delivery === 'complete'
+    && s13[k].results[0]?.record_status === 'found'),
+  'un articleids pubmed que contradice clave y uid tumba la respuesta entera, solo o en colisión con otro registro; sin pubmed, con el propio y otros tipos, o en un libro, found');
+
 // --- X. dossier-check ---------------------------------------------------------------------------------
 // Una excepción aquí (p. ej. porque una mutación rompió el transporte y un recibo no trae lo esperado) es
 // un fallo declarado: no puede llevarse por delante el informe de las comprobaciones F, que ya corrieron.
@@ -334,7 +591,10 @@ try {
     const ids = new URLSearchParams(init.body.toString()).get('id').split(',');
     return new Response(xmlSet(...ids.filter((p) => records.get(p) !== null).map((p) => records.get(p) ?? article({ pmid: p }))));
   };
-  const fetcher = async (url, init) => (String(url) === EFETCH_URL ? efetchFake(url, init) : esearchFake(url, init));
+  const esummaryFake = (url, init) => new Response(sumBody(Object.fromEntries(new URLSearchParams(init.body.toString()).get('id').split(',')
+    .map((p) => [p, docsum(p)]))));
+  const fetcher = async (url, init) => (String(url) === EFETCH_URL ? efetchFake(url, init)
+    : String(url) === ESUMMARY_URL ? esummaryFake(url, init) : esearchFake(url, init));
   const { buildFilterBundle } = await import('./filter-source.mjs');
   const bundle = await buildFilterBundle(ROOT);
   // Con clave, el espaciado entre llamadas a NCBI es de 110 ms en vez de 350: aquí no se prueba la cuota.
@@ -845,6 +1105,23 @@ try {
   check('X19', rechazo.result.structuredContent.rejected_before_ncbi === true && x19.valido.verdict === 'consistent'
     && x19.sinContrato.verdict === 'inconclusive' && x19.sinContrato.uncertainties.some((u) => u.code === 'unsupported_input'),
     `rechazo previo a NCBI: el del MCP, ${x19.valido.verdict} sin exigir lectura; sin run, intento, hora ni motivo, ${x19.sinContrato.verdict}`);
+
+  // S11. dossier-check no cambia en la 1.15.0: un recibo de cribado dentro de un dossier no se cuenta
+  // como lectura ni como cero. Declarado como lectura o como búsqueda es entrada no reconocida y deja el
+  // dossier inconclusive; declarado como otra ruta se registra como tal. Contarlo aparte es la 1.15.1.
+  const criba = await call('pubmed_summary_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', screen_id: 'c1' } });
+  const s11 = {
+    comoLectura: await control({ extra: [F(criba)] }),
+    comoBusqueda: await control({ extra: [S(criba)] }),
+    comoOtra: await control({ extra: [{ tool: 'other', raw: criba }] }),
+  };
+  const d3 = (r) => JSON.stringify(r.denominators.D3);
+  check('S11', criba.result.structuredContent.status.delivery === 'complete' && ctl.verdict === 'consistent'
+    && ['comoLectura', 'comoBusqueda'].every((k) => s11[k].verdict === 'inconclusive' && s11[k].uncertainties.some((u) => u.code === 'unsupported_input'))
+    && s11.comoOtra.verdict === ctl.verdict && s11.comoOtra.notices.some((n) => /ruta alternativa/.test(n))
+    && Object.values(s11).every((r) => d3(r) === d3(ctl)),
+    `un recibo de cribado en un dossier: como lectura, ${s11.comoLectura.verdict}; como búsqueda, ${s11.comoBusqueda.verdict}; como otra ruta, ${
+      s11.comoOtra.verdict} y anotado; D3 igual que sin él en los tres`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }

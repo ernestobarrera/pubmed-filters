@@ -655,6 +655,46 @@ check('K8', k8Fallos.length === 0,
     ? 'tres recorridos definidos, la muestra ordenada no es el conjunto, seis controles de deriva con su límite, cuatro denominadores y los motivos sin continuación'
     : k8Fallos.join('; ')}`);
 
+// Orden, guías y recencia (1.14.1). Estructurales, como K8: rechazan
+// vacío y relleno, no prueban que una superficie las cumpla.
+const ohba = rd.order_hides_by_age ?? {};
+const cgp = router.evidence_landscape_policy?.condition_guideline_pass ?? {};
+const k9Fallos = [
+  !(sustantivo(ohba.rule) && /default order/.test(ohba.rule ?? '') && /relevance/.test(ohba.rule ?? '')
+    && sustantivo(ohba.when_both_matter) && /both orders/.test(ohba.when_both_matter ?? '') && sustantivo(ohba.measured))
+    && 'order_hides_by_age no dice qué esconde cada orden o cuándo leer las dos cabezas',
+  !(sustantivo(cgp.rule) && /without the intervention/.test(cgp.rule ?? '')
+    && sustantivo(cgp.deferred) && /not run/.test(cgp.deferred ?? ''))
+    && 'condition_guideline_pass no saca la intervención de la pasada de guías o da por hecha una vía aplazada',
+  !(sustantivo(router.saturation_policy?.recency_before_closing)
+    && /order_hides_by_age/.test(router.saturation_policy?.recency_before_closing ?? ''))
+    && 'saturation_policy no comprueba la recencia antes de cerrar',
+  !sustantivo(pag.order_recommendation) && 'la paginación no recomienda el orden para una recuperación de varias páginas',
+].filter(Boolean);
+check('K9', k9Fallos.length === 0,
+  `orden y guías: ${k9Fallos.length === 0
+    ? 'cada orden dice qué esconde, la pasada de guías va sin la intervención, una vía aplazada no cuenta como hecha y la recencia se comprueba antes de cerrar'
+    : k9Fallos.join('; ')}`);
+
+// Cribado por título (1.15.0). Estructural, como K8 y K9: la regla separa cribar (decide qué
+// se lee) de destacar (exige leer), y lo apartado por título se cuenta aparte, como quinto recuento.
+const ts = rd.title_screen ?? {};
+const k10Fallos = [
+  !(sustantivo(ts.rule) && /decides what to read/.test(ts.rule ?? '') && /never turns a record into a finding/.test(ts.rule ?? '')
+    && /title_only_selection_forbidden/.test(ts.rule ?? ''))
+    && 'title_screen no separa cribar para decidir qué leer de convertir un registro en hallazgo',
+  !(sustantivo(ts.counted_apart) && /titles screened/.test(ts.counted_apart ?? '') && /never as read/.test(ts.counted_apart ?? ''))
+    && 'title_screen no cuenta aparte lo apartado por título',
+  !(sustantivo(ts.does_not_certify) && /coverage/.test(ts.does_not_certify ?? '')) && 'title_screen no dice qué no acredita',
+  !(/titles screened/.test(router.provenance?.denominators ?? '') && /title_screen/.test(rd.order_hides_by_age?.cost ?? ''))
+    && 'los denominadores o el coste de cribar no remiten al cribado por título',
+  router.defaults?.reading?.title_only_selection_forbidden !== true && 'defaults.reading ya no prohíbe destacar por título',
+].filter(Boolean);
+check('K10', k10Fallos.length === 0,
+  `cribado por título: ${k10Fallos.length === 0
+    ? 'decide qué se lee y nunca qué se destaca, lo apartado se cuenta aparte, dice qué no acredita y los denominadores lo separan'
+    : k10Fallos.join('; ')}`);
+
 // La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
 const casosEval = JSON.parse(read('scripts/eval/cases.json'));
 const conformidadEval = roleConformance(casosEval, roleOf);
@@ -727,20 +767,24 @@ check('C11', ciega.length > 0 && ciegaMal.length === 0
 //      (tema de 950 caracteres + filtro de síntesis), y se exige POST, `term` fuera de la URL y el
 //      cuerpo idéntico a la consulta. Así caen un GET, un GET condicional para consultas cortas y un
 //      truncado. Un 414 simulado debe acabar en fallo de transporte, nunca en un recuento.
-// Desde la 1.14.0 hay un segundo servicio, EFetch, con su propio módulo (scripts/efetch.mjs): cada
-// módulo de transporte nombra solo el suyo, y nadie más nombra E-utilities.
+// Desde la 1.14.0 hay un segundo servicio, EFetch, con su propio módulo (scripts/efetch.mjs), y desde la
+// 1.15.0 un tercero, ESummary (scripts/esummary.mjs): cada módulo de transporte nombra solo el suyo, y
+// nadie más nombra E-utilities.
 const ESEARCH_MODULE = 'scripts/esearch.mjs';
 const EFETCH_MODULE = 'scripts/efetch.mjs';
+const ESUMMARY_MODULE = 'scripts/esummary.mjs';
+const SERVICIOS = { [ESEARCH_MODULE]: /esearch\.fcgi/, [EFETCH_MODULE]: /efetch\.fcgi/, [ESUMMARY_MODULE]: /esummary\.fcgi/ };
 const scriptsConServicio = readdirSync(join(ROOT, 'scripts')).filter((f) => f.endsWith('.mjs'))
   .map((f) => `scripts/${f}`)
-  .filter((f) => f !== router.conformance.test_suite && f !== ESEARCH_MODULE && f !== EFETCH_MODULE
-    && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi|efetch\.fcgi/.test(read(f)));
-const cruzados = [[ESEARCH_MODULE, /efetch\.fcgi/], [EFETCH_MODULE, /esearch\.fcgi/]].filter(([f, otro]) => otro.test(read(f))).map(([f]) => f);
+  .filter((f) => f !== router.conformance.test_suite && !Object.hasOwn(SERVICIOS, f)
+    && /eutils\.ncbi\.nlm\.nih\.gov|esearch\.fcgi|efetch\.fcgi|esummary\.fcgi/.test(read(f)));
+const cruzados = Object.keys(SERVICIOS).filter((f) => Object.entries(SERVICIOS).some(([g, otro]) => g !== f && otro.test(read(f))));
 const ejecutanSinModulo = ['scripts/quickstart.mjs', 'scripts/sweep-filters.mjs', 'scripts/exact-core.mjs']
   .filter((f) => !/from '\.\/esearch\.mjs'/.test(read(f)))
-  .concat(/from '\.\/efetch\.mjs'/.test(read('scripts/fetch-core.mjs')) ? [] : ['scripts/fetch-core.mjs']);
+  .concat(/from '\.\/efetch\.mjs'/.test(read('scripts/fetch-core.mjs')) ? [] : ['scripts/fetch-core.mjs'])
+  .concat(/from '\.\/esummary\.mjs'/.test(read('scripts/summary-core.mjs')) ? [] : ['scripts/summary-core.mjs']);
 check('C12', scriptsConServicio.length === 0 && ejecutanSinModulo.length === 0 && cruzados.length === 0,
-  `ESearch solo se llama desde ${ESEARCH_MODULE} y EFetch desde ${EFETCH_MODULE}: ${scriptsConServicio.length === 0
+  `ESearch solo se llama desde ${ESEARCH_MODULE}, EFetch desde ${EFETCH_MODULE} y ESummary desde ${ESUMMARY_MODULE}: ${scriptsConServicio.length === 0
     && ejecutanSinModulo.length === 0 && cruzados.length === 0 ? 'sí'
     : `servicio nombrado fuera ${JSON.stringify(scriptsConServicio)} / sin el módulo ${JSON.stringify(ejecutanSinModulo)} / cruzados ${JSON.stringify(cruzados)}`}`);
 

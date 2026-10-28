@@ -11,7 +11,9 @@
  * (`worker.mjs`, en Cloudflare Workers): dos transportes, un solo comportamiento.
  *
  * Lee también registros por PMID con recibo (`pubmed_fetch_exact`, contrato 1.14.0, especificación 29-):
- * cada PMID pedido sale completo, pendiente o con su error, nunca cortado (scripts/fetch-core.mjs).
+ * cada PMID pedido sale completo, pendiente o con su error, nunca cortado (scripts/fetch-core.mjs). Y
+ * criba por título hasta 50 PMID con recibo (`pubmed_summary_exact`, contrato 1.15.0), sin
+ * abstract: decide qué se lee, nunca qué se destaca (scripts/summary-core.mjs).
  *
  * Lo que este servidor NO hace, y por qué: no reescribe, sanea ni trocea la consulta (por eso existe);
  * no busca en ninguna otra fuente; no acredita que algo se leyera o se entendiera; no guarda nada. Es de
@@ -21,7 +23,9 @@
 import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 import { runFetch, fetchFailureReceipt, fetchRequestError, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION,
-  MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID } from '../scripts/fetch-core.mjs';
+  MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID, MAX_STRUCTURED_BYTES } from '../scripts/fetch-core.mjs';
+import { runSummary, summaryFailureReceipt, summaryRequestError, describeKeys, SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION,
+  MAX_SUMMARY_PMIDS, MAX_SCREEN_ID } from '../scripts/summary-core.mjs';
 import { dateLimitTags } from '../scripts/parse-filter.mjs';
 
 export const SERVER_NAME = 'pubmed-filters-exact';
@@ -245,6 +249,24 @@ export function selectionRecordCheck(bundle, record, { query, filtersUsed = [] }
   return { status: problems.length ? 'inconsistent' : 'declared', problems, notes };
 }
 
+/**
+ * Qué esconde cada orden (1.14.1; medido en el caso de prueba de los relajantes musculares en lumbalgia aguda (`scripts/eval/cases.json`)). El aviso iba en un solo sentido, y
+ * una revisión de 2026 quedó 17.ª por relevancia con 15 leídos. La misma frase en la herramienta y en
+ * `sort`, que es donde se decide el orden; la regla entera va en `guidance` del catálogo. Es un riesgo
+ * observado, no una ley de la edad: por eso «can», no «hides».
+ */
+const ORDER_HIDES_BY_AGE = 'Either order can leave important records out of a truncated head: the default order'
+  + ' sorts by entry date (not publication date) and pushes older pivotal records down; relevance can also push'
+  + ' recent records down (guidance.order_hides_by_age in pubmed_filter_catalog).';
+
+/**
+ * Cribado por título (1.15.0). La frase va en la búsqueda, que es donde se decide cuánto de
+ * la lista se mira; la regla entera, en `guidance.title_screen`.
+ */
+const TITLE_SCREEN = 'To screen a whole list by title, send its PMIDs to pubmed_summary_exact (up to'
+  + ` ${MAX_SUMMARY_PMIDS} per call): a title screen decides what to read, never what to report`
+  + ' (guidance.title_screen in pubmed_filter_catalog).';
+
 export const TOOL = {
   name: 'pubmed_search_exact',
   title: 'PubMed literal search with integrity receipt',
@@ -263,7 +285,10 @@ export const TOOL = {
     'result_count is what PubMed counts; records_retrieved is how many PMIDs came back',
     `(retmax, default 0, max ${MCP_MAX_RETMAX}); neither means anything was read.`,
     'PMIDs come in PubMed\'s default order (most recent entry first) unless you send sort "relevance";',
-    'the first N of a truncated list are not the set, in any order. For the next page send retstart =',
+    'the first N of a truncated list are not the set, in any order.',
+    ORDER_HIDES_BY_AGE,
+    TITLE_SCREEN,
+    'For the next page send retstart =',
     'next_retstart from the receipt; when it is null, next_retstart_reason says why (end_of_set,',
     'window_limit, count_only, empty_page, not_verified, page_adjusted), and null never means everything',
     'was retrieved. Pages are independent calls: joining them is an operational retrieval without a fixed',
@@ -302,7 +327,7 @@ export const TOOL = {
         type: 'string',
         enum: ['relevance'],
         description: 'Omit for PubMed\'s default order (most recent entry first). "relevance" is Best Match. Neither'
-          + ' order makes a truncated list representative of the set.',
+          + ' order makes a truncated list representative of the set. ' + ORDER_HIDES_BY_AGE,
       },
       filters_used: {
         type: 'array',
@@ -358,6 +383,50 @@ export const FETCH_TOOL = {
           read_id: str(MAX_READ_ID, { description: 'Your id for this reading operation: a retry keeps it, another reading uses another.' }),
         },
         required: ['plan_ref', 'read_id'],
+        additionalProperties: false,
+      },
+    },
+    required: ['pmids', 'context'],
+    additionalProperties: false,
+  },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+};
+
+/**
+ * Cribado por PMID con recibo (1.15.0). Calcado de la lectura: misma cola,
+ * mismo `run`, mismo presupuesto y la misma regla de no cortar. Medido en el caso de lumbalgia de `scripts/eval/cases.json`: cribar
+ * por abstracts una pasada de 59 eran unas 12 lecturas, y se leyeron 15; por título, dos llamadas.
+ */
+export const SUMMARY_TOOL = {
+  name: 'pubmed_summary_exact',
+  title: 'Screen PubMed records by PMID (title, year, type), with a delivery receipt',
+  description: [
+    `Fetch the NCBI summary of 1 to ${MAX_SUMMARY_PMIDS} PubMed records by PMID through ESummary (JSON, HTTP POST):`,
+    'title, year, publication types, journal, DOIs and has_abstract (NCBI\'s flag), never the abstract. It is',
+    'for screening a whole list by title to decide what to read: a title screen never turns a record into a',
+    'finding or a highlight; read it first with pubmed_fetch_exact. Records set aside on title are counted',
+    'apart (counts_as: titles_screened), never as read and discarded. It never searches, widens the list or',
+    'swaps a PMID. Per PMID, record_status is: found; not_found (NCBI said it has no summary in THIS response,',
+    'not proof that the article does not exist: request it alone); error (reason says why). Titles are never',
+    'cut: a record that does not fit in what is left goes to pending_pmids (request it again).',
+    'status.delivery is complete, partial or failed; status.record_identity is verified or failed.',
+    'Search, reading and screening share the same rate limit. Read-only; queries PubMed only.',
+  ].join(' '),
+  inputSchema: {
+    type: 'object',
+    properties: {
+      pmids: {
+        type: 'array', minItems: 1, maxItems: MAX_SUMMARY_PMIDS, uniqueItems: true,
+        items: { type: 'string', pattern: '^[1-9][0-9]{0,8}$' },
+        description: 'PMIDs as strings, in the order you want them back. Never converted or corrected.',
+      },
+      context: {
+        type: 'object',
+        properties: {
+          plan_ref: str(MAX_PLAN_REF, { description: 'The plan_ref of your search plan, as in selection_record.' }),
+          screen_id: str(MAX_SCREEN_ID, { description: 'Your id for this screening operation: a retry keeps it, another screening uses another.' }),
+        },
+        required: ['plan_ref', 'screen_id'],
         additionalProperties: false,
       },
     },
@@ -527,7 +596,8 @@ function filterView(bundle, p) {
 const INSTRUCTIONS = 'Literal PubMed execution for the pubmed-filters neurosymbolic router '
   + '(github.com/ernestobarrera/pubmed-filters). Every call returns a receipt; '
   + 'status.query_integrity decides whether the count may be used. To read records by PMID use '
-  + 'pubmed_fetch_exact: each one comes back whole, pending or as an error with its reason, never cut.';
+  + 'pubmed_fetch_exact: each one comes back whole, pending or as an error with its reason, never cut. '
+  + 'To screen a list by title use pubmed_summary_exact: it decides what to read, never what to report.';
 const SOURCE_INSTRUCTIONS = 'Before composing, call pubmed_filter_catalog and check every facet of the '
   + 'question against it; fetch each chosen filter with pubmed_get_filter, paste it unchanged, and '
   + 'declare it in filters_used so the receipt can check status.filter_fidelity. Send your selection_record '
@@ -565,9 +635,9 @@ function makeThrottle(minMs, maxQueueMs = MAX_QUEUE_MS) {
 export function createMcpHandler({
   apiKey = '', email = '', run = null, engine = 'mcp', fetcher, now, timeoutMs, maxQueueMs, filters = null,
 } = {}) {
-  // Un solo limitador para búsqueda y lectura: dos cuotas independientes duplicarían el ritmo real a NCBI.
+  // Un solo limitador para búsqueda, lectura y cribado: cuotas independientes multiplicarían el ritmo real a NCBI.
   const throttle = makeThrottle(apiKey ? 110 : 350, maxQueueMs);
-  const tools = filters ? [TOOL, CATALOG_TOOL, GET_FILTER_TOOL, FETCH_TOOL] : [TOOL, FETCH_TOOL];
+  const tools = filters ? [TOOL, CATALOG_TOOL, GET_FILTER_TOOL, FETCH_TOOL, SUMMARY_TOOL] : [TOOL, FETCH_TOOL, SUMMARY_TOOL];
   const textResult = (structured) => ({ content: [{ type: 'text', text: JSON.stringify(structured, null, 2) }], structuredContent: structured, isError: false });
   // El recibo de lectura va como JSON compacto también en el texto: es el que mide el presupuesto (29-, §3.6).
   const compactResult = (structured, isError) => ({ content: [{ type: 'text', text: JSON.stringify(structured) }], structuredContent: structured, isError });
@@ -596,6 +666,33 @@ export function createMcpHandler({
     return compactResult(receipt, receipt.status.delivery === 'failed');
   }
 
+  /** Cribado por PMID: la misma forma que la lectura, con su núcleo y su contexto (`screen_id`). */
+  async function callSummary(args) {
+    const receivedAt = (now ? now() : new Date()).toISOString();
+    const attemptId = globalThis.crypto.randomUUID();
+    const extra = args === null || typeof args !== 'object' || Array.isArray(args) ? ['(los argumentos no son un objeto)']
+      : Object.keys(args).filter((k) => !Object.hasOwn(SUMMARY_TOOL.inputSchema.properties, k));
+    const invalid = extra.length ? `argumentos no admitidos: ${describeKeys(extra)}` : summaryRequestError(args.pmids, args.context);
+    if (invalid) {
+      // El rechazo también cabe en el presupuesto. Los diagnósticos ya
+      // vienen acotados; si aun así no cupiera, sale un motivo fijo, nunca un rechazo de más de 24 KiB.
+      const rejection = { run, receipt_type: SUMMARY_RECEIPT_TYPE, receipt_version: SUMMARY_RECEIPT_VERSION, attempt_id: attemptId,
+        received_at: receivedAt, rejected_before_ncbi: true, error: invalid };
+      if (new TextEncoder().encode(JSON.stringify(rejection)).length > MAX_STRUCTURED_BYTES) {
+        rejection.error = 'petición no válida; su diagnóstico no cabía en el recibo';
+      }
+      return compactResult(rejection, true);
+    }
+    const opts = { run, apiKey, email, tool: 'pubmed-filters-mcp', engine, fetcher, now, timeoutMs, attemptId, receivedAt };
+    if (!(await throttle())) {
+      const busy = await summaryFailureReceipt(args.pmids, args.context, opts, { code: 'service_busy',
+        message: 'SERVICIO_OCUPADO: demasiadas llamadas en cola; vuelve a intentarlo en unos segundos' });
+      return compactResult(busy, true);
+    }
+    const receipt = await runSummary(args.pmids, args.context, opts);
+    return compactResult(receipt, receipt.status.delivery === 'failed');
+  }
+
   function callSourceTool(name, args) {
     const extra = Object.keys(args).filter((k) => !(k in (name === CATALOG_TOOL.name ? CATALOG_TOOL : GET_FILTER_TOOL).inputSchema.properties));
     if (extra.length) return toolError({ error: `argumentos no admitidos: ${extra.join(', ')}` });
@@ -615,6 +712,7 @@ export function createMcpHandler({
       return { result: callSourceTool(params.name, params.arguments ?? {}) };
     }
     if (params?.name === FETCH_TOOL.name) return { result: await callFetch(params.arguments ?? {}) };
+    if (params?.name === SUMMARY_TOOL.name) return { result: await callSummary(params.arguments ?? {}) };
     if (params?.name !== TOOL.name) return { error: [-32602, `Herramienta desconocida: ${params?.name}`] };
     const args = params.arguments ?? {};
     const extra = Object.keys(args).filter((k) => !(k in TOOL.inputSchema.properties));
