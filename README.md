@@ -194,13 +194,13 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X22 dossier y
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X23 dossier y
 auditor de superficie; también en la CI y en la puerta de mutación).
 
 ### Auditoría de una superficie
 
 ```
-node scripts/audit-surface.mjs recibos.jsonl --respuesta respuesta.md --perlas perlas.json --salida carpeta/
+node scripts/audit-surface.mjs recibos.jsonl --respuesta respuesta.md --perlas perlas.json --salida carpeta/ [--en-linea]
 ```
 
 Cuando la ejecución se hace desde un chat (ChatGPT, claude.ai), el archivo de recibos lo conserva el propio
@@ -221,10 +221,25 @@ Además comprueba que la petición archivada coincida con la que acredita su rec
 listan aparte, y una línea ilegible se cuenta.
 
 Las perlas son una lista de PMID o un `pubmed-dossier-reference`. Sin registro de cierre externo, una
-superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Es local y sin red.
+superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Sin `--en-linea`,
+es local y sin red.
 
 Una huella declarada que no coincide con el texto archivado suele ser una normalización hecha al archivar,
-como cambiar espacios especiales por espacios normales. El abstract no cuenta como íntegro hasta releerlo.
+como cambiar espacios especiales por espacios normales. Ese abstract no cuenta como íntegro, porque lo
+conservado no es lo que llegó.
+
+Con `--en-linea`, el auditor hace dos comprobaciones con NCBI que no tocan el material del modelo ni suman
+lecturas:
+- **Perlas dentro del conjunto.** Por cada pasada válida lanza `(<su consulta>) AND (<las perlas en OR con
+  [pmid]>)` y su recuento de hoy. La intersección verificada entra en el manifiesto como `intersections`. El
+  informe separa la perla que estaba en un conjunto, pero fuera de toda cabecera traída, de la que no estaba en
+  ninguno. Mide el conjunto de hoy: si el recuento cambió, lo dice.
+- **Relectura de las huellas que no cuadran.** Si la huella de hoy es la declarada y el texto solo difiere en
+  espacios especiales, fue una normalización. Si la huella coincide y el texto difiere en algo más, fue una
+  alteración. Si la huella de hoy es otra, no se decide.
+
+Deja sus recibos en `en-linea/` y el resumen en `en-linea.json`. Usa `NCBI_API_KEY` y `NCBI_EMAIL` si están
+en el entorno, sin escribirlos.
 
 ### Desde un chat sin terminal: MCP
 
