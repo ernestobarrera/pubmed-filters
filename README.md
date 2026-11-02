@@ -145,9 +145,10 @@ pasada por título y decidir qué leer. Una pasada de síntesis de 59 registros 
 llamadas (más si quedan pendientes), donde antes hacían falta unas 12 lecturas de abstracts. Un título cribado **no** es un registro leído: destacarlo exige leerlo con
 `pubmed_fetch_exact`, y lo apartado se cuenta aparte (`reading_and_drilldown.title_screen`, quinto recuento
 en `provenance.denominators`). Mismas reglas de recibo que la lectura: por PMID, nunca cortado, pendientes
-explícitos, `run` y cuota compartidos. `dossier-check.mjs` todavía no lee estos recibos: declarados como
-búsqueda o como lectura salen como entrada no reconocida, y declarados como otra ruta se anotan como tal; en
-ningún caso cuentan como lectura.
+explícitos, `run` y cuota compartidos. Desde la versión 1.1.0, `dossier-check.mjs` lee estos recibos como
+un estado propio: suman el quinto recuento (`titles_screened`) y el embudo de cada pasada, y nunca suman a
+D3 ni a D4. Declarados como búsqueda o como lectura son un defecto de herramienta; declarados como otra
+ruta, se anotan como tal.
 
 `dossier-check.mjs` es local y sin red, hermano de `page-union.mjs`. Une recibos de búsqueda y de lectura,
 la respuesta final y sus usos documentados, y mide sobre **lo conservado** los cuatro denominadores (D1
@@ -157,7 +158,16 @@ o `unattributed`, que es «sin procedencia acreditable», no memoria del modelo)
 retención frente a una referencia. Sale 0 `consistent`, 1 `incomplete` (un defecto demostrado: huella o
 archivo que falta, hueco de texto, conflicto, lectura pedida sin resolver, recuperación completa que no pasa
 la unión) o 2 `inconclusive` (sin defecto, pero sin cierre de captura acreditado, sin D4 medible o con
-entradas ilegibles). Cuatro formatos JSON, todos con `format` y `format_version: 1`:
+entradas ilegibles).
+
+Cada pasada lleva su embudo: encontrados, devueltos, cribados, abstracts obtenidos y usados. La lista
+`findings` recoge huecos del procedimiento que no son defectos del material y no cambian el veredicto:
+- `read_without_origin`: leído sin estar en ninguna lista válida ni declarado en `known_pmids`;
+- `screened_without_origin`: lo mismo para un título cribado;
+- `mentioned_without_reading`: PMID mencionado en la respuesta sin abstract íntegro conservado;
+- `reference_not_returned`: PMID de la referencia que no llegó a ninguna lista devuelta.
+
+Cuatro formatos JSON, todos con `format` y `format_version: 1`:
 
 - **`pubmed-dossier-manifest`**: `dossier_id`, `case`, `condition`, `profile` (`bench` | `surface`),
   `capture` (`method`, `inventory_by`, `closure` y `clock`), `plans` admitidos con sus pasadas y
@@ -184,8 +194,8 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, X1-X16 dossier; también en la CI y en
-la puerta de mutación).
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X21 dossier;
+también en la CI y en la puerta de mutación).
 
 ### Desde un chat sin terminal: MCP
 

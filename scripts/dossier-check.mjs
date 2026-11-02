@@ -33,8 +33,9 @@ import { sha256, continuation, ESEARCH_WINDOW } from './exact-core.mjs';
 import { checkPageUnion, OPERATIONAL, OPERATIONAL_LABEL } from './page-union.mjs';
 import { sha256Bytes, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION, RECORD_STATUSES, PMID_PATTERN } from './fetch-core.mjs';
 import { ABSTRACT_FORMAT, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
+import { SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION, COUNTS_AS as SUMMARY_COUNTS_AS, RECORD_STATUSES as SUMMARY_RECORD_STATUSES } from './summary-core.mjs';
 
-export const CHECKER_VERSION = '1.0.0';
+export const CHECKER_VERSION = '1.1.0';
 export const FORMATS = {
   manifest: 'pubmed-dossier-manifest',
   capture_log: 'pubmed-dossier-capture-log',
@@ -49,9 +50,11 @@ export const LIMITS = [
   'D4 acredita uso documental visible, no que la fuente sostenga la afirmación.',
   'Las huellas y run identifican, no autentican: no son firmas de NCBI ni del servidor.',
   'Una unión de páginas es una recuperación operativa sin instantánea fijada, nunca un conjunto completo certificado.',
+  'Un título cribado no es un registro leído: el cribado nunca suma D3 ni D4, y no acredita que lo apartado no fuera pertinente.',
+  'Los hallazgos (findings) señalan huecos del procedimiento declarado, no defectos del material: no cambian el veredicto.',
 ];
 
-const TOOLS = ['pubmed_search_exact', 'pubmed_fetch_exact', 'other'];
+const TOOLS = ['pubmed_search_exact', 'pubmed_fetch_exact', 'pubmed_summary_exact', 'other'];
 const SHA = /^[0-9a-f]{64}$/;
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStr = (v) => typeof v === 'string' && v.trim() !== '';
@@ -191,6 +194,10 @@ function kindOf(p) {
   if (p.receipt_type === FETCH_RECEIPT_TYPE) {
     if (p.receipt_version !== FETCH_RECEIPT_VERSION) return 'unknown';
     return p.rejected_before_ncbi === true ? 'fetch_rejected' : 'fetch';
+  }
+  if (p.receipt_type === SUMMARY_RECEIPT_TYPE) {
+    if (p.receipt_version !== SUMMARY_RECEIPT_VERSION) return 'unknown';
+    return p.rejected_before_ncbi === true ? 'summary_rejected' : 'summary';
   }
   if (typeof p.sent_query_sha256 === 'string' && isObj(p.status) && 'query_integrity' in p.status) return 'search';
   if (typeof p.error === 'string' && p.result_count === null) return 'search_error';
@@ -389,6 +396,91 @@ async function fetchDefects(r) {
     abstracts.push({ pmid: x.requested_pmid, sha256: x.abstract_sha256, ok: problems.length === 0, problems });
   }
   return { defects: d, attributable, abstracts };
+}
+
+function summaryResultShapeError(x) {
+  if (!isObj(x)) return 'no es un objeto';
+  if (typeof x.requested_pmid !== 'string' || !PMID_PATTERN.test(x.requested_pmid)) return 'requested_pmid';
+  if (!SUMMARY_RECORD_STATUSES.includes(x.record_status)) return 'record_status';
+  if (!strOrNull(x.returned_pmid) || !strOrNull(x.reason)) return 'returned_pmid o reason';
+  if (x.record_status === 'found') {
+    if (!strOrNull(x.title) || !strOrNull(x.journal) || typeof x.has_abstract !== 'boolean'
+      || ![x.dois, x.publication_types].every((l) => Array.isArray(l) && l.every((v) => typeof v === 'string'))
+      || !(x.year === null || Number.isSafeInteger(x.year))) return 'identidad del registro';
+  }
+  return null;
+}
+
+/** Forma de un recibo de cribado por título (1.15.0): la de la lectura, con screen_id y counts_as. */
+function summaryShapeErrors(r) {
+  const e = [];
+  if (!isObj(r.run)) e.push('run');
+  if (!isStr(r.attempt_id)) e.push('attempt_id');
+  if (r.counts_as !== SUMMARY_COUNTS_AS) e.push('counts_as');
+  if (!isIso(r.received_at) || !(r.executed_at === null || isIso(r.executed_at)) || !(r.completed_at === null || isIso(r.completed_at))) e.push('tiempos');
+  for (const k of ['engine', 'provider', 'endpoint']) if (!isStr(r[k])) e.push(k);
+  const q = r.request;
+  if (!isObj(q) || !pmidList(q.pmids, PMID_PATTERN) || q.pmids.length === 0 || new Set(q.pmids).size !== q.pmids.length
+    || !isObj(q.context) || !isStr(q.context.plan_ref) || !isStr(q.context.screen_id) || typeof q.context_sha256 !== 'string'
+    || q.declared_by !== 'agent') e.push('request');
+  const t = r.transport;
+  if (!isObj(t) || !(t.http_status === null || isInt(t.http_status)) || !(t.raw_response_sha256 === null || isSha(t.raw_response_sha256))) e.push('transport');
+  if (!isObj(r.limits) || !isInt(r.limits.max_pmids, 1)) e.push('limits');
+  if (!(r.failure === null || (isObj(r.failure) && isStr(r.failure.code) && typeof r.failure.message === 'string'))) e.push('failure');
+  if (!isObj(r.status) || !['verified', 'failed', 'unsupported'].includes(r.status.record_identity)
+    || !['complete', 'partial', 'failed'].includes(r.status.delivery)) e.push('status');
+  if (!Array.isArray(r.problems) || !r.problems.every((v) => typeof v === 'string')) e.push('problems');
+  if (!Array.isArray(r.pending_pmids) || !r.pending_pmids.every((x) => isObj(x) && typeof x.pmid === 'string' && isStr(x.reason))) e.push('pending_pmids');
+  if (!Array.isArray(r.results)) e.push('results');
+  else r.results.forEach((x, i) => { const bad = summaryResultShapeError(x); if (bad) e.push(`results[${i}]: ${bad}`); });
+  return e;
+}
+
+/**
+ * Coherencia de un recibo de cribado con forma válida, con el mismo criterio que la lectura: partición
+ * ordenada de lo pedido, estados que no se contradicen y registros atribuibles a su PMID. Un título
+ * cribado no es un registro leído: lo que devuelve nunca alimenta D3 ni D4.
+ */
+async function summaryDefects(r) {
+  const d = [];
+  const pmids = r.request.pmids;
+  const ctx = r.request.context;
+  if (await sha256(JSON.stringify({ plan_ref: ctx.plan_ref, screen_id: ctx.screen_id })) !== r.request.context_sha256) {
+    d.push('request.context o context_sha256 no corresponden');
+  }
+  const delivered = r.results.map((x) => x.requested_pmid);
+  const pending = r.pending_pmids.map((x) => x.pmid);
+  const all = [...delivered, ...pending];
+  const inOrder = (list) => list.every((p, i) => i === 0 || pmids.indexOf(list[i - 1]) < pmids.indexOf(p));
+  if (all.length !== pmids.length || new Set(all).size !== all.length || !all.every((p) => pmids.includes(p))
+    || !inOrder(delivered) || !inOrder(pending)) {
+    d.push('resultados y pendientes no son una partición ordenada de lo pedido');
+  }
+  const { record_identity: identity, delivery } = r.status;
+  const errors = r.results.filter((x) => x.record_status === 'error');
+  const found = r.results.filter((x) => x.record_status === 'found');
+  const times = [r.received_at, r.executed_at, r.completed_at].filter((t) => t !== null).map((t) => Date.parse(t));
+  const contradictions = [
+    delivery === 'complete' && (pending.length || errors.length) && 'complete con pendientes o errores',
+    delivery === 'partial' && !pending.length && !errors.length && 'partial sin pendientes ni errores',
+    delivery === 'failed' && (found.length || pending.length) && 'failed con registros entregados o pendientes',
+    identity === 'failed' && delivery !== 'failed' && 'identidad failed con entrega no failed',
+    (r.failure !== null) !== (delivery === 'failed') && 'failure y delivery no concuerdan',
+    r.results.some((x) => ['found', 'not_found'].includes(x.record_status))
+      && (r.executed_at === null || r.transport.http_status !== 200 || r.transport.raw_response_sha256 === null)
+      && 'registros o ausencias sin respuesta ejecutada, HTTP 200 y con huella',
+    times.some((t, i) => i > 0 && t < times[i - 1]) && 'tiempos fuera de orden',
+    pmids.length > r.limits.max_pmids && 'más PMID pedidos que el límite del recibo',
+  ].filter(Boolean);
+  for (const c of contradictions) d.push(`estados contradictorios: ${c}`);
+  const receiptTrusted = d.length === 0 && identity === 'verified' && delivery !== 'failed';
+  const screened = new Set();
+  for (const x of r.results) {
+    if (x.record_status === 'error' && !isStr(x.reason)) d.push(`PMID ${x.requested_pmid}: error sin reason`);
+    if (x.record_status === 'found' && x.returned_pmid !== x.requested_pmid) d.push(`PMID ${x.requested_pmid}: returned_pmid distinto (${x.returned_pmid})`);
+    else if (receiptTrusted && x.record_status === 'found') screened.add(x.requested_pmid);
+  }
+  return { defects: d, screened, pending };
 }
 
 // --- Usos (D4) --------------------------------------------------------------------------------------
@@ -597,15 +689,18 @@ async function checkDossierUnguarded(manifest, load) {
     entry.kind = kindOf(payload);
     entry.payload = payload;
     entry.manifest = a;
-    const expectedTool = { search: 'pubmed_search_exact', search_error: 'pubmed_search_exact', fetch: 'pubmed_fetch_exact', fetch_rejected: 'pubmed_fetch_exact' }[entry.kind];
+    const expectedTool = { search: 'pubmed_search_exact', search_error: 'pubmed_search_exact', fetch: 'pubmed_fetch_exact', fetch_rejected: 'pubmed_fetch_exact',
+      summary: 'pubmed_summary_exact', summary_rejected: 'pubmed_summary_exact' }[entry.kind];
     if (entry.kind === 'unknown') { uncertain('unsupported_input', `${a.attempt_ref}: formato de respuesta no reconocido`); entry.status = 'unreadable'; continue; }
     if (expectedTool !== a.tool) { defect('tool_mismatch', `${a.attempt_ref}: el inventario dice ${a.tool} y el archivo es ${entry.kind}`); entry.status = 'tool_mismatch'; continue; }
     // La forma, antes de leer ningún campo (R1): lo que no la tiene no se interpreta ni tumba el comprobador.
     const shape = entry.kind === 'search' ? searchShapeErrors(payload) : entry.kind === 'fetch' ? fetchShapeErrors(payload)
-      : entry.kind === 'fetch_rejected' ? rejectionShapeErrors(payload) : [];
+      : entry.kind === 'summary' ? summaryShapeErrors(payload)
+        : entry.kind === 'fetch_rejected' || entry.kind === 'summary_rejected' ? rejectionShapeErrors(payload) : [];
     if (shape.length) {
       const expected = { search: 'pubmed_search_exact 1.13+', fetch: `${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}`,
-        fetch_rejected: `rechazo de ${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}` }[entry.kind];
+        fetch_rejected: `rechazo de ${FETCH_RECEIPT_TYPE}/${FETCH_RECEIPT_VERSION}`, summary: `${SUMMARY_RECEIPT_TYPE}/${SUMMARY_RECEIPT_VERSION}`,
+        summary_rejected: `rechazo de ${SUMMARY_RECEIPT_TYPE}/${SUMMARY_RECEIPT_VERSION}` }[entry.kind];
       uncertain('unsupported_input', `${a.attempt_ref}: recibo sin la forma de ${expected} (${shape.slice(0, 8).join(', ')})`);
       entry.status = 'unsupported';
       continue;
@@ -613,8 +708,9 @@ async function checkDossierUnguarded(manifest, load) {
     // Identidad del intento: la del inventario, o la del propio recibo. Una copia repetida no cuenta dos veces.
     const identity = a.external_id ? tuple('ext', a.external_id)
       : entry.kind === 'fetch' || entry.kind === 'fetch_rejected' ? tuple('fetch', payload.attempt_id)
-        : entry.kind === 'search' ? tuple('search', payload.executed_at, payload.raw_response_sha256, payload.sent_query_sha256, payload.request?.retstart ?? 0)
-          : tuple('file', a.sha256);
+        : entry.kind === 'summary' || entry.kind === 'summary_rejected' ? tuple('summary', payload.attempt_id)
+          : entry.kind === 'search' ? tuple('search', payload.executed_at, payload.raw_response_sha256, payload.sent_query_sha256, payload.request?.retstart ?? 0)
+            : tuple('file', a.sha256);
     const prior = byIdentity.get(identity);
     if (prior) {
       if (JSON.stringify(prior.payload) === JSON.stringify(payload)) {
@@ -797,6 +893,24 @@ async function checkDossierUnguarded(manifest, load) {
   const multiVersion = requestedPmids.filter((p) => perPmid.get(p).versions.size > 1);
   for (const p of multiVersion) notices.push(`PMID ${p}: ${perPmid.get(p).versions.size} versiones completas distintas; se conservan separadas y cuenta una vez`);
 
+  // 5b. Cribado por título: un estado propio, que nunca suma a D3 ni a D4 (quinto recuento del router).
+  const screens = live.filter((e) => e.kind === 'summary');
+  for (const e of live.filter((x) => x.kind === 'summary_rejected')) notices.push(`${e.attempt_ref}: cribado rechazado antes de NCBI (${String(e.payload.error).slice(0, 160)})`);
+  const screened = new Set();
+  const screenPending = new Set();
+  for (const e of screens) {
+    const p = e.payload;
+    const { defects: sd, screened: ok, pending } = await summaryDefects(p);
+    for (const d of sd) defect('summary_receipt', `${e.attempt_ref}: ${d}`);
+    if (!admitted.has(p.request.context.plan_ref)) defect('outside_plan', `${e.attempt_ref}: plan_ref «${p.request.context.plan_ref}» no es un plan admitido en el dossier`);
+    if (p.status.record_identity !== 'verified') exclusions.push({ attempt_ref: e.attempt_ref, reason: `cribado con identidad ${p.status.record_identity}: sus títulos no cuentan` });
+    for (const pmid of ok) screened.add(pmid);
+    for (const pmid of pending) screenPending.add(pmid);
+  }
+  const screenedList = sortPmids(screened);
+  const screenUnresolved = sortPmids([...screenPending].filter((p) => !screened.has(p)));
+  if (screenUnresolved.length) notices.push(`cribado pedido y no entregado (pendiente sin reintento resuelto): ${screenUnresolved.join(', ')}`);
+
   // 6. Respuesta y usos (D4).
   let responseText = null;
   let responseSha = null;
@@ -890,6 +1004,7 @@ async function checkDossierUnguarded(manifest, load) {
       pmid, membership, temporality,
       lists,
       known_pmids: known.map((k) => ({ origin: k.origin, detail: k.detail, attempt_ref: k.attempt_ref, received_at: k.at, clock_source: 'server' })),
+      screened: screened.has(pmid),
       reading: slot ? { final: finalOf(slot), outcomes: slot.outcomes, versions: [...slot.versions.values()] } : null,
       used: U.includes(pmid),
     };
@@ -934,6 +1049,32 @@ async function checkDossierUnguarded(manifest, load) {
     }
   }
 
+  // 9. Hallazgos: huecos del procedimiento declarado que el veredicto no recoge, porque no son defectos del
+  // material. Lo leído sin procedencia se ha observado en superficie: el router ya pide declarar en
+  // known_pmids lo que no sale de una pasada.
+  const findings = [];
+  const finding = (code, detail, pmids) => { if (pmids.length) findings.push({ code, detail, pmids }); };
+  const returnedSet = new Set(S);
+  const knownSet = new Set(declarations.map((d) => d.pmid));
+  const obtainedSet = new Set(classes.obtained);
+  const usedPmids = new Set(U);
+  finding('read_without_origin', 'leídos sin estar en ninguna lista válida ni declarados en known_pmids: su procedencia no consta en el dossier',
+    provenance.filter((p) => p.reading && p.membership === 'unattributed').map((p) => p.pmid));
+  finding('screened_without_origin', 'cribados por título sin estar en ninguna lista válida ni declarados en known_pmids',
+    screenedList.filter((p) => !returnedSet.has(p) && !knownSet.has(p)));
+  finding('mentioned_without_reading', 'PMID mencionados en la respuesta sin abstract íntegro conservado: candidatos, no usos acreditados',
+    sortPmids(candidates.filter((c) => c.type === 'pmid' && !obtainedSet.has(c.value)).map((c) => c.value)));
+  if (retention.status === 'measured') {
+    finding('reference_not_returned', 'PMID de la referencia que no están en ninguna lista devuelta: fuera de la cabecera traída o fuera de la estrategia; una intersección conservada distingue los dos casos',
+      retention.stages[0].missing);
+  }
+  const funnelOf = (p) => ({
+    found: p.d1.value, returned: p.returned.length,
+    screened: p.returned.filter((id) => screened.has(id)).length,
+    abstracts_obtained: p.returned.filter((id) => obtainedSet.has(id)).length,
+    used: d4Measured ? p.returned.filter((id) => usedPmids.has(id)).length : null,
+  });
+
   const d3Status = unresolved.length ? 'partial' : 'measured';
   const denominators = {
     D1: { unit: 'result_count por pasada; no se suman pasadas', per_pass: passes.map((p) => ({ plan_ref: p.plan_ref, pass_id: p.pass_id, walk_id: p.walk_id, ...p.d1 })) },
@@ -951,18 +1092,27 @@ async function checkDossierUnguarded(manifest, load) {
         mentions_without_use_evidence: mentionsWithoutUse, uses: useReports }
       : { value: null, unit: 'documentos únicos con uso anclado en la respuesta', status: 'not_measured', mentions_without_use_evidence: mentionsWithoutUse,
         declared_unverified: unverifiedUses },
+    titles_screened: {
+      value: screens.length ? screenedList.length : null, unit: 'PMID únicos cribados por título; ni abstracts obtenidos ni documentos usados',
+      status: screens.length ? 'measured' : 'not_measured', attempts: screens.length,
+      per_pass: passes.map((p) => ({ plan_ref: p.plan_ref, pass_id: p.pass_id, walk_id: p.walk_id, value: p.returned.filter((id) => screened.has(id)).length, of_returned: p.returned.length })),
+      outside_returned: screenedList.filter((p) => !returnedSet.has(p)), pending_unresolved: screenUnresolved,
+    },
   };
   if (!passes.some((p) => p.d1.status === 'measured')) uncertain('d1_not_measured', 'ninguna pasada tiene D1 medido');
 
   return finish({
-    manifest, defects, uncertainties, notices, exclusions,
+    manifest, defects, uncertainties, notices, exclusions, findings,
     body: {
       capture: { method: cap.method, inventory_by: cap.inventory_by, inventory_completeness: inventory,
         clock: { source: 'server', skew_bound_ms: clock.bound, justification: clock.justification, sequence: clock.sequence ? 'capture_log' : null },
         transcribed: attempts.filter((e) => e.captured === 'transcribed').map((e) => e.attempt_ref) },
       inputs,
       attempts: attempts.map(({ payload, manifest: _m, window: _w, ...rest }) => rest),
-      passes: passes.map(({ _unionPmids, _key, _sent_query, d1, returned, ...rest }) => ({ ...rest, returned_size: returned.length })),
+      passes: passes.map((p) => {
+        const { _unionPmids, _key, _sent_query, d1, returned, ...rest } = p;
+        return { ...rest, returned_size: returned.length, funnel: funnelOf(p) };
+      }),
       denominators,
       provenance,
       retention,
@@ -1019,7 +1169,7 @@ async function intersectionRetention(x, i, { readRef, decodeJson, passes, R, sta
     executed_at: r.executed_at, ...stage(new Set(r.pmids), 'within_query') } };
 }
 
-function finish({ manifest, defects, uncertainties, notices, exclusions, body = {} }) {
+function finish({ manifest, defects, uncertainties, notices, exclusions, findings = [], body = {} }) {
   const verdict = defects.length ? 'incomplete' : uncertainties.length ? 'inconclusive' : 'consistent';
   return {
     checker: { name: 'dossier-check', version: CHECKER_VERSION },
@@ -1032,6 +1182,7 @@ function finish({ manifest, defects, uncertainties, notices, exclusions, body = 
       : verdict === 'incomplete' ? 'hay al menos un defecto demostrado' : 'sin defecto demostrado, falta material o cierre para decidir',
     defects,
     uncertainties,
+    findings,
     ...body,
     exclusions,
     notices,

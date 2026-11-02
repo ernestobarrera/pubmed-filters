@@ -1106,22 +1106,75 @@ try {
     && x19.sinContrato.verdict === 'inconclusive' && x19.sinContrato.uncertainties.some((u) => u.code === 'unsupported_input'),
     `rechazo previo a NCBI: el del MCP, ${x19.valido.verdict} sin exigir lectura; sin run, intento, hora ni motivo, ${x19.sinContrato.verdict}`);
 
-  // S11. dossier-check no cambia en la 1.15.0: un recibo de cribado dentro de un dossier no se cuenta
-  // como lectura ni como cero. Declarado como lectura o como búsqueda es entrada no reconocida y deja el
-  // dossier inconclusive; declarado como otra ruta se registra como tal. Contarlo aparte es la 1.15.1.
+  // S11. Desde dossier-check 1.1.0 el cribado se cuenta aparte: declarado como cribado suma titles_screened y
+  // nunca D3; declarado como lectura o como búsqueda es un defecto de herramienta; como otra ruta, se anota.
   const criba = await call('pubmed_summary_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', screen_id: 'c1' } });
+  const C = (r) => ({ tool: 'pubmed_summary_exact', raw: r });
   const s11 = {
+    comoCribado: await control({ extra: [C(criba)] }),
     comoLectura: await control({ extra: [F(criba)] }),
     comoBusqueda: await control({ extra: [S(criba)] }),
     comoOtra: await control({ extra: [{ tool: 'other', raw: criba }] }),
   };
   const d3 = (r) => JSON.stringify(r.denominators.D3);
   check('S11', criba.result.structuredContent.status.delivery === 'complete' && ctl.verdict === 'consistent'
-    && ['comoLectura', 'comoBusqueda'].every((k) => s11[k].verdict === 'inconclusive' && s11[k].uncertainties.some((u) => u.code === 'unsupported_input'))
+    && s11.comoCribado.verdict === 'consistent' && s11.comoCribado.denominators.titles_screened.value === 2
+    && ['comoLectura', 'comoBusqueda'].every((k) => s11[k].verdict === 'incomplete' && codes(s11[k]).includes('tool_mismatch'))
     && s11.comoOtra.verdict === ctl.verdict && s11.comoOtra.notices.some((n) => /ruta alternativa/.test(n))
+    && ctl.denominators.titles_screened.status === 'not_measured'
     && Object.values(s11).every((r) => d3(r) === d3(ctl)),
-    `un recibo de cribado en un dossier: como lectura, ${s11.comoLectura.verdict}; como búsqueda, ${s11.comoBusqueda.verdict}; como otra ruta, ${
-      s11.comoOtra.verdict} y anotado; D3 igual que sin él en los tres`);
+    `un recibo de cribado en un dossier: como cribado, ${s11.comoCribado.verdict} y ${s11.comoCribado.denominators.titles_screened.value} títulos; como lectura, ${
+      s11.comoLectura.verdict}; como búsqueda, ${s11.comoBusqueda.verdict}; como otra ruta, ${s11.comoOtra.verdict} y anotado; D3 igual en los cuatro`);
+
+  // X20. Cribado con su propio criterio: pendientes sin reintento, identidad fallida y contexto alterado no
+  // suman; un reintento resuelve el pendiente; un título fuera de toda lista se cuenta aparte.
+  const criba3 = await call('pubmed_summary_exact', { pmids: ['11', '22', '33'], context: { plan_ref: 'plan-1', screen_id: 'c2' } });
+  const conPendiente = tocar(criba3, (sc) => {
+    const r = sc.results.pop();
+    sc.pending_pmids.push({ pmid: r.requested_pmid, reason: 'no cabe en el recibo' });
+    sc.status.delivery = 'partial';
+  });
+  const reintento = await call('pubmed_summary_exact', { pmids: ['33'], context: { plan_ref: 'plan-1', screen_id: 'c3' } });
+  const identidadFallida = tocar(criba, (sc) => { sc.status.record_identity = 'failed'; sc.status.delivery = 'failed'; sc.failure = { code: 'identity_uncertain', message: 'x' }; sc.results = []; sc.pending_pmids = []; });
+  const contextoAlterado = tocar(criba, (sc) => { sc.request.context.screen_id = 'otro'; });
+  const x20 = {
+    fuera: await control({ extra: [C(criba3)] }),
+    pendiente: await control({ extra: [C(conPendiente)] }),
+    resuelto: await control({ extra: [C(conPendiente), C(reintento)] }),
+    fallida: await control({ extra: [C(identidadFallida)] }),
+    alterado: await control({ extra: [C(contextoAlterado)] }),
+  };
+  const ts = (r) => r.denominators.titles_screened;
+  check('X20', ts(x20.fuera).value === 3 && ts(x20.fuera).outside_returned.join() === '33'
+    && x20.fuera.findings.some((f) => f.code === 'screened_without_origin' && f.pmids.join() === '33')
+    && ts(x20.pendiente).value === 2 && ts(x20.pendiente).pending_unresolved.join() === '33'
+    && ts(x20.resuelto).value === 3 && ts(x20.resuelto).pending_unresolved.length === 0
+    && ts(x20.fallida).value === 0 && x20.fallida.exclusions.some((x) => /cribado con identidad failed/.test(x.reason))
+    && x20.alterado.verdict === 'incomplete' && codes(x20.alterado).includes('summary_receipt') && ts(x20.alterado).value === 0
+    && Object.values(x20).every((r) => d3(r) === d3(ctl)),
+    `cribado: fuera de lista ${ts(x20.fuera).outside_returned.join()}; pendiente ${ts(x20.pendiente).value}→${ts(x20.resuelto).value} con reintento; identidad fallida ${
+      ts(x20.fallida).value}; contexto alterado ${x20.alterado.verdict}; D3 igual en todos`);
+
+  // X21. Hallazgos y embudo: lo leído sin pasada de origen ni declaración, lo mencionado sin leer y la
+  // referencia fuera de lo devuelto se señalan sin cambiar el veredicto; declarado en known_pmids, no.
+  const leido33 = await leer(['33'], 'l33');
+  const ctlConocido = await buscar('ctl[tiab]', { known: [{ pmid: '33', origin: 'user', detail: 'given by the user' }] });
+  const refExtra = { json: { format: 'pubmed-dossier-reference', format_version: 1, reference_id: 'R-x21', target_pmids: ['11', '77'] } };
+  const x21 = {
+    sinOrigen: await control({ extra: [F(leido33)] }),
+    declarado: await control({ s: ctlConocido, extra: [F(leido33)] }),
+    mencion: (await dossier({ attempts: [S(ctlS), F(ctlF)], response: 'According to PMID 11 and PMID 99.', usage: usoCtl(), closure: true })).result,
+    referencia: (await dossier({ attempts: [S(ctlS), F(ctlF), C(criba)], response: respuestaCtl, usage: usoCtl(), closure: true, reference: refExtra })).result,
+  };
+  const hallazgo = (r, code) => r.findings.find((f) => f.code === code)?.pmids.join() ?? '';
+  const embudo = x21.referencia.passes.find((p) => p.pass_id === 'p1')?.funnel;
+  check('X21', x21.sinOrigen.verdict === ctl.verdict && hallazgo(x21.sinOrigen, 'read_without_origin') === '33'
+    && hallazgo(x21.declarado, 'read_without_origin') === '' && prov(x21.declarado, '33').membership === 'known_only'
+    && hallazgo(x21.mencion, 'mentioned_without_reading') === '99' && hallazgo(ctl, 'mentioned_without_reading') === ''
+    && hallazgo(x21.referencia, 'reference_not_returned') === '77' && ctl.findings.length === 0
+    && JSON.stringify(embudo) === JSON.stringify({ found: 2, returned: 2, screened: 2, abstracts_obtained: 2, used: 1 }),
+    `hallazgos: leído sin origen ${hallazgo(x21.sinOrigen, 'read_without_origin')}, declarado ninguno; mencionado sin leer ${
+      hallazgo(x21.mencion, 'mentioned_without_reading')}; referencia no devuelta ${hallazgo(x21.referencia, 'reference_not_returned')}; embudo ${JSON.stringify(embudo)}`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }
