@@ -29,7 +29,7 @@ import { runContext } from './pubmed-exact.mjs';
 import { runFetch, sha256Bytes, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
 import { SUMMARY_RECEIPT_TYPE } from './summary-core.mjs';
 
-export const AUDITOR_VERSION = '1.1.1';
+export const AUDITOR_VERSION = '1.1.2';
 const DOSSIER_TOOLS = ['pubmed_search_exact', 'pubmed_fetch_exact', 'pubmed_summary_exact'];
 const CONTEXT_TOOLS = ['pubmed_filter_catalog', 'pubmed_get_filter'];
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -70,12 +70,19 @@ export function referenceFromPerlas(json) {
 const SEARCH_ARGS = ['query', 'retmax', 'retstart', 'sort', 'filters_used', 'selection_record'];
 const READ_ARGS = ['pmids', 'context'];
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Igualdad por campos y valores, sin dar significado al orden de las claves: el servidor fija el suyo
+// (revisión de Codex del delta, Δ1).
+const canon = (v) => (Array.isArray(v) ? `[${v.map(canon).join(',')}]`
+  : isObj(v) ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon(v[k])}`).join(',')}}` : JSON.stringify(v));
+const sameFields = (a, b) => canon(a) === canon(b);
 
 /**
  * La petición archivada frente a lo que acredita su recibo, campo a campo y con los valores por defecto del
  * MCP: en una búsqueda, consulta, tamaño PEDIDO (no el acotado por el servidor), desplazamiento, orden,
  * filtros declarados y registro de selección (por su huella, la misma que calcula el servidor); en lectura y
- * cribado, PMID y contexto. Devuelve los campos distintos y los que no se pudieron comparar.
+ * cribado, PMID y contexto. Un `null` no es omitir: el servidor lo rechaza en `retstart`, `sort`,
+ * `filters_used` y `selection_record`, y solo en `retmax` lo toma por su valor por defecto. Devuelve los
+ * campos distintos y los que no se pudieron comparar.
  */
 async function compareRequest(tool, asked, p) {
   const mismatched = [];
@@ -83,9 +90,9 @@ async function compareRequest(tool, asked, p) {
   if (!isObj(asked)) return { mismatched, uncomparable: ['la petición entera (no es un objeto)'] };
   const known = tool === 'pubmed_search_exact' ? SEARCH_ARGS : READ_ARGS;
   uncomparable.push(...Object.keys(asked).filter((k) => !known.includes(k)));
-  const check = (field, archived, certified) => {
+  const check = (field, archived, certified, equal = same) => {
     if (certified === undefined) uncomparable.push(field);
-    else if (!same(archived, certified)) mismatched.push(field);
+    else if (!equal(archived, certified)) mismatched.push(field);
   };
   if (tool === 'pubmed_search_exact' && typeof p.sent_query_sha256 !== 'string') {
     // Búsqueda fallida: su recibo solo acredita la consulta enviada.
@@ -96,16 +103,18 @@ async function compareRequest(tool, asked, p) {
     if (!isObj(p.request)) { uncomparable.push('retmax', 'retstart', 'sort'); } else {
       check('retmax', asked.retmax ?? 0, p.request.retmax_requested);
       check('retstart', Object.hasOwn(asked, 'retstart') ? asked.retstart : 0, p.request.retstart);
-      check('sort', asked.sort ?? null, p.request.sort);
+      if (asked.sort === null) mismatched.push('sort');
+      else check('sort', asked.sort ?? null, p.request.sort);
     }
     const declared = Array.isArray(p.filter_fidelity) ? p.filter_fidelity.map((f) => f?.declared) : null;
-    if (asked.filters_used === undefined ? declared !== null : !same(asked.filters_used, declared)) mismatched.push('filters_used');
-    if (asked.selection_record === undefined) { if (p.selection_record !== undefined) mismatched.push('selection_record'); }
+    if (!Object.hasOwn(asked, 'filters_used') ? declared !== null
+      : !Array.isArray(asked.filters_used) || !same(asked.filters_used, declared)) mismatched.push('filters_used');
+    if (!Object.hasOwn(asked, 'selection_record')) { if (p.selection_record !== undefined) mismatched.push('selection_record'); }
     else if (typeof p.selection_record?.sha256 !== 'string') mismatched.push('selection_record');
     else if (await sha256(JSON.stringify(asked.selection_record)) !== p.selection_record.sha256) mismatched.push('selection_record');
   } else {
     check('pmids', asked.pmids, p.request?.pmids);
-    check('context', asked.context, p.request?.context);
+    check('context', asked.context, p.request?.context, sameFields);
   }
   return { mismatched, uncomparable };
 }
@@ -270,8 +279,16 @@ export async function onlineChecks(built, result, { search, read, pause = async 
       continue;
     }
     files.set(`en-linea/relectura-${String(i + 1).padStart(3, '0')}.json`, enc(JSON.stringify(receipt ?? null)));
-    const check = await checkFetchReceipt(payloadOf(receipt) ?? receipt);
-    const record = receipt?.results?.find?.((r) => r?.requested_pmid === pmid) ?? payloadOf(receipt)?.results?.find?.((r) => r?.requested_pmid === pmid);
+    const payload = payloadOf(receipt) ?? receipt;
+    let check;
+    try {
+      check = await checkFetchReceipt(payload);
+    } catch (e) {
+      check = { usable: false, problems: [`no se pudo comprobar (${why(e)})`], attributable: new Set(), abstracts: [] };
+    }
+    // Los registros se miran solo si el validador aceptó el recibo, y en su lista ya validada: un recibo
+    // ilegible no puede interrumpir el informe (revisión de Codex del delta, Δ2).
+    const record = check.usable ? payload.results.find((r) => r.requested_pmid === pmid) : null;
     const abstract = check.abstracts.find((x) => x.pmid === pmid);
     const reason = !check.usable ? `relectura no válida: ${check.problems.slice(0, 3).join('; ')}`
       : !check.attributable.has(pmid) ? 'relectura sin registro atribuible a ese PMID'

@@ -1399,6 +1399,40 @@ try {
     && !x28.valida.thrown && x28.valida.built.referenceError === null && x28.valida.result.retention.status === 'measured',
     `referencias inválidas: ${['nula', 'ausente', 'objeto', 'repetida', 'version'].map((k) => x28[k].thrown ?? x28[k].built.referenceError).join(' | ')}; la válida, ${
       x28.valida.thrown ?? x28.valida.result.retention.status}`);
+
+  // --- X29-X30. Contraejemplos de la revisión de Codex del delta (02/11, Δ1-Δ2).
+  // X29 (Δ1). El contexto se compara por campos y valores, no por el orden de sus claves, que fija el
+  // servidor. Un null no es omitir: el servidor lo rechaza en sort y en filters_used, y solo en retmax lo toma
+  // por su valor por defecto.
+  const f29 = await call('pubmed_fetch_exact', { pmids: ['11'], context: { read_id: 'l29', plan_ref: 'plan-1' } });
+  const c29 = await call('pubmed_summary_exact', { pmids: ['11'], context: { screen_id: 'c29', plan_ref: 'plan-1' } });
+  const s29 = await call('pubmed_search_exact', { query: 'x23[tiab]' });
+  const archivo29 = [
+    linea('pubmed_fetch_exact', { pmids: ['11'], context: { read_id: 'l29', plan_ref: 'plan-1' } }, f29),
+    linea('pubmed_fetch_exact', { pmids: ['11'], context: { plan_ref: 'plan-1', read_id: 'l29' } }, f29),
+    linea('pubmed_summary_exact', { pmids: ['11'], context: { screen_id: 'c29', plan_ref: 'plan-1' } }, c29),
+    linea('pubmed_fetch_exact', { pmids: ['11'], context: { read_id: 'otra', plan_ref: 'plan-1' } }, f29),
+    linea('pubmed_search_exact', { query: 'x23[tiab]' }, s29),
+    linea('pubmed_search_exact', { query: 'x23[tiab]', retmax: null }, s29),
+    linea('pubmed_search_exact', { query: 'x23[tiab]', sort: null }, s29),
+    linea('pubmed_search_exact', { query: 'x23[tiab]', filters_used: null }, s29),
+  ].join('\n');
+  const x29 = await auditSurface(archivo29);
+  check('X29', igual(campos(x29.built.requestMismatches), { 4: 'context', 7: 'sort', 8: 'filters_used' }) && x29.built.requestUncomparable.length === 0
+    && Object.keys(f29.result.structuredContent.request.context).join() !== 'read_id,plan_ref',
+    `contexto en otro orden de claves igual, contexto distinto, sort y filters_used nulos distintos; omisión y retmax nulo iguales: ${
+      JSON.stringify(campos(x29.built.requestMismatches))}`);
+
+  // X30 (Δ2). Una relectura que el validador rechaza no se mira después: con `results` que no es una lista,
+  // el PMID queda sin releer y como fallo del auditor, y la comprobación base no cambia.
+  const x30 = {};
+  for (const [k, cambia] of Object.entries({ findTexto: (c) => { c.results = { find: 'invalid' }; }, nulo: (c) => { c.results = null; } })) {
+    try { x30[k] = await auditSurface(archivo23, { online: conLectura(cambia) }); } catch (e) { x30[k] = { thrown: String(e?.message ?? e) }; }
+  }
+  check('X30', Object.values(x30).every((a) => !a.thrown && releido(a, '11')?.outcome === 'not_reread' && /forma no válida: results/.test(releido(a, '11').detail)
+    && a.online.failures.some((f) => /^relectura de 11: /.test(f)) && releido(a, '22')?.outcome === 'altered'
+    && igual(a.result.defects, base23.defects) && a.result.denominators.D3.value === base23.denominators.D3.value),
+    `relectura con results no lista: ${Object.values(x30).map((a) => a.thrown ?? releido(a, '11')?.outcome).join(', ')}, sin interrumpir el informe`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }

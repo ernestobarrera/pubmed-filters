@@ -222,8 +222,9 @@ defecto del MCP:
 - en una búsqueda, consulta, tamaño pedido, desplazamiento, orden, filtros declarados y registro de selección;
 - en una lectura o un cribado, PMID y contexto.
 
-Un campo archivado que el recibo no refleja se declara como no comparable. El catálogo y el filtro se listan
-aparte, y una línea ilegible se cuenta.
+El contexto se compara por campos y valores, no por el orden de sus claves. Un `null` no equivale a omitir
+el campo, salvo en `retmax`, porque el servidor lo rechaza. Un campo archivado que el recibo no refleja se
+declara como no comparable. El catálogo y el filtro se listan aparte, y una línea ilegible se cuenta.
 
 Las perlas son una lista de PMID o un `pubmed-dossier-reference`. Sin registro de cierre externo, una
 superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Sin `--en-linea`,
