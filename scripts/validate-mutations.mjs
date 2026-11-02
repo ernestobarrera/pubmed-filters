@@ -1507,7 +1507,7 @@ const MUTACIONES = [
     a: '        : [];',
     rompe: 'X19',
   },
-  // Auditor ampliado (02/11, 37-): dossier-check 1.1.0 con cribado y hallazgos, y audit-surface con y sin red.
+  // Auditor ampliado (02/11): dossier-check 1.1.0 con cribado y hallazgos, y audit-surface con y sin red.
   {
     id: 'X20-CRIBADO-SIN-CONFIANZA',
     porque: 'un recibo de cribado con defectos o identidad no verificada suma sus títulos como cribados',
