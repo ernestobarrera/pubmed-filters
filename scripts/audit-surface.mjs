@@ -23,13 +23,13 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkDossier, FORMATS, LIMITS, safePath } from './dossier-check.mjs';
+import { checkDossier, checkFetchReceipt, referenceFrom, FORMATS, LIMITS, safePath } from './dossier-check.mjs';
 import { runExact, sha256 } from './exact-core.mjs';
 import { runContext } from './pubmed-exact.mjs';
-import { runFetch, sha256Bytes, PMID_PATTERN, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
+import { runFetch, sha256Bytes, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
 import { SUMMARY_RECEIPT_TYPE } from './summary-core.mjs';
 
-export const AUDITOR_VERSION = '1.1.0';
+export const AUDITOR_VERSION = '1.1.1';
 const DOSSIER_TOOLS = ['pubmed_search_exact', 'pubmed_fetch_exact', 'pubmed_summary_exact'];
 const CONTEXT_TOOLS = ['pubmed_filter_catalog', 'pubmed_get_filter'];
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -47,19 +47,67 @@ function inferTool(p) {
   return null;
 }
 
-/** La referencia de perlas, en cualquiera de sus dos formas, como `pubmed-dossier-reference`. */
+/**
+ * La referencia de perlas, en cualquiera de sus formas, como `pubmed-dossier-reference` ya validada con el
+ * mismo criterio del comprobador. Devuelve `{ ref }` o `{ error }`, nunca una referencia a medias.
+ */
 export function referenceFromPerlas(json) {
+  let ref = null;
   if (Array.isArray(json)) {
-    return { format: FORMATS.reference, format_version: 1, reference_id: 'perlas', version: null, source: 'perlas declaradas por quien audita',
+    ref = { format: FORMATS.reference, format_version: 1, reference_id: 'perlas', version: null, source: 'perlas declaradas por quien audita',
       partial: true, target_pmids: json, synthesis_pmids: [] };
-  }
-  if (isObj(json) && json.format === FORMATS.reference) return json;
-  if (isObj(json) && Array.isArray(json.target_pmids)) {
-    return { format: FORMATS.reference, format_version: 1, reference_id: json.reference_id ?? 'perlas', version: json.version ?? null,
+  } else if (isObj(json) && json.format === FORMATS.reference) ref = json;
+  else if (isObj(json) && Array.isArray(json.target_pmids)) {
+    ref = { format: FORMATS.reference, format_version: 1, reference_id: json.reference_id ?? 'perlas', version: json.version ?? null,
       source: json.source ?? 'perlas declaradas por quien audita', partial: json.partial !== false, target_pmids: json.target_pmids,
       synthesis_pmids: json.synthesis_pmids ?? [] };
   }
-  return null;
+  if (!ref) return { error: 'perlas: ni lista de PMID ni pubmed-dossier-reference' };
+  const checked = referenceFrom(ref);
+  return checked.error ? { error: `perlas: ${checked.error}` } : { ref };
+}
+
+const SEARCH_ARGS = ['query', 'retmax', 'retstart', 'sort', 'filters_used', 'selection_record'];
+const READ_ARGS = ['pmids', 'context'];
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * La petición archivada frente a lo que acredita su recibo, campo a campo y con los valores por defecto del
+ * MCP: en una búsqueda, consulta, tamaño PEDIDO (no el acotado por el servidor), desplazamiento, orden,
+ * filtros declarados y registro de selección (por su huella, la misma que calcula el servidor); en lectura y
+ * cribado, PMID y contexto. Devuelve los campos distintos y los que no se pudieron comparar.
+ */
+async function compareRequest(tool, asked, p) {
+  const mismatched = [];
+  const uncomparable = [];
+  if (!isObj(asked)) return { mismatched, uncomparable: ['la petición entera (no es un objeto)'] };
+  const known = tool === 'pubmed_search_exact' ? SEARCH_ARGS : READ_ARGS;
+  uncomparable.push(...Object.keys(asked).filter((k) => !known.includes(k)));
+  const check = (field, archived, certified) => {
+    if (certified === undefined) uncomparable.push(field);
+    else if (!same(archived, certified)) mismatched.push(field);
+  };
+  if (tool === 'pubmed_search_exact' && typeof p.sent_query_sha256 !== 'string') {
+    // Búsqueda fallida: su recibo solo acredita la consulta enviada.
+    check('query', asked.query, p.sent_query);
+    uncomparable.push(...SEARCH_ARGS.filter((k) => k !== 'query' && Object.hasOwn(asked, k)));
+  } else if (tool === 'pubmed_search_exact') {
+    check('query', asked.query, p.sent_query);
+    if (!isObj(p.request)) { uncomparable.push('retmax', 'retstart', 'sort'); } else {
+      check('retmax', asked.retmax ?? 0, p.request.retmax_requested);
+      check('retstart', Object.hasOwn(asked, 'retstart') ? asked.retstart : 0, p.request.retstart);
+      check('sort', asked.sort ?? null, p.request.sort);
+    }
+    const declared = Array.isArray(p.filter_fidelity) ? p.filter_fidelity.map((f) => f?.declared) : null;
+    if (asked.filters_used === undefined ? declared !== null : !same(asked.filters_used, declared)) mismatched.push('filters_used');
+    if (asked.selection_record === undefined) { if (p.selection_record !== undefined) mismatched.push('selection_record'); }
+    else if (typeof p.selection_record?.sha256 !== 'string') mismatched.push('selection_record');
+    else if (await sha256(JSON.stringify(asked.selection_record)) !== p.selection_record.sha256) mismatched.push('selection_record');
+  } else {
+    check('pmids', asked.pmids, p.request?.pmids);
+    check('context', asked.context, p.request?.context);
+  }
+  return { mismatched, uncomparable };
 }
 
 /**
@@ -73,6 +121,7 @@ export async function buildSurfaceDossier(jsonlText, { responseBytes = null, per
   const unreadable = [];
   const contextCalls = [];
   const requestMismatches = [];
+  const requestUncomparable = [];
   const responseOnly = [];
   const attempts = [];
   const plans = new Map();
@@ -102,12 +151,10 @@ export async function buildSurfaceDossier(jsonlText, { responseBytes = null, per
       continue;
     }
     const tool = DOSSIER_TOOLS.includes(line.tool) ? line.tool : 'other';
-    if (p && line.request !== undefined) {
-      const asked = tool === 'pubmed_search_exact' ? line.request?.query : line.request?.pmids;
-      const certified = tool === 'pubmed_search_exact' ? p.sent_query : p.request?.pmids;
-      if (tool !== 'other' && asked !== undefined && certified !== undefined && JSON.stringify(asked) !== JSON.stringify(certified)) {
-        requestMismatches.push({ line: i + 1, tool });
-      }
+    if (p && line.request !== undefined && tool !== 'other') {
+      const { mismatched, uncomparable } = await compareRequest(tool, line.request, p);
+      if (mismatched.length) requestMismatches.push({ line: i + 1, tool, fields: mismatched });
+      if (uncomparable.length) requestUncomparable.push({ line: i + 1, tool, fields: uncomparable });
     }
     if (tool === 'pubmed_search_exact') admit(p?.selection_record?.record?.plan_ref, p?.selection_record?.record?.pass?.pass_id);
     else if (tool !== 'other') admit(p?.request?.context?.plan_ref, null);
@@ -124,28 +171,32 @@ export async function buildSurfaceDossier(jsonlText, { responseBytes = null, per
   if (responseBytes) manifest.response = { ...await put('respuesta.md', responseBytes), captured: 'transcribed' };
   let referenceError = null;
   if (perlas !== null) {
-    const ref = referenceFromPerlas(perlas);
-    if (!ref) referenceError = 'perlas: ni lista de PMID ni pubmed-dossier-reference';
-    else if (!ref.target_pmids.every((x) => typeof x === 'string' && PMID_PATTERN.test(x))) referenceError = 'perlas: algún PMID no es válido';
+    const { ref, error } = referenceFromPerlas(perlas);
+    if (error) referenceError = error;
     else manifest.reference = await put('referencia.json', enc(JSON.stringify(ref)));
   }
-  return { files, manifest, contextCalls, unreadable, requestMismatches, responseOnly, referenceError };
+  return { files, manifest, contextCalls, unreadable, requestMismatches, requestUncomparable, responseOnly, referenceError };
 }
 
 const decode = (bytes) => JSON.parse(new TextDecoder().decode(bytes));
 const SPECIAL_SPACE = /(?! )\p{Zs}/gu;
+const passKey = (p) => JSON.stringify([p.plan_ref, p.pass_id, p.walk_id ?? null]);
 const codePoints = (s) => [...new Set(s.match(SPECIAL_SPACE) ?? [])].map((c) => `U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`).sort();
 
 /**
- * Con red, lo que el archivo no puede decir solo. No cambia el material del modelo ni lo releído suma D3.
+ * Con red, lo que el archivo no puede decir solo. Las llamadas, los recibos, los fallos y la incertidumbre del
+ * auditor quedan separados del material del modelo: no cambian su veredicto, sus defectos ni sus denominadores.
  *
  * - Perlas dentro del conjunto: por cada pasada válida sin unión medida, `(<su consulta>) AND (<las perlas
- *   en OR con [pmid]>)` y su recuento de hoy. La intersección verificada entra en el manifiesto como
- *   `intersections`, que dossier-check ya mide, y separa la perla que estaba en un conjunto pero fuera de
- *   toda cabecera traída de la que no estaba en ninguno. Mide el conjunto de hoy: si el recuento cambió, se dice.
- * - Relectura de los abstracts cuya huella declarada no corresponde al texto archivado, uno por llamada. Si
- *   la huella de hoy es la declarada y el texto coincide salvo espacios especiales, el archivo los normalizó;
- *   si coincide la huella y no el texto, lo alteró; si la huella de hoy es otra, no se decide.
+ *   en OR con [pmid]>)` y, aparte, su recuento de hoy. La intersección verificada entra en el manifiesto como
+ *   `intersections`, que dossier-check mide, y separa la perla que estaba en un conjunto pero fuera de toda
+ *   cabecera traída de la que no estaba en ninguno. Mide el conjunto de hoy: el recuento dice si es el mismo,
+ *   si cambió o si no se pudo comparar.
+ * - Relectura de los abstracts cuya huella declarada no corresponde al texto archivado, uno por llamada. Solo
+ *   decide una relectura íntegra y atribuible, comprobada con el mismo criterio que una lectura del dossier. Si
+ *   su huella es la declarada y el texto coincide salvo espacios especiales, la copia los normalizó; si coincide
+ *   la huella y no el texto, la copia lo alteró; si la huella de hoy es otra, no se decide. Dice qué le pasó a
+ *   la copia, no quién la hizo.
  *
  * `search(term, retmax)` y `read(pmid, n)` devuelven recibos del ejecutor del repo; `pause()` espacia las llamadas.
  */
@@ -154,40 +205,48 @@ export async function onlineChecks(built, result, { search, read, pause = async 
   const failures = [];
   const payloadAt = new Map(built.manifest.attempts.map((a) => [a.attempt_ref, payloadOf(decode(built.files.get(a.file)))]));
   const out = { perlas: null, passes: [], rereads: [], failures, files };
+  const why = (e) => String(e?.message ?? e).slice(0, 160);
 
   const R = built.manifest.reference ? decode(built.files.get(built.manifest.reference.file)).target_pmids : null;
   const within = Array.isArray(result.retention?.within_query) ? result.retention.within_query : [];
-  const keyOf = (p) => JSON.stringify([p.plan_ref, p.pass_id, p.walk_id ?? null]);
-  const measured = new Set(within.map(keyOf));
+  const measured = new Set(within.map(passKey));
   if (R && result.retention?.status === 'measured') {
     const orList = R.map((p) => `${p}[pmid]`).join(' OR ');
-    for (const [i, p] of result.passes.filter((x) => x.attempts_valid.length && !measured.has(keyOf(x))).entries()) {
+    for (const [i, p] of result.passes.filter((x) => x.attempts_valid.length && !measured.has(passKey(x))).entries()) {
       const queries = [...new Set(p.attempts_valid.map((ref) => payloadAt.get(ref)?.sent_query))];
-      const row = { plan_ref: p.plan_ref, pass_id: p.pass_id, walk_id: p.walk_id, count_receipt: p.funnel.found, count_today: null, intersection: null };
+      const row = { plan_ref: p.plan_ref, pass_id: p.pass_id, walk_id: p.walk_id, count_receipt: p.funnel.found, count_today: null,
+        count_status: 'not_compared', intersection: null };
       out.passes.push(row);
-      if (queries.length !== 1) { failures.push(`${p.pass_id}: más de una consulta en la pasada; sin intersección`); continue; }
+      if (queries.length !== 1 || typeof queries[0] !== 'string') { failures.push(`${p.pass_id}: no tiene una sola consulta; sin intersección`); continue; }
+      const n = String(i + 1).padStart(3, '0');
       try {
         await pause();
         const inter = await search(`(${queries[0]}) AND (${orList})`, R.length);
+        if (inter?.status?.query_integrity !== 'verified' || inter?.records_complete !== true) {
+          failures.push(`${p.pass_id}: intersección ${inter?.status?.query_integrity ?? 'ilegible'}${inter?.records_complete === true ? '' : ', sin la lista entera'}; no se mide`);
+          files.set(`en-linea/interseccion-no-usada-${n}.json`, enc(JSON.stringify(inter ?? null)));
+        } else {
+          const bytes = enc(JSON.stringify(inter));
+          const file = `intersecciones/${n}.json`;
+          built.files.set(file, bytes);
+          (built.manifest.intersections ??= []).push({ file, sha256: await sha256Bytes(bytes), plan_ref: p.plan_ref, pass_id: p.pass_id,
+            ...(p.walk_id ? { walk_id: p.walk_id } : {}) });
+          row.intersection = file;
+        }
+      } catch (e) {
+        failures.push(`${p.pass_id}: intersección no obtenida (${why(e)})`);
+      }
+      // El recuento va aparte: si falla, la intersección no se pierde y la comparación queda sin hacer.
+      try {
         await pause();
         const today = await search(queries[0], 0);
-        const n = String(i + 1).padStart(3, '0');
-        files.set(`en-linea/recuento-${n}.json`, enc(JSON.stringify(today)));
-        row.count_today = today.status.query_integrity === 'verified' ? today.result_count : null;
-        if (inter.status.query_integrity !== 'verified' || inter.records_complete !== true) {
-          failures.push(`${p.pass_id}: intersección ${inter.status.query_integrity}${inter.records_complete ? '' : ', sin la lista entera'}; no se mide`);
-          files.set(`en-linea/interseccion-no-usada-${n}.json`, enc(JSON.stringify(inter)));
-          continue;
-        }
-        const bytes = enc(JSON.stringify(inter));
-        const file = `intersecciones/${n}.json`;
-        built.files.set(file, bytes);
-        (built.manifest.intersections ??= []).push({ file, sha256: await sha256Bytes(bytes), plan_ref: p.plan_ref, pass_id: p.pass_id,
-          ...(p.walk_id ? { walk_id: p.walk_id } : {}) });
-        row.intersection = file;
+        files.set(`en-linea/recuento-${n}.json`, enc(JSON.stringify(today ?? null)));
+        if (today?.status?.query_integrity === 'verified' && Number.isSafeInteger(today.result_count)) row.count_today = today.result_count;
+        else failures.push(`${p.pass_id}: recuento de hoy ${today?.status?.query_integrity ?? 'ilegible'}; no se compara`);
       } catch (e) {
-        failures.push(`${p.pass_id}: ${String(e?.message ?? e).slice(0, 160)}`);
+        failures.push(`${p.pass_id}: recuento de hoy no obtenido (${why(e)})`);
       }
+      if (row.count_today !== null && Number.isSafeInteger(row.count_receipt)) row.count_status = row.count_today === row.count_receipt ? 'equal' : 'changed';
     }
   }
 
@@ -199,40 +258,56 @@ export async function onlineChecks(built, result, { search, read, pause = async 
       suspects.push({ attempt_ref: a.attempt_ref, pmid: x.requested_pmid, declared: x.abstract_sha256, archived: x.abstract_canonical });
     }
   }
+  // Por PMID: el registro releído si la relectura es íntegra y atribuible, o el motivo por el que no decide.
   const fresh = new Map();
   for (const [i, pmid] of [...new Set(suspects.map((s) => s.pmid))].entries()) {
+    let receipt;
     try {
       await pause();
-      const receipt = await read(pmid, i + 1);
-      files.set(`en-linea/relectura-${String(i + 1).padStart(3, '0')}.json`, enc(JSON.stringify(receipt)));
-      fresh.set(pmid, receipt.results?.find((r) => r.requested_pmid === pmid) ?? null);
+      receipt = await read(pmid, i + 1);
     } catch (e) {
-      failures.push(`relectura de ${pmid}: ${String(e?.message ?? e).slice(0, 160)}`);
+      fresh.set(pmid, { reason: `relectura no obtenida (${why(e)})` });
+      continue;
     }
+    files.set(`en-linea/relectura-${String(i + 1).padStart(3, '0')}.json`, enc(JSON.stringify(receipt ?? null)));
+    const check = await checkFetchReceipt(payloadOf(receipt) ?? receipt);
+    const record = receipt?.results?.find?.((r) => r?.requested_pmid === pmid) ?? payloadOf(receipt)?.results?.find?.((r) => r?.requested_pmid === pmid);
+    const abstract = check.abstracts.find((x) => x.pmid === pmid);
+    const reason = !check.usable ? `relectura no válida: ${check.problems.slice(0, 3).join('; ')}`
+      : !check.attributable.has(pmid) ? 'relectura sin registro atribuible a ese PMID'
+        : record?.record_status !== 'with_abstract' ? `relectura sin abstract (${record?.record_status ?? 'sin registro'})`
+          : !abstract?.ok ? `abstract releído no íntegro: ${abstract?.problems.join('; ') ?? 'sin comprobar'}` : null;
+    fresh.set(pmid, reason ? { reason } : { record });
   }
   for (const s of suspects) {
     const f = fresh.get(s.pmid);
     const base = { attempt_ref: s.attempt_ref, pmid: s.pmid };
-    if (!f || f.record_status !== 'with_abstract') out.rereads.push({ ...base, outcome: 'not_reread', detail: f ? `${f.record_status}${f.reason ? `: ${f.reason}` : ''}` : 'sin respuesta' });
-    else if (f.abstract_sha256 !== s.declared) out.rereads.push({ ...base, outcome: 'hash_differs_today', detail: 'NCBI da hoy otro texto, o la huella declarada no era la suya: no se decide' });
-    else if (f.abstract_canonical.replace(SPECIAL_SPACE, ' ') === s.archived.replace(SPECIAL_SPACE, ' ')) {
-      out.rereads.push({ ...base, outcome: 'normalized', detail: 'espacios especiales cambiados por espacios normales', code_points: codePoints(f.abstract_canonical) });
+    if (f.reason) {
+      out.rereads.push({ ...base, outcome: 'not_reread', detail: f.reason });
+      if (!failures.some((x) => x.startsWith(`relectura de ${s.pmid}:`))) failures.push(`relectura de ${s.pmid}: ${f.reason}`);
+    } else if (f.record.abstract_sha256 !== s.declared) {
+      out.rereads.push({ ...base, outcome: 'hash_differs_today', detail: 'NCBI da hoy otro texto, o la huella declarada no era la suya: no se decide' });
+    } else if (f.record.abstract_canonical.replace(SPECIAL_SPACE, ' ') === s.archived.replace(SPECIAL_SPACE, ' ')) {
+      out.rereads.push({ ...base, outcome: 'normalized', detail: 'espacios especiales cambiados por espacios normales', code_points: codePoints(f.record.abstract_canonical) });
     } else out.rereads.push({ ...base, outcome: 'altered', detail: 'la huella declarada es la de hoy, pero el texto archivado difiere en algo más que espacios' });
   }
   return out;
 }
 
-/** Con las intersecciones ya medidas: qué perlas no devueltas estaban en algún conjunto y cuáles en ninguno. */
+/**
+ * Con las intersecciones ya medidas: qué perlas no devueltas estaban en algún conjunto y cuáles en ninguno de
+ * los medidos. Una pasada sin intersección, también la fallida, limita la conclusión: sin ningún conjunto
+ * medido no se concluye nada; con alguno sin medir, es parcial.
+ */
 function splitPerlas(result, online) {
   const within = Array.isArray(result.retention?.within_query) ? result.retention.within_query : [];
   const missing = result.retention.stages[0].missing;
   const inSet = new Set(within.flatMap((w) => w.hits));
-  const keyOf = (p) => JSON.stringify([p.plan_ref, p.pass_id, p.walk_id ?? null]);
-  const measured = new Set(within.map(keyOf));
-  const notMeasured = result.passes.filter((p) => p.attempts_valid.length && !measured.has(keyOf(p))).map((p) => p.pass_id);
+  const measured = new Set(within.map(passKey));
+  const notMeasured = result.passes.filter((p) => !measured.has(passKey(p))).map((p) => p.pass_id ?? '¿?');
   online.perlas = {
-    status: notMeasured.length ? 'partial' : 'measured', passes_not_measured: notMeasured,
-    outside_head: missing.filter((p) => inSet.has(p)), outside_sets: missing.filter((p) => !inSet.has(p)),
+    status: !within.length ? 'not_measured' : notMeasured.length ? 'partial' : 'measured', passes_not_measured: notMeasured,
+    outside_head: missing.filter((p) => inSet.has(p)), outside_sets: within.length ? missing.filter((p) => !inSet.has(p)) : [],
   };
 }
 
@@ -257,15 +332,18 @@ export function renderReport(result, { source, built, online = null }) {
     + ` ${built.contextCalls.length} de catálogo o filtro y ${by('other')} de otras herramientas.`);
   if (built.unreadable.length) out.push(`- **Líneas ilegibles:** ${built.unreadable.map((u) => `${u.line} (${u.reason})`).join(', ')}.`);
   const compared = built.responseOnly.length ? ` (${built.responseOnly.length} líneas traen solo la respuesta: herramienta deducida del recibo y petición sin comparar)` : '';
+  const fieldsAt = (xs) => xs.map((m) => `${m.line} (${m.fields.join(', ')})`).join('; ');
   out.push(`- **Petición archivada frente a la acreditada por su recibo:** ${built.requestMismatches.length
-    ? `distinta en las líneas ${built.requestMismatches.map((m) => m.line).join(', ')}` : 'coinciden todas las comparables'}${compared}.`);
+    ? `distinta en las líneas ${fieldsAt(built.requestMismatches)}` : 'coinciden en todos los campos comparados'}${compared}.`
+    + ' Se comparan consulta, tamaño pedido, desplazamiento, orden, filtros declarados y registro de selección en las búsquedas; PMID y contexto en lecturas y cribados.');
+  if (built.requestUncomparable.length) out.push(`- **Campos archivados que el recibo no permite comparar:** líneas ${fieldsAt(built.requestUncomparable)}.`);
   const failed = r.exclusions.filter((x) => /integridad|búsqueda fallida/.test(x.reason));
   out.push(`- **Búsquedas excluidas por integridad:** ${failed.length ? failed.map((x) => `${x.attempt_ref} (${x.reason})`).join('; ') : 'ninguna'}.`);
   out.push(`- **Defectos del material:** ${r.defects.length ? '' : 'ninguno.'}`);
   for (const d of r.defects.slice(0, 30)) out.push(`  - \`${d.code}\`: ${d.detail}`);
   if (r.defects.length > 30) out.push(`  - y ${r.defects.length - 30} más en dossier-check.json`);
   if (r.defects.some((d) => d.code === 'abstract_gap' && /abstract_sha256 no coincide/.test(d.detail))) {
-    out.push('', 'Una huella declarada que no coincide con el texto archivado suele indicar que quien archivó normalizó caracteres:'
+    out.push('', 'Una huella declarada que no coincide con el texto archivado suele indicar que la copia normalizó caracteres, al archivar o al exportar:'
       + ' espacios especiales, comillas o saltos de línea. Releer esos PMID distingue la normalización de una alteración del contenido.'
       + (online ? ' La relectura está en la sección «Con red».' : ' Con `--en-linea`, el auditor los relee.')
       + ' En cualquier caso, esos abstracts no cuentan como íntegros.');
@@ -308,10 +386,12 @@ export function renderReport(result, { source, built, online = null }) {
       out.push('- **Dentro del conjunto entero de cada pasada:** no medido. Una perla que falta puede estar fuera de la cabecera traída o fuera de la estrategia.');
     }
     const sp = online?.perlas;
-    if (sp) {
+    if (sp?.status === 'not_measured') {
+      out.push(`- **Dentro de algún conjunto:** no medido; no hay ninguna intersección válida (sin medir: ${list(sp.passes_not_measured)}). No se puede decir si las perlas que faltan estaban fuera de la cabecera o fuera de la estrategia.`);
+    } else if (sp) {
       out.push(`- **No devueltas, pero en algún conjunto:** ${list(sp.outside_head)}. La estrategia las alcanzaba; se quedaron fuera de la cabecera traída.`);
       out.push(`- **No devueltas y en ningún conjunto${sp.status === 'measured' ? '' : ' de los medidos'}:** ${list(sp.outside_sets)}.`
-        + (sp.status === 'measured' ? ' Fuera de la estrategia.' : ` Sin medir: ${sp.passes_not_measured.join(', ')}.`));
+        + (sp.status === 'measured' ? ' Fuera de la estrategia.' : ` Sin medir: ${sp.passes_not_measured.join(', ')}, así que pudieron estar en alguno de esos.`));
     }
     out.push('');
   } else if (built.referenceError) out.push('## Perlas', '', `- ${built.referenceError}.`, '');
@@ -323,14 +403,18 @@ export function renderReport(result, { source, built, online = null }) {
       for (const p of online.passes) {
         out.push(`| ${p.pass_id}${p.walk_id ? ` (${p.walk_id})` : ''} | ${num(p.count_receipt)} | ${num(p.count_today)} | ${p.intersection ?? 'no medida'} |`);
       }
-      const drift = online.passes.filter((p) => p.count_today !== null && p.count_receipt !== null && p.count_today !== p.count_receipt);
-      out.push('', drift.length ? `El recuento ha cambiado en ${drift.map((p) => p.pass_id).join(', ')}. Ahí, una perla dentro del conjunto de hoy pudo no estar en el de la búsqueda, o al revés.`
-        : 'Los recuentos de hoy son los del recibo.', '');
+      const ids = (st) => online.passes.filter((p) => p.count_status === st).map((p) => p.pass_id);
+      const [changedIds, unknownIds] = [ids('changed'), ids('not_compared')];
+      const lines = [];
+      if (changedIds.length) lines.push(`El recuento ha cambiado en ${changedIds.join(', ')}. Ahí, una perla dentro del conjunto de hoy pudo no estar en el de la búsqueda, o al revés.`);
+      if (unknownIds.length) lines.push(`No se pudo comparar el recuento en ${unknownIds.join(', ')}: no se sabe si su conjunto de hoy es el de la búsqueda.`);
+      if (!lines.length) lines.push('Los recuentos de hoy son los del recibo en todas las pasadas comparadas.');
+      out.push('', ...lines, '');
     } else if (!r.retention || r.retention.status !== 'measured') out.push('- **Perlas dentro del conjunto:** sin perlas, no se lanzan intersecciones.', '');
     const by = (o) => online.rereads.filter((x) => x.outcome === o);
     if (online.rereads.length) {
       out.push(`- **Relectura de huellas que no cuadran:** ${online.rereads.length} abstracts.`);
-      for (const [o, label] of [['normalized', 'Normalizados al archivar, mismo contenido'], ['altered', 'Alterados'],
+      for (const [o, label] of [['normalized', 'Normalizados en la copia, mismo contenido'], ['altered', 'Alterados'],
         ['hash_differs_today', 'Con otra huella hoy, sin decidir'], ['not_reread', 'Sin relectura']]) {
         const xs = by(o);
         if (!xs.length) continue;
@@ -369,13 +453,24 @@ export async function auditSurface(jsonlText, { responseBytes = null, perlas = n
   if (net) {
     online = await onlineChecks(built, result, net);
     if (built.manifest.intersections?.length) {
-      // Una intersección del auditor que el comprobador rechaza sería un defecto atribuido al material del
-      // modelo: se retiran todas y se declara como fallo propio.
+      // Las intersecciones son material del auditor: solo pueden añadir la medida dentro del conjunto. Si la
+      // segunda comprobación cambia el veredicto, los defectos o las incertidumbres del material del modelo
+      // (un rechazo, una excepción del comprobador, lo que sea), se retiran todas, se guardan como evidencia
+      // propia y se conserva entera la comprobación base (revisión de Codex del auditor, R1).
       const second = await checkDossier(built.manifest, load);
-      const rejected = second.defects.filter((d) => d.code === 'intersection');
-      if (rejected.length) {
-        online.failures.push(`intersecciones rechazadas por dossier-check, no se usan: ${rejected.map((d) => d.detail).join('; ')}`);
-        for (const x of built.manifest.intersections) built.files.delete(x.file);
+      const changed = [
+        second.verdict !== result.verdict && `veredicto ${result.verdict} → ${second.verdict}`,
+        !same(second.defects, result.defects) && `defectos ${result.defects.length} → ${second.defects.length}`,
+        !same(second.uncertainties, result.uncertainties) && `incertidumbres ${result.uncertainties.length} → ${second.uncertainties.length}`,
+      ].filter(Boolean);
+      if (changed.length) {
+        const reasons = [...second.defects.filter((d) => d.code === 'intersection'), ...second.uncertainties.filter((u) => u.code === 'checker_exception')]
+          .map((d) => d.detail.slice(0, 200));
+        online.failures.push(`intersecciones descartadas: cambiaban la comprobación del material (${changed.join('; ')})${reasons.length ? `: ${reasons.join('; ')}` : ''}`);
+        for (const [k, x] of built.manifest.intersections.entries()) {
+          online.files.set(`en-linea/interseccion-rechazada-${String(k + 1).padStart(3, '0')}.json`, built.files.get(x.file));
+          built.files.delete(x.file);
+        }
         built.manifest.intersections = [];
         for (const p of online.passes) p.intersection = null;
       } else result = second;

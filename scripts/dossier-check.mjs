@@ -35,7 +35,7 @@ import { sha256Bytes, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION, RECORD_STATUSES
 import { ABSTRACT_FORMAT, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
 import { SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION, COUNTS_AS as SUMMARY_COUNTS_AS, RECORD_STATUSES as SUMMARY_RECORD_STATUSES } from './summary-core.mjs';
 
-export const CHECKER_VERSION = '1.1.0';
+export const CHECKER_VERSION = '1.1.1';
 export const FORMATS = {
   manifest: 'pubmed-dossier-manifest',
   capture_log: 'pubmed-dossier-capture-log',
@@ -1121,8 +1121,22 @@ async function checkDossierUnguarded(manifest, load) {
   });
 }
 
+/**
+ * Un recibo de lectura suelto, con los mismos controles que dentro de un dossier: forma, coherencia,
+ * atribución por PMID y cada abstract contra su huella, su tamaño y su forma canónica. Para quien lee por
+ * su cuenta fuera de un dossier, como el auditor al releer, sin otra definición de «íntegro».
+ */
+export async function checkFetchReceipt(payload) {
+  if (kindOf(payload) !== 'fetch') return { usable: false, problems: ['no es un recibo de lectura ejecutado'], attributable: new Set(), abstracts: [] };
+  const shape = fetchShapeErrors(payload);
+  if (shape.length) return { usable: false, problems: [`forma no válida: ${shape.join(', ')}`], attributable: new Set(), abstracts: [] };
+  const { defects, attributable, abstracts } = await fetchDefects(payload);
+  const failed = payload.status.record_identity === 'failed' || payload.status.delivery === 'failed';
+  return { usable: !defects.length && !failed, problems: failed ? [...defects, 'identidad o entrega fallidas'] : defects, attributable, abstracts };
+}
+
 /** Referencia propia o un caso de cases.json (reference.pmids, con la revisión de origen como síntesis). */
-function referenceFrom(json, caseId) {
+export function referenceFrom(json, caseId) {
   let ref;
   if (Array.isArray(json?.cases)) {
     const c = json.cases.find((x) => x?.id === caseId);
@@ -1153,6 +1167,10 @@ async function intersectionRetention(x, i, { readRef, decodeJson, passes, R, sta
   if (!json) return {};
   const r = unwrap(json).payload;
   if (kindOf(r) !== 'search') return { defect: `${at}: no es un recibo de búsqueda` };
+  // La forma antes que los campos, como en los intentos: sin ella, un recibo incompleto tumbaba el
+  // comprobador entero (revisión de Codex del auditor, R1).
+  const shape = searchShapeErrors(r);
+  if (shape.length) return { defect: `${at}: forma de recibo de búsqueda no válida (${shape.join(', ')})` };
   const sd = await searchDefects(r);
   if (sd.length) return { defect: `${at}: ${sd.join('; ')}` };
   const pass = passes.find((p) => p.plan_ref === x.plan_ref && p.pass_id === x.pass_id && p.walk_id === (x.walk_id ?? null));

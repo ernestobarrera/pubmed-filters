@@ -194,7 +194,7 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X23 dossier y
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X28 dossier y
 auditor de superficie; también en la CI y en la puerta de mutación).
 
 ### Auditoría de una superficie
@@ -217,26 +217,36 @@ niveles de garantía:
 - perlas;
 - lo que no acredita.
 
-Además comprueba que la petición archivada coincida con la que acredita su recibo. El catálogo y el filtro se
-listan aparte, y una línea ilegible se cuenta.
+Además compara la petición archivada con la que acredita su recibo, campo a campo y con los valores por
+defecto del MCP:
+- en una búsqueda, consulta, tamaño pedido, desplazamiento, orden, filtros declarados y registro de selección;
+- en una lectura o un cribado, PMID y contexto.
+
+Un campo archivado que el recibo no refleja se declara como no comparable. El catálogo y el filtro se listan
+aparte, y una línea ilegible se cuenta.
 
 Las perlas son una lista de PMID o un `pubmed-dossier-reference`. Sin registro de cierre externo, una
 superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Sin `--en-linea`,
 es local y sin red.
 
-Una huella declarada que no coincide con el texto archivado suele ser una normalización hecha al archivar,
-como cambiar espacios especiales por espacios normales. Ese abstract no cuenta como íntegro, porque lo
-conservado no es lo que llegó.
+Una huella declarada que no coincide con el texto archivado suele ser una normalización de la copia, al
+archivar o al exportar, como cambiar espacios especiales por espacios normales. Ese abstract no cuenta como
+íntegro, porque lo conservado no es lo que llegó.
 
-Con `--en-linea`, el auditor hace dos comprobaciones con NCBI que no tocan el material del modelo ni suman
-lecturas:
+Con `--en-linea`, el auditor hace dos comprobaciones con NCBI. Sus llamadas, sus fallos y su incertidumbre
+quedan aparte del material del modelo: no cambian su veredicto, sus defectos ni sus denominadores.
 - **Perlas dentro del conjunto.** Por cada pasada válida lanza `(<su consulta>) AND (<las perlas en OR con
-  [pmid]>)` y su recuento de hoy. La intersección verificada entra en el manifiesto como `intersections`. El
-  informe separa la perla que estaba en un conjunto, pero fuera de toda cabecera traída, de la que no estaba en
-  ninguno. Mide el conjunto de hoy: si el recuento cambió, lo dice.
-- **Relectura de las huellas que no cuadran.** Si la huella de hoy es la declarada y el texto solo difiere en
-  espacios especiales, fue una normalización. Si la huella coincide y el texto difiere en algo más, fue una
-  alteración. Si la huella de hoy es otra, no se decide.
+  [pmid]>)` y, aparte, su recuento de hoy. La intersección verificada entra en el manifiesto como
+  `intersections`. El informe separa la perla que estaba en un conjunto, pero fuera de toda cabecera traída,
+  de la que no estaba en ninguno de los medidos.
+  - Una pasada sin intersección, también una fallida, deja esa conclusión en parcial; sin ningún conjunto
+    medido, no se concluye.
+  - Mide el conjunto de hoy: el recuento dice si es el mismo, si cambió o si no se pudo comparar.
+  - Si una intersección cambia la comprobación del material, se descarta y se guarda aparte.
+- **Relectura de las huellas que no cuadran.** Solo decide una relectura íntegra y atribuible, comprobada como
+  una lectura del dossier. Si la huella de hoy es la declarada y el texto solo difiere en espacios especiales,
+  la copia se normalizó. Si la huella coincide y el texto difiere en algo más, se alteró. Si la huella de hoy
+  es otra, no se decide. Dice qué le pasó a la copia, no quién la hizo.
 
 Deja sus recibos en `en-linea/` y el resumen en `en-linea.json`. Usa `NCBI_API_KEY` y `NCBI_EMAIL` si están
 en el entorno, sin escribirlos.

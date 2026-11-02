@@ -1209,11 +1209,11 @@ try {
     && b.result.denominators.titles_screened.value === 2
     && hallazgo(b.result, 'read_without_origin') === '33' && hallazgo(b.result, 'mentioned_without_reading') === '99'
     && hallazgo(b.result, 'reference_not_returned') === '77'
-    && /\| p1 \| 2 \| 2 \| 2 \| 2 \| — \|/.test(b.report) && /Leídos sin pasada de origen[^\n]*33/.test(b.report) && /coinciden todas las comparables/.test(b.report)
+    && /\| p1 \| 2 \| 2 \| 2 \| 2 \| — \|/.test(b.report) && /Leídos sin pasada de origen[^\n]*33/.test(b.report) && /coinciden en todos los campos comparados/.test(b.report) && b.built.requestMismatches.length === 0
     && x22.otraPeticion.built.requestMismatches.map((m) => m.line).join() === '2' && /distinta en las líneas 2/.test(x22.otraPeticion.report)
     && x22.normalizado.result.verdict === 'incomplete' && codes(x22.normalizado.result).includes('abstract_gap')
     && /normalizó caracteres/.test(x22.normalizado.report) && !/normalizó caracteres/.test(b.report)
-    && x22.perlasMalas.built.referenceError !== null && /algún PMID no es válido/.test(x22.perlasMalas.report),
+    && x22.perlasMalas.built.referenceError !== null && /perlas: target: lista de PMID/.test(x22.perlasMalas.report),
     `auditor de superficie: ${b.built.manifest.attempts.length} intentos, 1 de catálogo, línea ilegible ${b.built.unreadable.map((u) => u.line).join()}, `
       + `respuesta sola en ${b.built.responseOnly.join()}; ${b.result.verdict}; petición distinta en ${x22.otraPeticion.built.requestMismatches.map((m) => m.line).join()}; `
       + `texto normalizado ${x22.normalizado.result.verdict}; perlas inválidas rechazadas`);
@@ -1268,16 +1268,137 @@ try {
     && relectura('33')?.outcome === 'hash_differs_today'
     && x23.conRed.result.verdict === x23.sinRed.result.verdict && x23.conRed.result.defects.length === x23.sinRed.result.defects.length
     && x23.conRed.result.denominators.D3.value === x23.sinRed.result.denominators.D3.value
-    && [...o.files.keys()].join() === 'en-linea/recuento-001.json,en-linea/relectura-001.json,en-linea/relectura-002.json,en-linea/relectura-003.json'
+    && [...o.files.keys()].join() === 'en-linea/recuento-001.json,en-linea/recuento-002.json,en-linea/relectura-001.json,en-linea/relectura-002.json,en-linea/relectura-003.json'
     && /No devueltas, pero en algún conjunto:\*\* 55/.test(x23.conRed.report) && /en ningún conjunto de los medidos:\*\* 88\. Sin medir: p2/.test(x23.conRed.report)
-    && /Normalizados al archivar, mismo contenido: 1 \(11\)\. Espacios especiales[^\n]*U\+00A0, U\+2009/.test(x23.conRed.report) && /Alterados: 1 \(22: /.test(x23.conRed.report)
+    && /Normalizados en la copia, mismo contenido: 1 \(11\)\. Espacios especiales[^\n]*U\+00A0, U\+2009/.test(x23.conRed.report) && /Alterados: 1 \(22: /.test(x23.conRed.report)
     && rech.built.manifest.intersections.length === 0 && !rech.built.files.has('intersecciones/001.json')
-    && rech.online.failures.some((f) => /rechazadas por dossier-check/.test(f)) && rech.result.verdict === x23.sinRed.result.verdict
+    && rech.online.failures.some((f) => /intersecciones descartadas/.test(f)) && rech.online.files.has('en-linea/interseccion-rechazada-001.json') && rech.result.verdict === x23.sinRed.result.verdict
     && rech.result.defects.length === x23.sinRed.result.defects.length && rech.online.perlas.outside_head.length === 0
     && rech.online.perlas.passes_not_measured.join() === 'p1,p2',
     `auditor con red: intersección ${dentro?.[0]?.hits?.join?.()}, fuera de cabecera ${o.perlas?.outside_head}, en ningún conjunto ${o.perlas?.outside_sets} (${o.perlas?.status}); `
       + `relectura 11 ${relectura('11')?.outcome}, 22 ${relectura('22')?.outcome}, 33 ${relectura('33')?.outcome}; veredicto ${x23.conRed.result.verdict} igual que sin red; `
       + `intersección rechazada retirada sin tocar el veredicto`);
+
+  // --- X24-X28. Contraejemplos de la revisión de Codex del auditor (02/11, R1-R5), cada uno con su control.
+  const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const base23 = x23.sinRed.result;
+  const conBusqueda = (cambia) => ({ ...red, search: async (term, retmax) => {
+    const r = await red.search(term, retmax);
+    return retmax > 0 ? cambia(r) : r;
+  } });
+
+  // X24 (R1). Una intersección del auditor sin `request` o con la lista mal formada no puede borrar los
+  // defectos del material: se descarta, se guarda aparte y queda la comprobación base. dossier-check, por su
+  // parte, la rechaza por forma en vez de interrumpirse.
+  const x24 = {
+    sinRequest: await auditSurface(archivo23, { perlas: ['55', '88', '22'], online: conBusqueda(({ request: _q, ...r }) => r) }),
+    listaRota: await auditSurface(archivo23, { perlas: ['55', '88', '22'], online: conBusqueda((r) => ({ ...r, pmids: r.pmids.join(',') })) }),
+  };
+  const interSinRequest = await red.search('(x23[tiab]) AND (55[pmid] OR 88[pmid] OR 22[pmid])', 3);
+  delete interSinRequest.request;
+  const refX24 = { json: { format: 'pubmed-dossier-reference', format_version: 1, reference_id: 'R-x24', target_pmids: ['55', '88', '22'] } };
+  const directo = (await dossier({ attempts: [S(s23)], reference: refX24, intersections: [{ raw: interSinRequest, plan: 'plan-1', pass: 'p1' }] })).result;
+  const intacta = (a) => a.result.verdict === base23.verdict && igual(a.result.defects, base23.defects) && igual(a.result.uncertainties, base23.uncertainties)
+    && a.result.denominators.D3.value === base23.denominators.D3.value && a.built.manifest.intersections.length === 0
+    && a.online.files.has('en-linea/interseccion-rechazada-001.json') && a.online.failures.some((f) => /intersecciones descartadas/.test(f));
+  check('X24', base23.defects.length > 0 && intacta(x24.sinRequest) && intacta(x24.listaRota) && intacta(x23.rechazada)
+    && !directo.uncertainties.some((u) => u.code === 'checker_exception')
+    && directo.defects.some((d) => d.code === 'intersection' && /forma de recibo de búsqueda no válida/.test(d.detail)),
+    `intersección del auditor sin request, con la lista rota o con la huella falsa: se descarta y queda la base (${base23.verdict}, ${base23.defects.length} defectos, D3 ${
+      base23.denominators.D3.value}); dossier-check la rechaza por forma sin interrumpirse`);
+
+  // X25 (R2). Lo no medido no se convierte en ausencia ni en igualdad: con solo una pasada fallida no hay
+  // conclusión sobre los conjuntos; con una fallida y una válida, es parcial; un recuento que no se pudo
+  // obtener no se da por igual, y uno distinto se dice.
+  queries.set('x25f[tiab]', { ids: ['11'], broken: true });
+  const s25f = await buscar('x25f[tiab]', { pass: 'pf' });
+  const lineaFallida = linea('pubmed_search_exact', { query: 'x25f[tiab]', retmax: 10, retstart: 0, selection_record: registro({ pass: 'pf' }) }, s25f);
+  const lineaValida = linea('pubmed_search_exact', { query: 'x23[tiab]', retmax: 2, retstart: 0, selection_record: registro() }, s23);
+  const conRecuento = (cambia) => ({ ...red, search: async (term, retmax) => (retmax === 0 ? cambia(await red.search(term, retmax)) : red.search(term, retmax)) });
+  const x25 = {
+    soloFallida: await auditSurface(lineaFallida, { perlas: ['11'], online: red }),
+    mezcla: await auditSurface([lineaValida, lineaFallida].join('\n'), { perlas: ['55', '88', '22'], online: red }),
+    sinRecuento: await auditSurface(lineaValida, { perlas: ['55', '88', '22'], online: conRecuento(() => { throw new Error('HTTP 429 simulado'); }) }),
+    otroRecuento: await auditSurface(lineaValida, { perlas: ['55', '88', '22'], online: conRecuento((r) => ({ ...r, result_count: r.result_count + 1 })) }),
+  };
+  const fila = (a, pass) => a.online.passes.find((p) => p.pass_id === pass);
+  check('X25', x25.soloFallida.online.perlas.status === 'not_measured' && x25.soloFallida.online.perlas.outside_sets.length === 0
+    && /no hay ninguna intersección válida/.test(x25.soloFallida.report) && !/Fuera de la estrategia/.test(x25.soloFallida.report)
+    && x25.mezcla.online.perlas.status === 'partial' && x25.mezcla.online.perlas.passes_not_measured.join() === 'pf'
+    && !/Fuera de la estrategia/.test(x25.mezcla.report)
+    && fila(x25.sinRecuento, 'p1').count_status === 'not_compared' && fila(x25.sinRecuento, 'p1').intersection !== null
+    && /No se pudo comparar el recuento en p1/.test(x25.sinRecuento.report) && !/son los del recibo/.test(x25.sinRecuento.report)
+    && fila(x25.otroRecuento, 'p1').count_status === 'changed' && /ha cambiado en p1/.test(x25.otroRecuento.report)
+    && fila(x23.conRed, 'p1').count_status === 'equal' && /son los del recibo en todas las pasadas comparadas/.test(x23.conRed.report),
+    `perlas sin conjunto medido ${x25.soloFallida.online.perlas.status}, con una pasada fallida ${x25.mezcla.online.perlas.status}; recuento sin obtener ${
+      fila(x25.sinRecuento, 'p1').count_status}, distinto ${fila(x25.otroRecuento, 'p1').count_status}, igual ${fila(x23.conRed, 'p1').count_status}`);
+
+  // X26 (R3). La petición archivada se compara campo a campo: tamaño pedido, desplazamiento, orden, filtros
+  // y registro de selección en la búsqueda; contexto en la lectura. Omitir un valor por defecto o pedir una
+  // página que el servidor acota no es una diferencia; un campo que el recibo no refleja se declara.
+  queries.set('x26w[tiab]', { ids: Array.from({ length: 10000 }, (_, i) => String(i + 1)) });
+  const s26w = await buscar('x26w[tiab]', { retmax: 20, retstart: 9990 });
+  const pide = (cambios) => ({ query: 'x23[tiab]', retmax: 2, selection_record: registro(), ...cambios });
+  const archivo26 = [
+    linea('pubmed_search_exact', pide({}), s23),
+    linea('pubmed_search_exact', pide({ retmax: 99 }), s23),
+    linea('pubmed_search_exact', pide({ retstart: 50 }), s23),
+    linea('pubmed_search_exact', pide({ sort: 'relevance' }), s23),
+    linea('pubmed_search_exact', pide({ selection_record: registro({ pass: 'p9' }) }), s23),
+    linea('pubmed_search_exact', pide({ filters_used: ['filters/clinical/x.txt'] }), s23),
+    linea('pubmed_search_exact', pide({ nota: 'campo que el MCP no admite' }), s23),
+    linea('pubmed_search_exact', { query: 'x26w[tiab]', retmax: 20, retstart: 9990, selection_record: registro() }, s26w),
+    linea('pubmed_fetch_exact', { pmids: ['11', '22', '33'], context: { plan_ref: 'plan-1', read_id: 'otro' } }, f23),
+  ].join('\n');
+  const x26 = await auditSurface(archivo26);
+  const campos = (xs) => Object.fromEntries(xs.map((m) => [m.line, m.fields.join('+')]));
+  check('X26', igual(campos(x26.built.requestMismatches), { 2: 'retmax', 3: 'retstart', 4: 'sort', 5: 'selection_record', 6: 'filters_used', 9: 'context' })
+    && igual(campos(x26.built.requestUncomparable), { 7: 'nota' })
+    && /distinta en las líneas 2 \(retmax\); 3 \(retstart\)/.test(x26.report) && /no permite comparar:\*\* líneas 7 \(nota\)/.test(x26.report),
+    `petición archivada distinta por campo: ${JSON.stringify(campos(x26.built.requestMismatches))}; sin comparar ${JSON.stringify(campos(x26.built.requestUncomparable))}; `
+      + 'omisiones por defecto y página acotada, iguales');
+
+  // X27 (R4). Solo decide una relectura íntegra y atribuible: con la identidad fallida, otro returned_pmid o
+  // un texto que no es el de su propia huella, el PMID queda sin releer y como fallo del auditor; nunca
+  // «normalizado». Lo releído sigue sin sumar a D3.
+  const conLectura = (cambia) => ({ ...red, read: async (pmid, n) => {
+    const r = await red.read(pmid, n);
+    if (pmid !== '11') return r;
+    const c = structuredClone(r);
+    cambia(c, c.results.find((x) => x.requested_pmid === '11'));
+    return c;
+  } });
+  const archivadoDe11 = archivado.result.structuredContent.results.find((x) => x.requested_pmid === '11').abstract_canonical;
+  const x27 = {
+    identidad: await auditSurface(archivo23, { online: conLectura((c) => { c.status = { record_identity: 'failed', delivery: 'failed' }; }) }),
+    otroPmid: await auditSurface(archivo23, { online: conLectura((_c, x) => { x.returned_pmid = '999'; }) }),
+    otraHuella: await auditSurface(archivo23, { online: conLectura((_c, x) => { x.abstract_canonical = archivadoDe11; }) }),
+    todo: await auditSurface(archivo23, { online: conLectura((c, x) => {
+      c.status = { record_identity: 'failed', delivery: 'failed' }; x.returned_pmid = '999'; x.abstract_canonical = archivadoDe11;
+    }) }),
+  };
+  const releido = (a, pmid) => a.online.rereads.find((x) => x.pmid === pmid);
+  check('X27', Object.values(x27).every((a) => releido(a, '11')?.outcome === 'not_reread' && a.online.failures.some((f) => /^relectura de 11: /.test(f))
+    && releido(a, '22')?.outcome === 'altered' && a.result.denominators.D3.value === base23.denominators.D3.value)
+    && /no íntegro/.test(releido(x27.otraHuella, '11').detail) && releido(x23.conRed, '11')?.outcome === 'normalized',
+    `relectura con identidad fallida, otro PMID u otro texto: ${Object.values(x27).map((a) => releido(a, '11')?.outcome).join(', ')}; la válida, ${releido(x23.conRed, '11')?.outcome}`);
+
+  // X28 (R5). Una referencia con forma inválida da un error de referencia y el resto del informe; nunca
+  // interrumpe el auditor ni se rellena con una lista vacía.
+  const refBase = { format: 'pubmed-dossier-reference', format_version: 1, reference_id: 'r' };
+  const x28 = {};
+  for (const [k, v] of Object.entries({ nula: { ...refBase, target_pmids: null }, ausente: { ...refBase }, objeto: { ...refBase, target_pmids: {} },
+    repetida: { ...refBase, target_pmids: ['55', '55'] }, version: { ...refBase, format_version: 2, target_pmids: ['55'] }, valida: { ...refBase, target_pmids: ['55', '22'] } })) {
+    try { x28[k] = await auditSurface(archivo23, { perlas: v }); } catch (e) { x28[k] = { thrown: String(e?.message ?? e) }; }
+  }
+  const rechazadaRef = (k, re) => !x28[k].thrown && re.test(x28[k].built.referenceError ?? '') && !x28[k].built.manifest.reference
+    && new RegExp(`## Perlas\\n\\n- ${re.source}`).test(x28[k].report) && x28[k].result.verdict === base23.verdict;
+  check('X28', rechazadaRef('nula', /perlas: target: lista de PMID/) && rechazadaRef('ausente', /perlas: target: lista de PMID/)
+    && rechazadaRef('objeto', /perlas: target: lista de PMID/) && rechazadaRef('repetida', /perlas: target: PMID repetidos/)
+    && rechazadaRef('version', /perlas: no es pubmed-dossier-reference versión 1/)
+    && !x28.valida.thrown && x28.valida.built.referenceError === null && x28.valida.result.retention.status === 'measured',
+    `referencias inválidas: ${['nula', 'ausente', 'objeto', 'repetida', 'version'].map((k) => x28[k].thrown ?? x28[k].built.referenceError).join(' | ')}; la válida, ${
+      x28.valida.thrown ?? x28.valida.result.retention.status}`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }
