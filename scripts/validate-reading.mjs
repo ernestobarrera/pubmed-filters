@@ -28,6 +28,7 @@ import { ESUMMARY_URL } from './esummary.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
 import { runFetch, fetchRequestError, sha256Bytes, MAX_STRUCTURED_BYTES, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
 import { checkDossier, extractCandidates } from './dossier-check.mjs';
+import { auditSurface } from './audit-surface.mjs';
 import { runSummary, summaryRequestError, parseJsonStrict, JsonStrictError, SUMMARY_RECEIPT_TYPE } from './summary-core.mjs';
 import { createMcpHandler } from '../mcp/protocol.mjs';
 
@@ -1175,6 +1176,47 @@ try {
     && JSON.stringify(embudo) === JSON.stringify({ found: 2, returned: 2, screened: 2, abstracts_obtained: 2, used: 1 }),
     `hallazgos: leído sin origen ${hallazgo(x21.sinOrigen, 'read_without_origin')}, declarado ninguno; mencionado sin leer ${
       hallazgo(x21.mencion, 'mentioned_without_reading')}; referencia no devuelta ${hallazgo(x21.referencia, 'reference_not_returned')}; embudo ${JSON.stringify(embudo)}`);
+
+  // X22. Auditor de superficie: del archivo que conserva el modelo (líneas { tool, request, response } o la
+  // respuesta sola) al dossier y al informe. El catálogo va aparte, una línea ilegible se cuenta, una petición
+  // archivada distinta de la acreditada se señala, un texto normalizado al archivar no cuenta como íntegro.
+  const linea = (tool, args, env) => JSON.stringify({ tool, request: args, response: env.result });
+  const argsCtl = { query: 'ctl[tiab]', retmax: 10, retstart: 0, selection_record: registro() };
+  const catalogo = await call('pubmed_filter_catalog', { include_journals: false });
+  const archivo = (busqueda = argsCtl, lectura = ctlF) => [
+    linea('pubmed_filter_catalog', { include_journals: false }, catalogo),
+    linea('pubmed_search_exact', busqueda, ctlS),
+    linea('pubmed_summary_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', screen_id: 'c1' } }, criba),
+    linea('pubmed_fetch_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', read_id: 'lc' } }, lectura),
+    JSON.stringify(leido33.result),
+    'esto no es json',
+  ].join('\n');
+  const normalizado = tocar(ctlF, (sc) => {
+    const r = sc.results.find((x) => x.requested_pmid === '11');
+    r.abstract_canonical = r.abstract_canonical.replace(' ', ' ');
+  });
+  const x22 = {
+    base: await auditSurface(archivo(), { responseBytes: enc('According to PMID 11 and PMID 99.'), perlas: ['11', '77'] }),
+    otraPeticion: await auditSurface(archivo({ ...argsCtl, query: 'otra[tiab]' })),
+    normalizado: await auditSurface(archivo(argsCtl, normalizado)),
+    perlasMalas: await auditSurface(archivo(), { perlas: ['11', 'x'] }),
+  };
+  const b = x22.base;
+  const porHerramienta = (a, tool) => a.built.manifest.attempts.filter((x) => x.tool === tool).length;
+  check('X22', b.built.contextCalls.length === 1 && b.built.unreadable.map((u) => u.line).join() === '6' && b.built.responseOnly.join() === '5'
+    && porHerramienta(b, 'pubmed_search_exact') === 1 && porHerramienta(b, 'pubmed_summary_exact') === 1 && porHerramienta(b, 'pubmed_fetch_exact') === 2
+    && b.result.verdict === 'inconclusive' && b.result.uncertainties.some((u) => u.code === 'inventory_unknown')
+    && b.result.denominators.titles_screened.value === 2
+    && hallazgo(b.result, 'read_without_origin') === '33' && hallazgo(b.result, 'mentioned_without_reading') === '99'
+    && hallazgo(b.result, 'reference_not_returned') === '77'
+    && /\| p1 \| 2 \| 2 \| 2 \| 2 \| — \|/.test(b.report) && /Leídos sin pasada de origen[^\n]*33/.test(b.report) && /coinciden todas las comparables/.test(b.report)
+    && x22.otraPeticion.built.requestMismatches.map((m) => m.line).join() === '2' && /distinta en las líneas 2/.test(x22.otraPeticion.report)
+    && x22.normalizado.result.verdict === 'incomplete' && codes(x22.normalizado.result).includes('abstract_gap')
+    && /normalizó caracteres/.test(x22.normalizado.report) && !/normalizó caracteres/.test(b.report)
+    && x22.perlasMalas.built.referenceError !== null && /algún PMID no es válido/.test(x22.perlasMalas.report),
+    `auditor de superficie: ${b.built.manifest.attempts.length} intentos, 1 de catálogo, línea ilegible ${b.built.unreadable.map((u) => u.line).join()}, `
+      + `respuesta sola en ${b.built.responseOnly.join()}; ${b.result.verdict}; petición distinta en ${x22.otraPeticion.built.requestMismatches.map((m) => m.line).join()}; `
+      + `texto normalizado ${x22.normalizado.result.verdict}; perlas inválidas rechazadas`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }

@@ -194,8 +194,37 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X21 dossier;
-también en la CI y en la puerta de mutación).
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X22 dossier y
+auditor de superficie; también en la CI y en la puerta de mutación).
+
+### Auditoría de una superficie
+
+```
+node scripts/audit-surface.mjs recibos.jsonl --respuesta respuesta.md --perlas perlas.json --salida carpeta/
+```
+
+Cuando la ejecución se hace desde un chat (ChatGPT, claude.ai), el archivo de recibos lo conserva el propio
+modelo. Es un JSONL con una línea por llamada, en una de dos formas: `{ tool, request, response }` o solo la
+respuesta, `{ structuredContent, content }`, en cuyo caso la herramienta se deduce del recibo.
+
+`audit-surface.mjs` convierte ese archivo en un dossier y lo pasa por `dossier-check.mjs`. En la carpeta de
+salida deja el manifiesto, un fichero por recibo, `dossier-check.json` e `informe.md`. El informe sigue los
+niveles de garantía:
+- integridad de las llamadas;
+- integridad de lo recuperado;
+- embudo por pasada;
+- procedencia de lo leído;
+- perlas;
+- lo que no acredita.
+
+Además comprueba que la petición archivada coincida con la que acredita su recibo. El catálogo y el filtro se
+listan aparte, y una línea ilegible se cuenta.
+
+Las perlas son una lista de PMID o un `pubmed-dossier-reference`. Sin registro de cierre externo, una
+superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Es local y sin red.
+
+Una huella declarada que no coincide con el texto archivado suele ser una normalización hecha al archivar,
+como cambiar espacios especiales por espacios normales. El abstract no cuenta como íntegro hasta releerlo.
 
 ### Desde un chat sin terminal: MCP
 
