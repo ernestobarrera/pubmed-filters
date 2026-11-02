@@ -1220,8 +1220,8 @@ try {
 
   // X23. Auditor con red: la intersección verificada entra en el dossier y separa la perla que estaba en el
   // conjunto, pero fuera de la cabecera, de la que no estaba en ninguno; una pasada sin intersección deja la
-  // separación en parcial. La relectura distingue el texto con espacios normalizados del alterado. El
-  // veredicto y los defectos del material no cambian.
+  // separación en parcial. La relectura distingue el texto con espacios normalizados del alterado, y no
+  // decide cuando NCBI da hoy otra huella. El veredicto y los defectos del material no cambian.
   queries.clear(); records.clear();
   queries.set('x23[tiab]', { ids: ['11', '22', '55', '66', '77'] });
   queries.set('x23b[tiab]', { ids: ['66'] });
@@ -1229,17 +1229,20 @@ try {
   records.set('11', article({ pmid: '11', abstract: [{ text: 'Effect of 5\u2009mg versus 10\u00a0mg.' }] }));
   const s23 = await buscar('x23[tiab]', { retmax: 2 });
   const s23b = await buscar('x23b[tiab]', { pass: 'p2' });
-  const f23 = await leer(['11', '22'], 'l23');
+  const f23 = await leer(['11', '22', '33'], 'l23');
+  records.set('33', article({ pmid: '33', abstract: [{ text: 'Revised after the search.' }] }));
   const archivado = tocar(f23, (sc) => {
     const r11 = sc.results.find((x) => x.requested_pmid === '11');
     r11.abstract_canonical = r11.abstract_canonical.replace(/\u2009|\u00a0/g, ' ');
-    const r22 = sc.results.find((x) => x.requested_pmid === '22');
-    r22.abstract_canonical = r22.abstract_canonical.replace('59%', '58%');
+    for (const pmid of ['22', '33']) {
+      const r = sc.results.find((x) => x.requested_pmid === pmid);
+      r.abstract_canonical = r.abstract_canonical.replace('59%', '58%');
+    }
   });
   const archivo23 = [
     linea('pubmed_search_exact', { query: 'x23[tiab]', retmax: 2, retstart: 0, selection_record: registro() }, s23),
     linea('pubmed_search_exact', { query: 'x23b[tiab]', retmax: 10, retstart: 0, selection_record: registro({ pass: 'p2' }) }, s23b),
-    linea('pubmed_fetch_exact', { pmids: ['11', '22'], context: { plan_ref: 'plan-1', read_id: 'l23' } }, archivado),
+    linea('pubmed_fetch_exact', { pmids: ['11', '22', '33'], context: { plan_ref: 'plan-1', read_id: 'l23' } }, archivado),
   ].join('\n');
   const red = ncbiOnline({ run: RUN, fetcher, spacingMs: 0 });
   // Una intersección con la lista desordenada tras sellar su huella: el comprobador la rechaza y no puede
@@ -1262,9 +1265,10 @@ try {
     && JSON.stringify(o.perlas) === JSON.stringify({ status: 'partial', passes_not_measured: ['p2'], outside_head: ['55'], outside_sets: ['88'] })
     && o.passes.find((p) => p.pass_id === 'p1')?.count_today === 5 && o.failures.length === 1 && /^p2: /.test(o.failures[0])
     && relectura('11')?.outcome === 'normalized' && relectura('11')?.code_points.join() === 'U+00A0,U+2009' && relectura('22')?.outcome === 'altered'
+    && relectura('33')?.outcome === 'hash_differs_today'
     && x23.conRed.result.verdict === x23.sinRed.result.verdict && x23.conRed.result.defects.length === x23.sinRed.result.defects.length
     && x23.conRed.result.denominators.D3.value === x23.sinRed.result.denominators.D3.value
-    && [...o.files.keys()].join() === 'en-linea/recuento-001.json,en-linea/relectura-001.json,en-linea/relectura-002.json'
+    && [...o.files.keys()].join() === 'en-linea/recuento-001.json,en-linea/relectura-001.json,en-linea/relectura-002.json,en-linea/relectura-003.json'
     && /No devueltas, pero en algún conjunto:\*\* 55/.test(x23.conRed.report) && /en ningún conjunto de los medidos:\*\* 88\. Sin medir: p2/.test(x23.conRed.report)
     && /Normalizados al archivar, mismo contenido: 1 \(11\)\. Espacios especiales[^\n]*U\+00A0, U\+2009/.test(x23.conRed.report) && /Alterados: 1 \(22: /.test(x23.conRed.report)
     && rech.built.manifest.intersections.length === 0 && !rech.built.files.has('intersecciones/001.json')
@@ -1272,7 +1276,7 @@ try {
     && rech.result.defects.length === x23.sinRed.result.defects.length && rech.online.perlas.outside_head.length === 0
     && rech.online.perlas.passes_not_measured.join() === 'p1,p2',
     `auditor con red: intersección ${dentro?.[0]?.hits?.join?.()}, fuera de cabecera ${o.perlas?.outside_head}, en ningún conjunto ${o.perlas?.outside_sets} (${o.perlas?.status}); `
-      + `relectura 11 ${relectura('11')?.outcome}, 22 ${relectura('22')?.outcome}; veredicto ${x23.conRed.result.verdict} igual que sin red; `
+      + `relectura 11 ${relectura('11')?.outcome}, 22 ${relectura('22')?.outcome}, 33 ${relectura('33')?.outcome}; veredicto ${x23.conRed.result.verdict} igual que sin red; `
       + `intersección rechazada retirada sin tocar el veredicto`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
