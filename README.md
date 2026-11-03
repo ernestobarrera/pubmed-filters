@@ -145,9 +145,10 @@ pasada por título y decidir qué leer. Una pasada de síntesis de 59 registros 
 llamadas (más si quedan pendientes), donde antes hacían falta unas 12 lecturas de abstracts. Un título cribado **no** es un registro leído: destacarlo exige leerlo con
 `pubmed_fetch_exact`, y lo apartado se cuenta aparte (`reading_and_drilldown.title_screen`, quinto recuento
 en `provenance.denominators`). Mismas reglas de recibo que la lectura: por PMID, nunca cortado, pendientes
-explícitos, `run` y cuota compartidos. `dossier-check.mjs` todavía no lee estos recibos: declarados como
-búsqueda o como lectura salen como entrada no reconocida, y declarados como otra ruta se anotan como tal; en
-ningún caso cuentan como lectura.
+explícitos, `run` y cuota compartidos. Desde la versión 1.1.0, `dossier-check.mjs` lee estos recibos como
+un estado propio: suman el quinto recuento (`titles_screened`) y el embudo de cada pasada, y nunca suman a
+D3 ni a D4. Declarados como búsqueda o como lectura son un defecto de herramienta; declarados como otra
+ruta, se anotan como tal.
 
 `dossier-check.mjs` es local y sin red, hermano de `page-union.mjs`. Une recibos de búsqueda y de lectura,
 la respuesta final y sus usos documentados, y mide sobre **lo conservado** los cuatro denominadores (D1
@@ -157,7 +158,16 @@ o `unattributed`, que es «sin procedencia acreditable», no memoria del modelo)
 retención frente a una referencia. Sale 0 `consistent`, 1 `incomplete` (un defecto demostrado: huella o
 archivo que falta, hueco de texto, conflicto, lectura pedida sin resolver, recuperación completa que no pasa
 la unión) o 2 `inconclusive` (sin defecto, pero sin cierre de captura acreditado, sin D4 medible o con
-entradas ilegibles). Cuatro formatos JSON, todos con `format` y `format_version: 1`:
+entradas ilegibles).
+
+Cada pasada lleva su embudo: encontrados, devueltos, cribados, abstracts obtenidos y usados. La lista
+`findings` recoge huecos del procedimiento que no son defectos del material y no cambian el veredicto:
+- `read_without_origin`: leído sin estar en ninguna lista válida ni declarado en `known_pmids`;
+- `screened_without_origin`: lo mismo para un título cribado;
+- `mentioned_without_reading`: PMID mencionado en la respuesta sin abstract íntegro conservado;
+- `reference_not_returned`: PMID de la referencia que no llegó a ninguna lista devuelta.
+
+Cuatro formatos JSON, todos con `format` y `format_version: 1`:
 
 - **`pubmed-dossier-manifest`**: `dossier_id`, `case`, `condition`, `profile` (`bench` | `surface`),
   `capture` (`method`, `inventory_by`, `closure` y `clock`), `plans` admitidos con sus pasadas y
@@ -184,8 +194,63 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, X1-X16 dossier; también en la CI y en
-la puerta de mutación).
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X28 dossier y
+auditor de superficie; también en la CI y en la puerta de mutación).
+
+### Auditoría de una superficie
+
+```
+node scripts/audit-surface.mjs recibos.jsonl --respuesta respuesta.md --perlas perlas.json --salida carpeta/ [--en-linea]
+```
+
+Cuando la ejecución se hace desde un chat (ChatGPT, claude.ai), el archivo de recibos lo conserva el propio
+modelo. Es un JSONL con una línea por llamada, en una de dos formas: `{ tool, request, response }` o solo la
+respuesta, `{ structuredContent, content }`, en cuyo caso la herramienta se deduce del recibo.
+
+`audit-surface.mjs` convierte ese archivo en un dossier y lo pasa por `dossier-check.mjs`. En la carpeta de
+salida deja el manifiesto, un fichero por recibo, `dossier-check.json` e `informe.md`. El informe sigue los
+niveles de garantía:
+- integridad de las llamadas;
+- integridad de lo recuperado;
+- embudo por pasada;
+- procedencia de lo leído;
+- perlas;
+- lo que no acredita.
+
+Además compara la petición archivada con la que acredita su recibo, campo a campo y con los valores por
+defecto del MCP:
+- en una búsqueda, consulta, tamaño pedido, desplazamiento, orden, filtros declarados y registro de selección;
+- en una lectura o un cribado, PMID y contexto.
+
+El contexto se compara por campos y valores, no por el orden de sus claves. Un `null` no equivale a omitir
+el campo, salvo en `retmax`, porque el servidor lo rechaza. Un campo archivado que el recibo no refleja se
+declara como no comparable. El catálogo y el filtro se listan aparte, y una línea ilegible se cuenta.
+
+Las perlas son una lista de PMID o un `pubmed-dossier-reference`. Sin registro de cierre externo, una
+superficie no pasa de `inconclusive`: nada prueba que el archivo tenga todas las llamadas. Sin `--en-linea`,
+es local y sin red.
+
+Una huella declarada que no coincide con el texto archivado suele ser una normalización de la copia, al
+archivar o al exportar, como cambiar espacios especiales por espacios normales. Ese abstract no cuenta como
+íntegro, porque lo conservado no es lo que llegó.
+
+Con `--en-linea`, el auditor hace dos comprobaciones con NCBI. Sus llamadas, sus fallos y su incertidumbre
+quedan aparte del material del modelo: no cambian su veredicto, sus defectos ni sus denominadores.
+- **Perlas dentro del conjunto.** Por cada pasada válida lanza `(<su consulta>) AND (<las perlas en OR con
+  [pmid]>)` y, aparte, su recuento de hoy. La intersección verificada entra en el manifiesto como
+  `intersections`. El informe separa la perla que estaba en un conjunto, pero fuera de toda cabecera traída,
+  de la que no estaba en ninguno de los medidos.
+  - Una pasada sin intersección, también una fallida, deja esa conclusión en parcial; sin ningún conjunto
+    medido, no se concluye.
+  - Mide el conjunto de hoy: el recuento dice si es el mismo, si cambió o si no se pudo comparar.
+  - Si una intersección cambia la comprobación del material, se descarta y se guarda aparte.
+- **Relectura de las huellas que no cuadran.** Solo decide una relectura íntegra y atribuible, comprobada como
+  una lectura del dossier. Si la huella de hoy es la declarada y el texto solo difiere en espacios especiales,
+  la copia se normalizó. Si la huella coincide y el texto difiere en algo más, se alteró. Si la huella de hoy
+  es otra, no se decide. Dice qué le pasó a la copia, no quién la hizo.
+
+Deja sus recibos en `en-linea/` y el resumen en `en-linea.json`. Usa `NCBI_API_KEY` y `NCBI_EMAIL` si están
+en el entorno, sin escribirlos.
 
 ### Desde un chat sin terminal: MCP
 
