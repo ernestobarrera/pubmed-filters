@@ -651,7 +651,7 @@ export function createMcpHandler({
     const attemptId = globalThis.crypto.randomUUID();
     const extra = args === null || typeof args !== 'object' || Array.isArray(args) ? ['(los argumentos no son un objeto)']
       : Object.keys(args).filter((k) => !Object.hasOwn(FETCH_TOOL.inputSchema.properties, k));
-    const invalid = extra.length ? `argumentos no admitidos: ${extra.join(', ')}` : fetchRequestError(args.pmids, args.context);
+    const invalid = extra.length ? `argumentos no admitidos: ${describeKeys(extra)}` : fetchRequestError(args.pmids, args.context);
     if (invalid) {
       return compactResult({ run, receipt_type: FETCH_RECEIPT_TYPE, receipt_version: FETCH_RECEIPT_VERSION, attempt_id: attemptId,
         received_at: receivedAt, rejected_before_ncbi: true, error: invalid }, true);
@@ -695,7 +695,7 @@ export function createMcpHandler({
 
   function callSourceTool(name, args) {
     const extra = Object.keys(args).filter((k) => !(k in (name === CATALOG_TOOL.name ? CATALOG_TOOL : GET_FILTER_TOOL).inputSchema.properties));
-    if (extra.length) return toolError({ error: `argumentos no admitidos: ${extra.join(', ')}` });
+    if (extra.length) return toolError({ error: `argumentos no admitidos: ${describeKeys(extra)}` });
     if (name === CATALOG_TOOL.name) {
       if (args.role !== undefined && typeof args.role !== 'string') return toolError({ error: 'role debe ser una cadena' });
       if (args.include_journals !== undefined && typeof args.include_journals !== 'boolean') return toolError({ error: 'include_journals debe ser booleano' });
@@ -732,7 +732,7 @@ export function createMcpHandler({
       ? `retstart debe ser un entero entre 0 y ${ESEARCH_WINDOW - 1}`
       : sort !== undefined && !SORT_VALUES.includes(sort)
         ? `sort solo admite ${SORT_VALUES.join(', ')}; omítelo para el orden de PubMed` : null;
-    const invalid = extra.length > 0 ? `argumentos no admitidos: ${extra.join(', ')}`
+    const invalid = extra.length > 0 ? `argumentos no admitidos: ${describeKeys(extra)}`
       : typeof query !== 'string' || query.trim() === '' ? 'query debe ser una cadena no vacía'
         : query.length > MCP_MAX_QUERY ? `query supera ${MCP_MAX_QUERY} caracteres`
           : !Number.isSafeInteger(retmax) || retmax < 0 || retmax > MCP_MAX_RETMAX

@@ -315,6 +315,38 @@ check('F12', Object.values(r8).every((r) => bytesOf(r) < 4000)
   `diagnósticos acotados: nombre, entidad, <ERROR> y marcado de 30.000 caracteres dan recibos estructurados de ${
     Object.values(r8).map(bytesOf).join(', ')} bytes`);
 
+// F13 (1.16.0, 38- D9). La clave y el contacto no salen en NINGÚN diagnóstico de la lectura que venga de la
+// respuesta, tampoco en el de un registro, y se ocultan antes de recortar, como en el cribado (S12). Hasta la
+// 1.15.0 el texto de <ERROR> se recortaba a 200 antes de ocultar, y los detalles por registro no se ocultaban
+// (32- §11). Por el MCP, en structuredContent y en su copia de texto. Credenciales ficticias.
+const CLAVE13 = 'SYNTHKEY0123456789abcdef0123456789ab';
+const CONTACTO13 = 'synthetic-contact@example.invalid';
+const leer13 = async (cuerpo, pmids) => (await createMcpHandler({ fetcher: ncbi(cuerpo), apiKey: CLAVE13, email: CONTACTO13, run: { contract_version: 'x' } })(
+  { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'pubmed_fetch_exact', arguments: { pmids, context: CTX } } })).result;
+const f13 = {
+  errorLegible: await leer13(xmlSet(`<ERROR>temporary failure api_key=${CLAVE13} email=${CONTACTO13}</ERROR>`), ['11']),
+  errorEnElBorde: await leer13(xmlSet(`<ERROR>${'x'.repeat(190)}${CLAVE13}</ERROR>`), ['11']),
+  contactoEnElBorde: await leer13(xmlSet(`<ERROR>${'x'.repeat(190)}${CONTACTO13}</ERROR>`), ['11']),
+  registro: await leer13(xmlSet(article({ pmid: '11', abstract: [{ text: `a <${CLAVE13}>b</${CLAVE13}>` }] }), article({ pmid: '22' })), ['11', '22']),
+  registroEnElBorde: await leer13(xmlSet(article({ pmid: '11', abstract: [{ text: `a <${'x'.repeat(270)}${CLAVE13}/>` }] })), ['11']),
+  raiz: await leer13(`<${'x'.repeat(70)}${CLAVE13}/>`, ['11']),
+  ajeno: await leer13(xmlSet(`<${'x'.repeat(70)}${CLAVE13}/>`), ['11']),
+};
+const fuga13 = (r) => [JSON.stringify(r.structuredContent), r.content[0].text]
+  .some((t) => t.includes(CLAVE13.slice(0, 8)) || t.includes(CONTACTO13.slice(0, 12)));
+const oculto13 = (r, pmid) => /\[oculto\]/.test(resultOf(r.structuredContent, pmid)?.detail ?? '');
+check('F13', Object.values(f13).every((r) => !fuga13(r))
+  && f13.errorLegible.structuredContent.failure?.code === 'ncbi_error'
+  && /temporary failure api_key=\[oculto\] email=\[oculto\]/.test(f13.errorLegible.structuredContent.failure.message)
+  && [f13.errorEnElBorde, f13.contactoEnElBorde].every((r) => r.structuredContent.failure?.code === 'ncbi_error')
+  && resultOf(f13.registro.structuredContent, '11')?.record_status === 'error' && oculto13(f13.registro, '11')
+  && resultOf(f13.registro.structuredContent, '22')?.record_status === 'with_abstract'
+  && resultOf(f13.registroEnElBorde.structuredContent, '11')?.record_status === 'error' && oculto13(f13.registroEnElBorde, '11')
+  && f13.raiz.structuredContent.failure?.code === 'unexpected_root'
+  && resultOf(f13.ajeno.structuredContent, '11')?.reason === 'identity_uncertain' && oculto13(f13.ajeno, '11'),
+  'lectura: la clave y el contacto se ocultan en un <ERROR> cortado justo en el secreto, en el detalle de un registro (también al borde de los 300),'
+  + ' en la raíz y en un elemento ajeno sin PMID; el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
+
 // --- S. Cribado por PMID con recibo (pubmed_summary_exact, 1.15.0) ---------------------------------
 // Respuestas con la forma medida en NCBI el 26/10 (JSON de ESummary): cabecera, `result.uids` y una entrada
 // por PMID; un PMID sin resumen lleva solo `uid` y `error`; los errores globales van en `error` o en

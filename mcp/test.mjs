@@ -576,6 +576,28 @@ check('M30', rechazosLargos.every(({ result: r }) => r.isError === true && r.str
   `rechazos con claves de 30.000 letras (argumentos y contexto), 20.000 «€» y 2.000 claves: ${rechazosLargos.map(({ result: r }) =>
     Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, todos ≤ ${MAX_STRUCTURED_BYTES}, con motivo, run, intento y hora, sin NCBI; el normal sigue nombrando la clave`);
 
+// M32 (1.16.0, 38- D9). Los demás rechazos de la misma clase acotan también las claves ajenas: lectura
+// (argumentos y contexto), catálogo, filtro y búsqueda. Hasta la 1.15.0 las copiaban enteras. No eran una vía
+// de secretos, porque esas claves las escribe el modelo, pero sí de tamaño.
+enviadas.length = 0;
+const larga32 = 'a'.repeat(30000);
+const h32 = createMcpHandler({ fetcher: ncbiLectura(), run: { contract_version: 'x' }, filters: paquete });
+const fuente32 = (id, name, args) => h32({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args } });
+const r32 = {
+  lecturaArgs: (await leerCon(h32, 720, { pmids: ['1'], context: CTX, [larga32]: 1 })).result,
+  lecturaContexto: (await leerCon(h32, 721, { pmids: ['1'], context: { ...CTX, [larga32]: 1 } })).result,
+  catalogo: (await fuente32(722, 'pubmed_filter_catalog', { [larga32]: 1 })).result,
+  filtro: (await fuente32(723, 'pubmed_get_filter', { path: 'filters/clinical/deprescription.txt', [larga32]: 1 })).result,
+  busqueda: (await h32(llamada(724, 'asthma[tiab]', { [larga32]: 1 }))).result,
+};
+const normal32 = (await h32(llamada(725, 'asthma[tiab]', { include_abstract: true }))).result.structuredContent;
+check('M32', Object.values(r32).every((r) => r.isError === true && Buffer.byteLength(JSON.stringify(r.structuredContent)) <= 2000
+    && /no admitid[ao]s/.test(r.structuredContent.error) && r.structuredContent.error.includes('a'.repeat(40))
+    && !r.structuredContent.error.includes('a'.repeat(41)) && /30000 caracteres/.test(r.structuredContent.error))
+  && normal32.error === 'argumentos no admitidos: include_abstract' && enviadas.length === 0,
+  `rechazos con una clave de 30.000 letras en lectura (argumentos y contexto), catálogo, filtro y búsqueda: ${Object.values(r32).map((r) =>
+    Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, acotados a 40 letras con su longitud, sin NCBI; el normal sigue nombrando la clave`);
+
 // --- Canal de llegada a la superficie (1.14.1) -------------------------------------------------------
 // Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
 // `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de

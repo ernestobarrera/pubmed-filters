@@ -28,6 +28,13 @@ const INVALID_CHAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]|[\uD800-\uD
 const XML_DECL = /^<\?xml[ \t\n]+version[ \t\n]*=[ \t\n]*(["'])1\.[0-9]+\1(?:[ \t\n]+encoding[ \t\n]*=[ \t\n]*(["'])([A-Za-z][A-Za-z0-9._-]*)\2)?(?:[ \t\n]+standalone[ \t\n]*=[ \t\n]*(["'])(?:yes|no)\4)?[ \t\n]*\?>/;
 /** Los nombres y textos que vienen de la respuesta, acotados en los diagnósticos (revisión de Codex, R8). */
 export const clip = (text, max = 80) => (String(text).length > max ? `${String(text).slice(0, max)}…(${String(text).length} caracteres)` : String(text));
+/**
+ * Claves ajenas en un diagnóstico, acotadas : las cinco primeras,
+ * recortadas, y cuántas más hay. Una clave de 30.000 letras llevaba el rechazo a 30 KB, fuera del
+ * presupuesto que la herramienta promete. Vive junto a `clip` desde la 1.16.0 para que la lectura, el
+ * cribado y el protocolo usen la misma (38- D9), sin que la lectura importe del cribado.
+ */
+export const describeKeys = (keys) => `${keys.slice(0, 5).map((k) => clip(k, 40)).join(', ')}${keys.length > 5 ? ` y ${keys.length - 5} más` : ''}`;
 const SPACE = /[ \t\n]*/y;
 const PREDEFINED = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 export const MAX_DEPTH = 256;

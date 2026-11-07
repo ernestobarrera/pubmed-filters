@@ -16,7 +16,7 @@
 
 import { sha256 } from './exact-core.mjs';
 import { efetch, EFETCH_URL, EFETCH_TRANSPORT, FetchTransportError } from './efetch.mjs';
-import { parseXml, childNamed, childrenNamed, clip } from './xml-lite.mjs';
+import { parseXml, childNamed, childrenNamed, clip, describeKeys } from './xml-lite.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, hasAbstractText, utf8Length } from './abstract-canonical.mjs';
 
 export const FETCH_RECEIPT_TYPE = 'pubmed_fetch_exact';
@@ -58,7 +58,7 @@ export function fetchRequestError(pmids, context) {
   if (repeated.length) return `pmids repetidos: ${repeated.join(', ')}`;
   if (context === null || typeof context !== 'object' || Array.isArray(context)) return 'context debe ser un objeto con plan_ref y read_id';
   const extra = Object.keys(context).filter((k) => !CONTEXT_KEYS.includes(k));
-  if (extra.length) return `context: claves no admitidas ${extra.join(', ')}`;
+  if (extra.length) return `context: claves no admitidas ${describeKeys(extra)}`;
   for (const [k, max] of [['plan_ref', MAX_PLAN_REF], ['read_id', MAX_READ_ID]]) {
     if (!Object.hasOwn(context, k)) return `context: falta ${k}`;
     if (typeof context[k] !== 'string' || context[k].trim() === '' || context[k].length > max) {
@@ -75,8 +75,9 @@ class RecordError extends Error {
   constructor(reason, detail) {
     super(detail);
     this.reason = reason;
-    // Lo que viene de la respuesta (nombres de elementos) se acota: un diagnóstico no rompe el presupuesto.
-    this.detail = clip(detail, MAX_DIAGNOSTIC);
+    // Lo que viene de la respuesta (nombres de elementos) sale entero de aquí: `interpret` lo pasa por
+    // `diag`, que oculta antes de recortar (1.16.0, 38- D9). Recortarlo aquí dejaría medio secreto a la vista.
+    this.detail = detail;
   }
 }
 
@@ -248,8 +249,14 @@ const notFound = (pmid) => ({ requested_pmid: pmid, returned_pmid: null, record_
  * certificar la correspondencia de la respuesta entera (`failure`). Un elemento desconocido deja la
  * identidad en `unsupported`: si se le puede atribuir un PMID, ese sale `unsupported_record`; si no, los
  * PMID que falten salen `identity_uncertain`, nunca `not_found`.
+ *
+ * Todo texto que viene de la respuesta y acaba en un diagnóstico, también el de un registro, pasa por
+ * `diag`: primero `clean` (que oculta la clave y el contacto) y después el recorte, como el cribado
+ * (summary-core.mjs). Hasta la 1.15.0 el texto de <ERROR> se recortaba a 200 antes de ocultar, y los
+ * detalles por registro no se ocultaban (38- D9, 32- §11).
  */
-async function interpret(bytes, pmids) {
+async function interpret(bytes, pmids, clean = (t) => t) {
+  const diag = (text, max = MAX_DIAGNOSTIC) => clip(clean(String(text)), max);
   let text;
   try {
     text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
@@ -260,17 +267,17 @@ async function interpret(bytes, pmids) {
   try {
     doc = parseXml(text);
   } catch (e) {
-    return { failure: { code: 'invalid_xml', message: e.message } };
+    return { failure: { code: 'invalid_xml', message: diag(e.message) } };
   }
   if (doc.root.name !== 'PubmedArticleSet') {
-    return { failure: { code: 'unexpected_root', message: `raíz <${clip(doc.root.name)}>, no <PubmedArticleSet>` } };
+    return { failure: { code: 'unexpected_root', message: `raíz <${diag(doc.root.name, 80)}>, no <PubmedArticleSet>` } };
   }
   // Un <ERROR> de NCBI dentro del conjunto invalida la respuesta entera ANTES de atribuir registros o
   // decidir ausencias: con él, ni lo entregado ni lo que falta se pueden certificar (revisión de Codex, R6).
   const ncbiErrors = doc.root.children.filter((c) => typeof c !== 'string' && c.name === 'ERROR');
   if (ncbiErrors.length) {
-    const said = ncbiErrors.map((c) => clip(textOf(c), 200)).join(' | ');
-    return { failure: { code: 'ncbi_error', message: `NCBI devolvió <ERROR> dentro de la respuesta: ${said}` } };
+    const said = ncbiErrors.map((c) => diag(textOf(c), 200)).join(' | ');
+    return { failure: { code: 'ncbi_error', message: diag(`NCBI devolvió <ERROR> dentro de la respuesta: ${said}`) } };
   }
   const requested = new Set(pmids);
   const found = new Map();
@@ -290,7 +297,7 @@ async function interpret(bytes, pmids) {
     } else {
       unknown = true;
       const inside = descendantPmids(c);
-      if (inside.size !== 1) { unknownUnattributed.push(clip(c.name)); continue; }
+      if (inside.size !== 1) { unknownUnattributed.push(diag(c.name, 80)); continue; }
       [pmid] = inside;
     }
     if (!requested.has(pmid)) identity.push(`registro no pedido: PMID ${pmid}`);
@@ -298,7 +305,7 @@ async function interpret(bytes, pmids) {
     else found.set(pmid, { el: c, supported });
   }
   if (identity.length) {
-    return { failure: { code: 'identity_uncertain', message: clip(`no se puede certificar la correspondencia: ${identity.join('; ')}`, MAX_DIAGNOSTIC) } };
+    return { failure: { code: 'identity_uncertain', message: diag(`no se puede certificar la correspondencia: ${identity.join('; ')}`) } };
   }
   const results = new Map();
   const problems = [];
@@ -306,16 +313,16 @@ async function interpret(bytes, pmids) {
     const f = found.get(pmid);
     if (!f) {
       results.set(pmid, unknownUnattributed.length
-        ? errorRecord(pmid, 'identity_uncertain', clip(`la respuesta trae elementos no soportados sin PMID atribuible (${unique(unknownUnattributed).join(', ')})`, MAX_DIAGNOSTIC))
+        ? errorRecord(pmid, 'identity_uncertain', diag(`la respuesta trae elementos no soportados sin PMID atribuible (${unique(unknownUnattributed).join(', ')})`))
         : notFound(pmid));
     } else if (!f.supported) {
-      results.set(pmid, errorRecord(pmid, 'unsupported_record', `<${clip(f.el.name)}> no es un formato soportado`, pmid));
+      results.set(pmid, errorRecord(pmid, 'unsupported_record', `<${diag(f.el.name, 80)}> no es un formato soportado`, pmid));
     } else {
       try {
         results.set(pmid, await extractRecord(f.el, pmid));
       } catch (e) {
         if (!(e instanceof RecordError)) throw e;
-        results.set(pmid, errorRecord(pmid, e.reason, e.detail, pmid));
+        results.set(pmid, errorRecord(pmid, e.reason, diag(e.detail), pmid));
       }
     }
   }
@@ -482,7 +489,7 @@ export async function runFetch(pmids, context, opts = {}) {
   }
   const transport = { method: EFETCH_TRANSPORT, http_status: response.httpStatus, bytes_received: response.bytes.byteLength,
     raw_response_sha256: await sha256Bytes(response.bytes) };
-  const read = await interpret(response.bytes, pmids);
+  const read = await interpret(response.bytes, pmids, (t) => redact(t, o));
   env.completed_at = o.now().toISOString();
   if (read.failure) {
     const safe = redact(read.failure.message, o);

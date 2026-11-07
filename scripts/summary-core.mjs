@@ -21,7 +21,7 @@
 
 import { sha256 } from './exact-core.mjs';
 import { esummary, ESUMMARY_URL, ESUMMARY_TRANSPORT, SummaryTransportError } from './esummary.mjs';
-import { clip, MAX_DEPTH } from './xml-lite.mjs';
+import { clip, MAX_DEPTH, describeKeys } from './xml-lite.mjs';
 import { utf8Length } from './abstract-canonical.mjs';
 import { sha256Bytes, PMID_PATTERN, MAX_PLAN_REF, MAX_STRUCTURED_BYTES, MAX_DIAGNOSTIC, PENDING_REASON } from './fetch-core.mjs';
 
@@ -42,12 +42,8 @@ export const COUNTS_AS = 'titles_screened';
 export const NOT_FOUND_MARK = 'cannot get document summary';
 const CONTEXT_KEYS = ['plan_ref', 'screen_id'];
 
-/**
- * Claves ajenas en un diagnóstico, acotadas : las cinco primeras,
- * recortadas, y cuántas más hay. Una clave de 30.000 letras llevaba el rechazo a 30 KB, fuera del
- * presupuesto que la herramienta promete.
- */
-export const describeKeys = (keys) => `${keys.slice(0, 5).map((k) => clip(k, 40)).join(', ')}${keys.length > 5 ? ` y ${keys.length - 5} más` : ''}`;
+/** Claves ajenas acotadas: definidas en xml-lite.mjs, junto a `clip`, y reexportadas para el protocolo. */
+export { describeKeys };
 
 /**
  * La petición, antes de NCBI: 1-50 PMID en cadena, sin duplicados, sin convertir ni corregir, y el
