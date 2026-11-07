@@ -1754,8 +1754,10 @@ const MUTACIONES = [
     id: 'F12-DIAGNOSTICO-SIN-ACOTAR',
     porque: 'un nombre de elemento enorme entra entero en el diagnóstico del registro y rompe el presupuesto',
     fichero: 'scripts/fetch-core.mjs',
-    de: '    this.detail = clip(detail, MAX_DIAGNOSTIC);',
-    a: '    this.detail = detail;',
+    // Desde la 1.16.0 el registro se acota en `interpret`, por `diag`, después de ocultar (38- D9): la
+    // mutación quita el recorte y conserva la ocultación, para que caiga el presupuesto y no la clave.
+    de: 'results.set(pmid, errorRecord(pmid, e.reason, diag(e.detail), pmid));',
+    a: 'results.set(pmid, errorRecord(pmid, e.reason, clean(String(e.detail)), pmid));',
     rompe: 'F12',
   },
   // Canal de llegada a la superficie (1.14.1). Medido el 26/10: las cuatro reglas de la
