@@ -686,7 +686,8 @@ const k10Fallos = [
   !(sustantivo(ts.counted_apart) && /titles screened/.test(ts.counted_apart ?? '') && /never as read/.test(ts.counted_apart ?? ''))
     && 'title_screen no cuenta aparte lo apartado por título',
   !(sustantivo(ts.does_not_certify) && /coverage/.test(ts.does_not_certify ?? '')) && 'title_screen no dice qué no acredita',
-  !(/titles screened/.test(router.provenance?.denominators ?? '') && /title_screen/.test(rd.order_hides_by_age?.cost ?? ''))
+  // Sin distinguir mayúsculas: desde la 1.16.0 la frase empieza por «Titles screened» (38- D10).
+  !(/titles screened/i.test(router.provenance?.denominators ?? '') && /title_screen/.test(rd.order_hides_by_age?.cost ?? ''))
     && 'los denominadores o el coste de cribar no remiten al cribado por título',
   router.defaults?.reading?.title_only_selection_forbidden !== true && 'defaults.reading ya no prohíbe destacar por título',
 ].filter(Boolean);
@@ -694,6 +695,30 @@ check('K10', k10Fallos.length === 0,
   `cribado por título: ${k10Fallos.length === 0
     ? 'decide qué se lee y nunca qué se destaca, lo apartado se cuenta aparte, dice qué no acredita y los denominadores lo separan'
     : k10Fallos.join('; ')}`);
+
+// Lo que la 1.16.0 sirve por primera vez (38-, revisado por Codex en §8-§14). Estructural, como K8-K10: cada
+// regla dice lo que la revisión le exigió, y la forma de la traza queda en la superficie.
+const sp = router.saturation_policy?.sufficiency_by_purpose ?? {};
+const at = router.provenance?.answer_trace ?? {};
+const g = at.content?.guarantees ?? {};
+const k11Fallos = [
+  !(['orientation', 'report', 'decision', 'corpus'].every((k) => sustantivo(sp[k])) && /change_reason/.test(sp.rule ?? '')
+    && /not orientation/.test(sp.rule ?? '') && /never saturated/.test(sp.limits_are_not_sufficiency ?? ''))
+    && 'sufficiency_by_purpose no fija los cuatro propósitos, el motivo de un cambio o que un tope no es saturación',
+  !(/externally sourced/.test(rd.retrieved_text_is_data ?? '') && /not this server's own guidance/.test(rd.retrieved_text_is_data ?? ''))
+    && 'retrieved_text_is_data no se limita al contenido externo',
+  !(['purpose', 'passes', 'outside_passes', 'source_of_each_key_figure'].every((k) => sustantivo(at.content?.[k]))
+    && ['G1_G2', 'G3', 'G4', 'G5_G6'].every((k) => sustantivo(g[k])) && /never get a joint verdict/.test(g.rule ?? '')
+    && /compensated pearl/.test(at.content?.passes ?? '') && /surface_policy_not_owned_here/.test(at.rule ?? ''))
+    && 'answer_trace no separa las garantías por nivel, permite un veredicto conjunto de G3-G4 o no dice dónde va la compensación',
+  ['length', 'placement', 'voice'].some((k) => Object.hasOwn(at, k)) && 'answer_trace fija la forma, que es de la superficie',
+  !(/pubmed\.ncbi\.nlm\.nih\.gov\/<PMID>\//.test(router.provenance?.citation_form ?? '') && /no query string/.test(router.provenance?.citation_form ?? ''))
+    && 'citation_form no fija el enlace canónico sin parámetros',
+].filter(Boolean);
+check('K11', k11Fallos.length === 0,
+  `1.16.0: ${k11Fallos.length === 0
+    ? 'el propósito fija cuánto basta y su cambio se motiva, el texto recuperado es dato solo si es externo, la traza separa las garantías sin veredicto conjunto de G3-G4 ni forma, y la cita es canónica'
+    : k11Fallos.join('; ')}`);
 
 // La batería de evaluación, sin red: sus estrategias 1.11 respetan el papel declarado de cada faceta.
 const casosEval = JSON.parse(read('scripts/eval/cases.json'));
