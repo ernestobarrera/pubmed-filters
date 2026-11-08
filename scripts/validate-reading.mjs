@@ -347,6 +347,32 @@ check('F13', Object.values(f13).every((r) => !fuga13(r))
   'lectura: la clave y el contacto se ocultan en un <ERROR> cortado justo en el secreto, en el detalle de un registro (también al borde de los 300),'
   + ' en la raíz y en un elemento ajeno sin PMID; el diagnóstico útil se conserva («temporary failure api_key=[oculto]»)');
 
+// F14 (revisión de Codex, 38- §15 R1). El analizador XML mete trozos de la respuesta en su mensaje y los recorta
+// a 80: si la lectura ocultaba después, ya no reconocía el secreto cortado y dejaba su principio. Un secreto
+// justo en el corte, en cada rama que cita texto de la respuesta. Credenciales ficticias; el contraejemplo de Codex
+// es `entidad`.
+const CLAVE14 = 'FAKE_KEY_FOR_TEST_123456789';
+const CONTACTO14 = 'synthetic-contact@example.invalid';
+const leer14 = async (cuerpo) => (await createMcpHandler({ fetcher: ncbi(cuerpo), apiKey: CLAVE14, email: CONTACTO14, run: { contract_version: 'x' } })(
+  { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'pubmed_fetch_exact', arguments: { pmids: ['11'], context: CTX } } })).result;
+const borde14 = (secreto) => `${'x'.repeat(75)}${secreto}`;
+const f14 = {
+  entidad: await leer14(`<PubmedArticleSet>&${borde14(CLAVE14)};</PubmedArticleSet>`),
+  contacto: await leer14(`<PubmedArticleSet>&${borde14(CONTACTO14)};</PubmedArticleSet>`),
+  numerica: await leer14(`<PubmedArticleSet>&#${borde14(CLAVE14)};</PubmedArticleSet>`),
+  sinCerrar: await leer14(`<PubmedArticleSet><${borde14(CLAVE14)}>`),
+  cierreSinApertura: await leer14(`<PubmedArticleSet></${borde14(CLAVE14)}></PubmedArticleSet>`),
+  atributoRepetido: await leer14(`<PubmedArticleSet ${borde14(CLAVE14)}="1" ${borde14(CLAVE14)}="2"></PubmedArticleSet>`),
+  codificacion: await leer14(`<?xml version="1.0" encoding="${borde14(CLAVE14)}"?><PubmedArticleSet/>`),
+};
+const fuga14 = (r) => [JSON.stringify(r.structuredContent), r.content[0].text].some((t) => t.includes(CLAVE14.slice(0, 5)) || t.includes(CONTACTO14.slice(0, 5)));
+const motivo14 = { entidad: /entidad no definida/, contacto: /entidad no definida/, numerica: /referencia numérica no válida/, sinCerrar: /fin del documento con </,
+  cierreSinApertura: /cierre <\/x+.*sin apertura/, atributoRepetido: /atributo repetido/, codificacion: /codificación declarada/ };
+check('F14', Object.entries(f14).every(([k, r]) => !fuga14(r) && r.structuredContent.failure?.code === 'invalid_xml'
+  && motivo14[k].test(r.structuredContent.failure.message) && r.structuredContent.failure.message.length <= 300),
+  `lectura: el texto de la respuesta que cita el analizador XML se oculta antes de su primer recorte (${Object.keys(f14).join(', ')}); el motivo se conserva:`
+  + ` «${f14.entidad.structuredContent.failure?.message?.slice(0, 40)}…»`);
+
 // --- S. Cribado por PMID con recibo (pubmed_summary_exact, 1.15.0) ---------------------------------
 // Respuestas con la forma medida en NCBI el 26/10 (JSON de ESummary): cabecera, `result.uids` y una entrada
 // por PMID; un PMID sin resumen lleva solo `uid` y `error`; los errores globales van en `error` o en
@@ -1564,6 +1590,37 @@ try {
     && x33mal.verdict === 'inconclusive' && x33mal.uncertainties.some((u) => u.code === 'unsupported_input' && /selection_record/.test(u.detail)),
     `propósito: tardío ${hallazgos33(x33.tardio)}, sin motivo ${hallazgos33(x33.sinMotivo)}, con motivo y vuelta sin él ${hallazgos33(x33.conMotivo)}, omitido ${
       hallazgos33(x33.omitido)}, ninguno ${hallazgos33(x33.ninguno)}; por hora del servidor ${hallazgos33(inverso.result)}; mal formado ${x33mal.verdict}`);
+
+  // X36 (revisión de Codex, 38- §15 R2). Con la misma hora del servidor y sin captura cerrada, dos búsquedas no
+  // tienen orden entre sí: el plan queda sin orden acreditado, sin tardanza ni omisión, e invertir las líneas no
+  // cambia nada. Con horas distintas, con un empate que no cambia el resultado (dos búsquedas sin propósito antes
+  // de la declaración) o con captura cerrada, el resultado se mantiene. Recibos del MCP sin tocar: solo el reloj es fijo.
+  const aLas = (iso) => createMcpHandler({ fetcher, now: () => new Date(iso), run: RUN, filters: bundle, engine: 'mcp/stdio.mjs', apiKey: 'clave-de-prueba' });
+  const [t36a, t36b] = [aLas('2026-11-08T10:00:00.000Z'), aLas('2026-11-08T10:00:01.000Z')];
+  const busca36 = async (handler, pass, product) => {
+    // Una consulta por pasada: misma consulta a la misma hora sería el mismo intento (attempt_conflict).
+    queries.set(`x36${pass}[tiab]`, { ids: ['11'] });
+    const args = { query: `x36${pass}[tiab]`, retmax: 10, retstart: 0, selection_record: registro({ pass, product }) };
+    return { args, env: await handler({ jsonrpc: '2.0', id: ++rpcId, method: 'tools/call', params: { name: 'pubmed_search_exact', arguments: args } }) };
+  };
+  const lineas36 = (xs) => xs.map((x) => linea('pubmed_search_exact', x.args, x.env)).join('\n');
+  // Los hallazgos con la pasada de cada línea (L1 es la primera), para comparar un orden de líneas con el inverso.
+  const pases36 = (r, xs) => r.result.findings.filter((f) => f.code.startsWith('purpose_'))
+    .map((f) => `${f.code}:${f.attempts.map((a) => xs[Number(a.slice(1)) - 1].args.selection_record.pass.pass_id).sort().join('+')}`).join() || 'ninguno';
+  const enAmbos = async (xs) => [pases36(await auditSurface(lineas36(xs)), xs), pases36(await auditSurface(lineas36([...xs].reverse())), [...xs].reverse())];
+  const empate36 = [await busca36(t36a, 'p1', null), await busca36(t36a, 'p2', REP)];
+  const distintas36 = [await busca36(t36a, 'p1', null), await busca36(t36b, 'p2', REP)];
+  const inocuo36 = [await busca36(t36a, 'p1', null), await busca36(t36a, 'p2', null), await busca36(t36b, 'p3', REP)];
+  const x36 = { empate: await enAmbos(empate36), distintas: await enAmbos(distintas36), inocuo: await enAmbos(inocuo36) };
+  const informe36 = await auditSurface(lineas36(empate36));
+  const cerrada36 = (await dossier({ attempts: empate36.map((x) => S(x.env)), closure: true, plans: plan3 })).result;
+  check('X36', x36.empate.every((h) => h === 'purpose_order_unknown:p1+p2')
+    && prop(informe36.result).order === 'unknown' && prop(informe36.result).declared.join() === 'report' && prop(informe36.result).first === null
+    && /plan-1\*\* \(orden: hora del servidor[^\n]*\*\*orden no acreditado\*\* entre L1, L2/.test(informe36.report)
+    && x36.distintas.every((h) => h === 'purpose_late:p2') && x36.inocuo.every((h) => h === 'purpose_late:p3')
+    && prop(cerrada36).order === 'established' && prop(cerrada36).order_by === 'capture_sequence' && hallazgos33(cerrada36) === 'purpose_late:a1',
+    `propósito con horas iguales y sin captura: ${x36.empate.join(' / ')} en los dos órdenes de líneas; horas distintas ${x36.distintas.join(' / ')};`
+    + ` empate inocuo ${x36.inocuo.join(' / ')}; con captura cerrada ${hallazgos33(cerrada36)}`);
 
   // X34 (38- §9). El catálogo archivado frente al que construye este commit para los mismos argumentos:
   // idéntico, distinto con sus claves, de otra versión o sin comparar; y su texto, el JSON compacto de su

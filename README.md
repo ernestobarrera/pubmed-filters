@@ -170,11 +170,15 @@ Cada pasada lleva su embudo: encontrados, devueltos, cribados, abstracts obtenid
   respuesta, en vez de la cita canónica `https://pubmed.ncbi.nlm.nih.gov/<PMID>/` (desde la 1.2.0);
 - `purpose_late`, `purpose_changed_without_reason` y `purpose_omitted`: el propósito declarado en
   `selection_record.product` llegó después de la primera búsqueda del plan, cambió sin `change_reason` o
-  faltó en una búsqueda posterior (desde la 1.2.0). Estos señalan búsquedas (`attempts`), no PMID.
+  faltó en una búsqueda posterior (desde la 1.2.0). Estos señalan búsquedas (`attempts`), no PMID;
+- `purpose_order_unknown`: búsquedas del plan con la misma hora del servidor, o sin hora legible, y sin captura
+  cerrada, cuyo orden cambiaría lo que se deduce. En ese plan no se afirma tardanza, cambio ni omisión.
 
 Desde la 1.2.0, `purposes` da por plan el primer propósito conocido, sus cambios y sus omisiones, en el
 orden de la secuencia de una captura cerrada o, sin ella, de la hora del servidor al recibir el registro;
-nunca en el de las líneas del archivo. Un `product` mal formado deja el recibo como entrada no soportada. La
+nunca en el de las líneas del archivo. Con horas iguales se prueban todos los órdenes: si no dan lo mismo,
+el plan sale con `order: 'unknown'`, las búsquedas empatadas (`tied`) y los propósitos declarados, sin
+primero, cambios ni omisiones. Un `product` mal formado deja el recibo como entrada no soportada. La
 retención va por etapas: lista devuelta, títulos cribados (sin cribado, `not_measured`), abstracts
 conservados y uso documentado. `links` cuenta los enlaces canónicos y lista los que llevan parámetros.
 
@@ -205,7 +209,7 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F13 lectura, S1-S13 cribado, X1-X35 dossier y
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F14 lectura, S1-S13 cribado, X1-X36 dossier y
 auditor de superficie; también en la CI y en la puerta de mutación).
 
 ### Auditoría de una superficie

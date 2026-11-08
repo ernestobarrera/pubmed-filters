@@ -793,7 +793,7 @@ async function checkDossierUnguarded(manifest, load) {
         at: p.selection_record.received_at, seq: e.sequence });
     }
     if (key) {
-      purposeLog.push({ plan_ref: plan, pass_id: pass, attempt_ref: e.attempt_ref, seq: e.sequence, idx: purposeLog.length,
+      purposeLog.push({ plan_ref: plan, pass_id: pass, attempt_ref: e.attempt_ref, seq: e.sequence,
         at: Date.parse(p.selection_record?.received_at ?? p.executed_at), product: rec?.product ?? null });
     }
     if (p.status.query_integrity !== 'verified') {
@@ -861,12 +861,15 @@ async function checkDossierUnguarded(manifest, load) {
   // recibir el registro: el primer propósito conocido, si llegó después de la primera búsqueda, cada cambio
   // con su motivo o sin él y las búsquedas posteriores que lo omiten. Es una declaración del agente: se ordena
   // y se compara, no se acredita que rigiera. Ningún orden entre propósitos: cualquier cambio pide motivo.
+  //
+  // Empates (revisión de Codex, §15 R2): sin captura cerrada, dos búsquedas con la misma hora del servidor, o
+  // sin hora legible, no tienen orden entre sí, y la línea del archivo la escribe el modelo. Se derivan todos los
+  // órdenes compatibles con los recibos; si no dan lo mismo, el plan queda con `order: 'unknown'` y sin
+  // tardanza, cambios ni omisiones, que serían afirmaciones sobre un orden no acreditado.
   const purposeOrder = clock.sequence ? 'capture_sequence' : 'server_received_at';
-  const purposes = [];
-  for (const plan of [...new Set(purposeLog.map((x) => x.plan_ref))].sort()) {
-    const xs = purposeLog.filter((x) => x.plan_ref === plan)
-      .sort((a, b) => (clock.sequence ? a.seq - b.seq : a.at - b.at) || a.idx - b.idx);
-    const at = (x) => ({ attempt_ref: x.attempt_ref, pass_id: x.pass_id });
+  const keyOf = (x) => (clock.sequence ? x.seq : x.at);
+  const at = (x) => ({ attempt_ref: x.attempt_ref, pass_id: x.pass_id });
+  const derive = (xs) => {
     let first = null;
     let current = null;
     const changes = [];
@@ -879,7 +882,35 @@ async function checkDossierUnguarded(manifest, load) {
         current = x.product.purpose;
       }
     }
-    purposes.push({ plan_ref: plan, order_by: purposeOrder, searches: xs.length, first, last: current, changes, omitted_after_declared: omitted });
+    // Las omisiones son un conjunto: en un empate, su orden no dice nada.
+    omitted.sort((a, b) => (a.attempt_ref < b.attempt_ref ? -1 : 1));
+    return { first, last: current, changes, omitted_after_declared: omitted };
+  };
+  const factorial = (n) => (n <= 1 ? 1 : n * factorial(n - 1));
+  const permutations = (xs) => (xs.length <= 1 ? [xs] : xs.flatMap((x, i) => permutations([...xs.slice(0, i), ...xs.slice(i + 1)]).map((p) => [x, ...p])));
+  const MAX_PURPOSE_ORDERS = 720;
+  const purposes = [];
+  for (const plan of [...new Set(purposeLog.map((x) => x.plan_ref))].sort()) {
+    const xs = purposeLog.filter((x) => x.plan_ref === plan);
+    const unplaced = xs.some((x) => !Number.isFinite(keyOf(x)));
+    const sorted = [...xs].sort((a, b) => keyOf(a) - keyOf(b) || (a.attempt_ref < b.attempt_ref ? -1 : 1));
+    const tiers = [];
+    for (const x of sorted) {
+      const last = tiers.at(-1);
+      if (last && (unplaced || keyOf(last[0]) === keyOf(x))) last.push(x); else tiers.push([x]);
+    }
+    const count = tiers.reduce((n, tier) => n * factorial(tier.length), 1);
+    let orders = [[]];
+    if (count <= MAX_PURPOSE_ORDERS) for (const tier of tiers) orders = orders.flatMap((o) => permutations(tier).map((p) => [...o, ...p]));
+    const results = count <= MAX_PURPOSE_ORDERS ? [...new Set(orders.map((o) => JSON.stringify(derive(o))))] : [];
+    const tied = tiers.filter((tier) => tier.length > 1).map((tier) => tier.map((x) => x.attempt_ref));
+    if (results.length === 1) {
+      purposes.push({ plan_ref: plan, order_by: purposeOrder, order: 'established', searches: xs.length, ...JSON.parse(results[0]) });
+    } else {
+      purposes.push({ plan_ref: plan, order_by: purposeOrder, order: 'unknown', searches: xs.length, tied,
+        declared: [...new Set(xs.filter((x) => x.product).map((x) => x.product.purpose))].sort(),
+        first: null, last: null, changes: null, omitted_after_declared: null });
+    }
   }
 
   // 5. Lectura: recibos, abstracts, versiones.
@@ -1135,6 +1166,11 @@ async function checkDossierUnguarded(manifest, load) {
   // El propósito no tiene PMID: sus hallazgos señalan las búsquedas.
   const purposeFinding = (code, detail, attempts) => { if (attempts.length) findings.push({ code, detail, pmids: [], attempts }); };
   for (const p of purposes) {
+    if (p.order === 'unknown') {
+      purposeFinding('purpose_order_unknown', `[${p.plan_ref}]: búsquedas sin orden acreditado entre sí (misma hora del servidor o sin hora legible, y sin captura cerrada): no se deduce tardanza, cambio ni omisión`,
+        p.tied.flat());
+      continue;
+    }
     purposeFinding('purpose_late', `[${p.plan_ref}]: propósito declarado después de la primera búsqueda del plan: no muestra que rigiera antes`,
       p.first?.late ? [p.first.attempt_ref] : []);
     purposeFinding('purpose_changed_without_reason', `[${p.plan_ref}]: propósito cambiado sin change_reason`,

@@ -479,6 +479,11 @@ export function renderReport(result, { source, built, online = null, catalogs = 
   out.push('## Propósito declarado (declaración del agente)', '');
   if (!(r.purposes ?? []).length) out.push('- Ninguna búsqueda atribuible a un plan.');
   for (const p of r.purposes ?? []) {
+    if (p.order === 'unknown') {
+      const declared = p.declared.map((x) => `\`${x}\``).join(', ') || 'ninguno';
+      out.push(`- **${p.plan_ref}** (orden: ${PURPOSE_ORDER[p.order_by]}): **orden no acreditado** entre ${p.tied.map((g) => g.join(', ')).join('; ')}, con la misma hora y sin captura cerrada; declarados ${declared}. No se deduce tardanza, cambio ni omisión.`);
+      continue;
+    }
     if (!p.first) { out.push(`- **${p.plan_ref}:** no declarado en ninguna de sus ${p.searches} búsquedas. Un propósito ausente no es orientación.`); continue; }
     const at = (x) => `${x.attempt_ref}${x.pass_id ? ` (${x.pass_id})` : ''}`;
     const parts = [`primero \`${p.first.purpose}\` en ${at(p.first)}${p.first.late ? ', **tardío**: declarado después de la primera búsqueda del plan, no muestra que rigiera antes' : ''}`];

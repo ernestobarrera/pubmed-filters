@@ -16,7 +16,7 @@
 
 import { sha256 } from './exact-core.mjs';
 import { efetch, EFETCH_URL, EFETCH_TRANSPORT, FetchTransportError } from './efetch.mjs';
-import { parseXml, childNamed, childrenNamed, clip, describeKeys } from './xml-lite.mjs';
+import { parseXml, childNamed, childrenNamed, clip, describeKeys, XmlError } from './xml-lite.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, hasAbstractText, utf8Length } from './abstract-canonical.mjs';
 
 export const FETCH_RECEIPT_TYPE = 'pubmed_fetch_exact';
@@ -267,7 +267,8 @@ async function interpret(bytes, pmids, clean = (t) => t) {
   try {
     doc = parseXml(text);
   } catch (e) {
-    return { failure: { code: 'invalid_xml', message: diag(e.message) } };
+    // El analizador mete en su mensaje trozos de la respuesta ya recortados: `describe` los oculta antes (§15 R1).
+    return { failure: { code: 'invalid_xml', message: diag(e instanceof XmlError ? e.describe(clean) : e.message) } };
   }
   if (doc.root.name !== 'PubmedArticleSet') {
     return { failure: { code: 'unexpected_root', message: `raíz <${diag(doc.root.name, 80)}>, no <PubmedArticleSet>` } };
