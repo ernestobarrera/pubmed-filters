@@ -11,7 +11,9 @@
  * QUÉ ACREDITA. Que el material recibido es coherente consigo mismo y con la procedencia declarada:
  * huellas, recibos, particiones, abstracts íntegros en su representación canónica, anclas de uso en la
  * respuesta conservada, y los cuatro denominadores medidos sobre lo conservado (D1 encontrados por
- * pasada, D2 PMID únicos devueltos, D3 abstracts obtenidos y conservados, D4 documentos usados).
+ * pasada, D2 PMID únicos devueltos, D3 abstracts obtenidos y conservados, D4 documentos usados). Desde la
+ * 1.2.0, también el propósito declarado en cada plan, con su orden y sus cambios, y la forma de los enlaces a
+ * PubMed en la respuesta: sus huecos son hallazgos, no defectos.
  *
  * QUÉ NO, y no puede. Que se atendiera o se entendiera lo leído, que una fuente sostenga lo que se dice
  * de ella, que una búsqueda causara una selección, ni que no se omitieran llamadas cuando la captura no
@@ -29,13 +31,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sha256, continuation, ESEARCH_WINDOW } from './exact-core.mjs';
+import { sha256, continuation, ESEARCH_WINDOW, PRODUCT_PURPOSES } from './exact-core.mjs';
 import { checkPageUnion, OPERATIONAL, OPERATIONAL_LABEL } from './page-union.mjs';
 import { sha256Bytes, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION, RECORD_STATUSES, PMID_PATTERN } from './fetch-core.mjs';
 import { ABSTRACT_FORMAT, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
 import { SUMMARY_RECEIPT_TYPE, SUMMARY_RECEIPT_VERSION, COUNTS_AS as SUMMARY_COUNTS_AS, RECORD_STATUSES as SUMMARY_RECORD_STATUSES } from './summary-core.mjs';
 
-export const CHECKER_VERSION = '1.1.1';
+export const CHECKER_VERSION = '1.2.0';
 export const FORMATS = {
   manifest: 'pubmed-dossier-manifest',
   capture_log: 'pubmed-dossier-capture-log',
@@ -210,6 +212,10 @@ const isSha = (v) => typeof v === 'string' && SHA.test(v);
 const strOrNull = (v) => v === null || typeof v === 'string';
 const pmidList = (l, pattern) => Array.isArray(l) && l.every((p) => typeof p === 'string' && pattern.test(p));
 
+/** `selection_record.product` (1.16.0): uno de los cuatro propósitos y, si cambió, su motivo; nada más. */
+const productShapeOk = (p) => isObj(p) && !extraKeys(p, ['purpose', 'change_reason']).length && PRODUCT_PURPOSES.includes(p.purpose)
+  && (p.change_reason === undefined || isStr(p.change_reason));
+
 /**
  * Forma de un recibo de búsqueda 1.13 o posterior (revisión de Codex, R1). Se comprueba ANTES de usar
  * ningún campo: lo que no tiene la forma no se interpreta y queda como entrada no soportada, nunca como
@@ -238,6 +244,7 @@ function searchShapeErrors(r) {
     if (!isObj(sr) || sr.declared_by !== 'agent' || !isIso(sr.received_at) || typeof sr.sha256 !== 'string' || !isObj(rec)
       || !(rec.plan_ref === undefined || isStr(rec.plan_ref)) || !isObj(rec.pass) || !isStr(rec.pass.pass_id)
       || !(rec.pass.reading_path === undefined || typeof rec.pass.reading_path === 'string')
+      || !(rec.product === undefined || productShapeOk(rec.product))
       || !(known === undefined || (Array.isArray(known) && known.every((k) => isObj(k) && typeof k.pmid === 'string'
         && /^[0-9]{1,9}$/.test(k.pmid) && isStr(k.origin) && (k.detail === undefined || typeof k.detail === 'string'))))) {
       e.push('selection_record');
@@ -504,6 +511,23 @@ export function extractCandidates(text) {
   return out.sort((a, b) => a.start - b.start || a.end - b.end || (a.type < b.type ? -1 : 1));
 }
 
+/**
+ * Enlaces a un registro de PubMed en la respuesta (provenance.citation_form, 1.16.0): canónicos, sin consulta
+ * ni fragmento, o con ellos (`?utm_source=…`, `#…`). Cuenta la forma del enlace, no que se citara bien.
+ */
+export function pubmedLinks(text) {
+  const canonical = [];
+  const withParameters = [];
+  for (const m of text.matchAll(/https?:\/\/pubmed\.ncbi\.nlm\.nih\.gov\/([0-9]{1,9})\b\/?([?#][^\s<>"'()[\]]*)?/gi)) {
+    // La puntuación que cierra la frase no es parte del enlace: «…/11/?utm_source=x.» ni «¿…/11/?».
+    const tail = m[2] ?? '';
+    const params = tail.replace(/[.,;:!?]+$/, '');
+    const link = { pmid: m[1], text: m[0].slice(0, m[0].length - tail.length + params.length), start: m.index };
+    (params ? withParameters : canonical).push(link);
+  }
+  return { canonical, withParameters };
+}
+
 const SOURCE_TYPES = ['pmid', 'doi', 'url'];
 const sourceKey = (s) => (s.type === 'doi' ? `doi:${s.value.toLowerCase()}` : `${s.type}:${s.value}`);
 const sourceError = (s) => {
@@ -732,6 +756,7 @@ async function checkDossierUnguarded(manifest, load) {
   // 4. Búsqueda: validación, pasada, recorrido.
   const walks = new Map();
   const declarations = [];
+  const purposeLog = [];
   const validLists = [];
   for (const e of live.filter((x) => x.kind === 'search' || x.kind === 'search_error')) {
     const p = e.payload;
@@ -766,6 +791,10 @@ async function checkDossierUnguarded(manifest, load) {
     for (const k of rec?.known_pmids ?? []) {
       declarations.push({ pmid: k.pmid, origin: k.origin, detail: k.detail ?? null, attempt_ref: e.attempt_ref,
         at: p.selection_record.received_at, seq: e.sequence });
+    }
+    if (key) {
+      purposeLog.push({ plan_ref: plan, pass_id: pass, attempt_ref: e.attempt_ref, seq: e.sequence, idx: purposeLog.length,
+        at: Date.parse(p.selection_record?.received_at ?? p.executed_at), product: rec?.product ?? null });
     }
     if (p.status.query_integrity !== 'verified') {
       exclusions.push({ attempt_ref: e.attempt_ref, reason: `integridad ${p.status.query_integrity}: su lista (${p.pmids.length} PMID) no entra en los devueltos válidos` });
@@ -826,6 +855,32 @@ async function checkDossierUnguarded(manifest, load) {
   for (const p of passes) for (const id of p.returned) passOf.set(id, [...(passOf.get(id) ?? []), [p.plan_ref, p.pass_id, p.walk_id]]);
   const overlap = sortPmids([...passOf].filter(([, ps]) => ps.length > 1).map(([id]) => id));
   if (!live.some((e) => e.kind === 'search')) uncertain('no_exact_search', 'el dossier no tiene búsquedas exactas válidas: puede estar bien formado y no acreditar el recorrido previsto');
+
+  // 4b. Propósito declarado por plan (38- §9, pregunta 5; saturation_policy.sufficiency_by_purpose). Las
+  // búsquedas de cada plan, por la secuencia de una captura cerrada o, sin ella, por la hora del servidor al
+  // recibir el registro: el primer propósito conocido, si llegó después de la primera búsqueda, cada cambio
+  // con su motivo o sin él y las búsquedas posteriores que lo omiten. Es una declaración del agente: se ordena
+  // y se compara, no se acredita que rigiera. Ningún orden entre propósitos: cualquier cambio pide motivo.
+  const purposeOrder = clock.sequence ? 'capture_sequence' : 'server_received_at';
+  const purposes = [];
+  for (const plan of [...new Set(purposeLog.map((x) => x.plan_ref))].sort()) {
+    const xs = purposeLog.filter((x) => x.plan_ref === plan)
+      .sort((a, b) => (clock.sequence ? a.seq - b.seq : a.at - b.at) || a.idx - b.idx);
+    const at = (x) => ({ attempt_ref: x.attempt_ref, pass_id: x.pass_id });
+    let first = null;
+    let current = null;
+    const changes = [];
+    const omitted = [];
+    for (const [i, x] of xs.entries()) {
+      if (!x.product) { if (first) omitted.push(at(x)); continue; }
+      if (!first) { first = { purpose: x.product.purpose, ...at(x), late: i > 0 }; current = x.product.purpose; continue; }
+      if (x.product.purpose !== current) {
+        changes.push({ from: current, to: x.product.purpose, ...at(x), reason: x.product.change_reason ?? null });
+        current = x.product.purpose;
+      }
+    }
+    purposes.push({ plan_ref: plan, order_by: purposeOrder, searches: xs.length, first, last: current, changes, omitted_after_declared: omitted });
+  }
 
   // 5. Lectura: recibos, abstracts, versiones.
   const reads = live.filter((e) => e.kind === 'fetch');
@@ -924,6 +979,9 @@ async function checkDossierUnguarded(manifest, load) {
     }
   }
   const candidates = responseText === null ? [] : extractCandidates(responseText);
+  const linkScan = responseText === null ? null : pubmedLinks(responseText);
+  const responseLinks = linkScan ? { status: 'measured', canonical: linkScan.canonical.length, with_parameters: linkScan.withParameters }
+    : { status: 'not_measured', canonical: null, with_parameters: [] };
   const useSources = [];
   const useReports = [];
   for (const k of ['citations', 'usage_log']) {
@@ -1038,7 +1096,11 @@ async function checkDossierUnguarded(manifest, load) {
       retention = {
         status: 'measured',
         reference: { reference_id: ref.id, version: ref.version, source: ref.source, partial: ref.partial, target_size: R.length, synthesis_pmids: ref.synthesis },
-        stages: [stage(new Set(S), 'returned'), stage(new Set(classes.obtained), 'abstracts_preserved'),
+        // G4 por etapas (38- §9, R1): lista entregada, títulos cribados, abstracts y uso. Sin cribado conservado,
+        // la etapa de títulos queda sin medir, nunca en cero.
+        stages: [stage(new Set(S), 'returned'),
+          screens.length ? stage(screened, 'titles_screened') : { stage: 'titles_screened', status: 'not_measured', ratio: null },
+          stage(new Set(classes.obtained), 'abstracts_preserved'),
           d4Measured ? stage(usedSet, 'documented_use') : { stage: 'documented_use', status: 'not_measured', ratio: null }],
         per_pass: passes.map((p) => ({ plan_ref: p.plan_ref, pass_id: p.pass_id, walk_id: p.walk_id, ...stage(new Set(p.returned), 'returned') })),
         synthesis: { returned: synth(new Set(S)), abstracts_preserved: synth(new Set(classes.obtained)), documented_use: d4Measured ? synth(usedSet) : null,
@@ -1067,6 +1129,18 @@ async function checkDossierUnguarded(manifest, load) {
   if (retention.status === 'measured') {
     finding('reference_not_returned', 'PMID de la referencia que no están en ninguna lista devuelta: fuera de la cabecera traída o fuera de la estrategia; una intersección conservada distingue los dos casos',
       retention.stages[0].missing);
+  }
+  finding('link_with_parameters', 'enlaces a PubMed con consulta o fragmento en la respuesta: la cita canónica es https://pubmed.ncbi.nlm.nih.gov/<PMID>/, sin parámetros (provenance.citation_form)',
+    sortPmids(responseLinks.with_parameters.map((l) => l.pmid)));
+  // El propósito no tiene PMID: sus hallazgos señalan las búsquedas.
+  const purposeFinding = (code, detail, attempts) => { if (attempts.length) findings.push({ code, detail, pmids: [], attempts }); };
+  for (const p of purposes) {
+    purposeFinding('purpose_late', `[${p.plan_ref}]: propósito declarado después de la primera búsqueda del plan: no muestra que rigiera antes`,
+      p.first?.late ? [p.first.attempt_ref] : []);
+    purposeFinding('purpose_changed_without_reason', `[${p.plan_ref}]: propósito cambiado sin change_reason`,
+      p.changes.filter((c) => c.reason === null).map((c) => c.attempt_ref));
+    purposeFinding('purpose_omitted', `[${p.plan_ref}]: búsquedas posteriores a la declaración que no llevan el propósito`,
+      p.omitted_after_declared.map((x) => x.attempt_ref));
   }
   const funnelOf = (p) => ({
     found: p.d1.value, returned: p.returned.length,
@@ -1116,6 +1190,8 @@ async function checkDossierUnguarded(manifest, load) {
       denominators,
       provenance,
       retention,
+      purposes,
+      links: responseLinks,
       alternative_route: alternative,
     },
   });

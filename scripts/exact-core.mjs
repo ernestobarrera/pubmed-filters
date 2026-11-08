@@ -47,6 +47,11 @@ export function queryIntegrity(inspection) {
 
 /** Órdenes admitidos (1.13.0). Solo relevancia: omitido, ESearch usa el suyo («Most Recent»). */
 export const SORT_VALUES = ['relevance'];
+/**
+ * Propósito del producto (1.16.0, 38- D4, saturation_policy.sufficiency_by_purpose): fija cuánta búsqueda
+ * basta. Una sola lista para el esquema del MCP y para dossier-check.
+ */
+export const PRODUCT_PURPOSES = ['orientation', 'report', 'decision', 'corpus'];
 
 /** «Restrictions achieved. start and count adjusted to S, C»: la posición y el tamaño que NCBI sirvió. */
 const ADJUSTED = /adjusted to ([0-9]+), ([0-9]+)/i;

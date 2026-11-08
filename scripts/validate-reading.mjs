@@ -28,7 +28,7 @@ import { ESUMMARY_URL } from './esummary.mjs';
 import { ABSTRACT_FORMAT, canonicalAbstract, checkCanonicalAbstract, utf8Length } from './abstract-canonical.mjs';
 import { runFetch, fetchRequestError, sha256Bytes, MAX_STRUCTURED_BYTES, FETCH_RECEIPT_TYPE } from './fetch-core.mjs';
 import { checkDossier, extractCandidates } from './dossier-check.mjs';
-import { auditSurface, ncbiOnline } from './audit-surface.mjs';
+import { auditSurface, ncbiOnline, repoCatalog } from './audit-surface.mjs';
 import { runSummary, summaryRequestError, parseJsonStrict, JsonStrictError, SUMMARY_RECEIPT_TYPE } from './summary-core.mjs';
 import { createMcpHandler } from '../mcp/protocol.mjs';
 
@@ -617,7 +617,8 @@ try {
     const idlist = q.status === 429 ? [] : q.ids.slice(start, start + n);
     if (q.status === 429) return { ok: false, status: 429, text: async () => '' };
     return { ok: true, status: 200, text: async () => JSON.stringify({ esearchresult: { count: String(q.count ?? q.ids.length), retmax: String(idlist.length),
-      retstart: String(start), idlist, querytranslation: p.get('term'), ...(q.broken ? { warninglist: { phrasesignored: ['x'] } } : {}) } }) };
+      retstart: String(start), idlist, ...(q.noTranslation ? {} : { querytranslation: p.get('term') }),
+      ...(q.broken ? { warninglist: { phrasesignored: ['x'] } } : {}) } }) };
   };
   const records = new Map();
   const efetchFake = (url, init) => {
@@ -634,8 +635,8 @@ try {
   const server = createMcpHandler({ fetcher, now, run: RUN, filters: bundle, engine: 'mcp/stdio.mjs', apiKey: 'clave-de-prueba' });
   let rpcId = 0;
   const call = async (name, args) => server({ jsonrpc: '2.0', id: ++rpcId, method: 'tools/call', params: { name, arguments: args } });
-  const registro = ({ plan = 'plan-1', pass: passId = 'p1', path, known } = {}) => ({ plan_ref: plan, facets: [{ facet: 'topic', role_in_question: 'core' }], filters: [],
-    pass: { pass_id: passId, purpose: 'test pass', ...(path ? { reading_path: path } : {}) }, ...(known ? { known_pmids: known } : {}) });
+  const registro = ({ plan = 'plan-1', pass: passId = 'p1', path, known, product } = {}) => ({ plan_ref: plan, facets: [{ facet: 'topic', role_in_question: 'core' }], filters: [],
+    pass: { pass_id: passId, purpose: 'test pass', ...(path ? { reading_path: path } : {}) }, ...(known ? { known_pmids: known } : {}), ...(product ? { product } : {}) });
   const buscar = (query, { retmax = 10, retstart = 0, ...rec } = {}) => call('pubmed_search_exact', { query, retmax, retstart, selection_record: registro(rec) });
   const leer = (pmids, readId = 'l1', plan = 'plan-1') => call('pubmed_fetch_exact', { pmids, context: { plan_ref: plan, read_id: readId } });
 
@@ -1424,7 +1425,7 @@ try {
     try { x28[k] = await auditSurface(archivo23, { perlas: v }); } catch (e) { x28[k] = { thrown: String(e?.message ?? e) }; }
   }
   const rechazadaRef = (k, re) => !x28[k].thrown && re.test(x28[k].built.referenceError ?? '') && !x28[k].built.manifest.reference
-    && new RegExp(`## Perlas\\n\\n- ${re.source}`).test(x28[k].report) && x28[k].result.verdict === base23.verdict;
+    && new RegExp(`## G4 · Perlas por etapa\\n\\n- ${re.source}`).test(x28[k].report) && x28[k].result.verdict === base23.verdict;
   check('X28', rechazadaRef('nula', /perlas: target: lista de PMID/) && rechazadaRef('ausente', /perlas: target: lista de PMID/)
     && rechazadaRef('objeto', /perlas: target: lista de PMID/) && rechazadaRef('repetida', /perlas: target: PMID repetidos/)
     && rechazadaRef('version', /perlas: no es pubmed-dossier-reference versión 1/)
@@ -1465,6 +1466,149 @@ try {
     && a.online.failures.some((f) => /^relectura de 11: /.test(f)) && releido(a, '22')?.outcome === 'altered'
     && igual(a.result.defects, base23.defects) && a.result.denominators.D3.value === base23.denominators.D3.value),
     `relectura con results no lista: ${Object.values(x30).map((a) => a.thrown ?? releido(a, '11')?.outcome).join(', ')}, sin interrumpir el informe`);
+
+  // --- X31-X35. Auditor 1.2.0 y dossier-check 1.2.0 (router 1.16.0, 38- §9): G1-G2 por recibo, G4 por etapa,
+  // propósito declarado, catálogo archivado y enlaces a PubMed. Sintéticos: prueban el contrato.
+  const seccion = (a, titulo) => a.report.split(`\n## ${titulo}`)[1]?.split('\n## ')[0] ?? '';
+  const filaDe = (a, titulo, inicio) => seccion(a, titulo).split('\n').find((l) => l.startsWith(`| ${inicio} |`)) ?? '';
+
+  // X31 (R1 de Codex, 38- §8 y §9). La búsqueda encuentra 100 y entrega 11 y 12; la intersección del auditor
+  // contiene las dos perlas, 21 y 22, y no hay lectura ni cribado. G4 por etapa: consulta 2/2, entregada 0/2,
+  // títulos no comprobados, abstracts 0/2, sin veredicto conjunto de G3 y G4. Con un cribado de las perlas, la
+  // etapa de títulos se mide, entre la lista entregada y los abstracts.
+  queries.clear(); records.clear();
+  queries.set('x31[tiab]', { ids: ['11', '12'], count: 100 });
+  queries.set('(x31[tiab]) AND (21[pmid] OR 22[pmid])', { ids: ['21', '22'] });
+  const s31 = await buscar('x31[tiab]', { retmax: 2 });
+  const linea31 = linea('pubmed_search_exact', { query: 'x31[tiab]', retmax: 2, retstart: 0, selection_record: registro() }, s31);
+  const ctx31 = { plan_ref: 'plan-1', screen_id: 'c31' };
+  const criba31 = await call('pubmed_summary_exact', { pmids: ['21', '22'], context: ctx31 });
+  const x31 = {
+    r1: await auditSurface(linea31, { perlas: ['21', '22'], online: red }),
+    cribado: await auditSurface([linea31, linea('pubmed_summary_exact', { pmids: ['21', '22'], context: ctx31 }, criba31)].join('\n'), { perlas: ['21', '22'] }),
+  };
+  const g4 = (a, etapa) => filaDe(a, 'G4 · Perlas por etapa', etapa);
+  const etapas = (a) => a.result.retention.stages.map((s) => s.stage).join();
+  check('X31', g4(x31.r1, 'En el conjunto de la consulta') === '| En el conjunto de la consulta | 2 de 2 | ninguno |'
+    && g4(x31.r1, 'En la lista entregada') === '| En la lista entregada | 0 de 2 | 21, 22 |'
+    && g4(x31.r1, 'Entre los títulos cribados') === '| Entre los títulos cribados | no comprobada | — |'
+    && g4(x31.r1, 'Con abstract conservado') === '| Con abstract conservado | 0 de 2 | 21, 22 |'
+    && g4(x31.r1, 'Con uso documentado') === '| Con uso documentado | no comprobada | — |'
+    && /G3 y G4 no reciben un veredicto conjunto/.test(seccion(x31.r1, 'G4 · Perlas por etapa')) && !/^## [^\n]*G3[^\n]*G4/m.test(x31.r1.report)
+    && /Medido, dentro del conjunto de p1:\*\* 2 de 2: 21, 22/.test(seccion(x31.r1, 'G3 · Estrategia: lo medido y lo declarado'))
+    && /Declarado, no comprobado/.test(x31.r1.report)
+    && etapas(x31.r1) === 'returned,titles_screened,abstracts_preserved,documented_use' && stage(x31.r1.result, 'titles_screened').status === 'not_measured'
+    && stage(x31.cribado.result, 'titles_screened').numerator === 2 && g4(x31.cribado, 'Entre los títulos cribados') === '| Entre los títulos cribados | 2 de 2 | ninguno |'
+    && g4(x31.cribado, 'En el conjunto de la consulta') === '| En el conjunto de la consulta | no comprobada | — |',
+    `escenario R1: ${['En el conjunto de la consulta', 'En la lista entregada', 'Entre los títulos cribados', 'Con abstract conservado']
+      .map((e) => g4(x31.r1, e).split('|')[2]?.trim()).join(' · ')}; con cribado, títulos ${stage(x31.cribado.result, 'titles_screened').numerator} de 2; sin veredicto conjunto`);
+
+  // X32 (R1). G1-G2 por recibo: una pasada `unsupported` no da G1-G2 comprobadas, y un `verified` no vale por
+  // la fidelidad de los filtros ni por la lista entera.
+  queries.set('x32[tiab]', { ids: ['11'], noTranslation: true });
+  queries.set('x32b[tiab]', { ids: ['11'] });
+  const unFiltro = bundle.catalog.filters[0].path;
+  const s32 = await buscar('x32[tiab]', { pass: 'p2' });
+  const args32b = { query: 'x32b[tiab]', retmax: 10, filters_used: [unFiltro], selection_record: registro({ pass: 'p3' }) };
+  const s32b = await call('pubmed_search_exact', args32b);
+  const x32 = await auditSurface([linea31, linea('pubmed_search_exact', { query: 'x32[tiab]', retmax: 10, retstart: 0, selection_record: registro({ pass: 'p2' }) }, s32),
+    linea('pubmed_search_exact', args32b, s32b)].join('\n'));
+  const g1 = (pase) => filaDe(x32, 'G1–G2 · Ejecución y recuperación, por recibo (comprobado por código)', pase);
+  check('X32', s32.result.structuredContent.status.query_integrity === 'unsupported'
+    && g1('p2') === '| p2 | unsupported | sin filtros declarados | no entra en los devueltos válidos |' && !/verified/.test(g1('p2'))
+    && g1('p1') === '| p1 | verified | sin filtros declarados | parcial: 2 de 100; quedan páginas desde 2 |'
+    && s32b.result.structuredContent.status.filter_fidelity === 'failed' && g1('p3') === '| p3 | verified | failed | entera (1 de 1) |',
+    `G1-G2 por recibo: ${[g1('p1'), g1('p2'), g1('p3')].join(' · ')}`);
+
+  // X33 (pregunta 5 de 38- §8 y §9). Propósito por plan: el primero conocido, si llegó tarde, cada cambio con
+  // su motivo o sin él y las búsquedas que lo omiten después; hallazgos, no defectos. Sin captura cerrada, el
+  // orden es la hora del servidor, no la línea del archivo. Un `product` mal formado no se interpreta.
+  queries.set('x33[tiab]', { ids: ['11'] });
+  const REP = { purpose: 'report' };
+  const plan3 = [{ plan_ref: 'plan-1', passes: ['p1', 'p2', 'p3'] }];
+  const conProposito = async (...productos) => {
+    const xs = [];
+    for (const [i, product] of productos.entries()) xs.push(await buscar('x33[tiab]', { pass: `p${i + 1}`, product }));
+    return xs;
+  };
+  const enDossier = async (...productos) => (await dossier({ attempts: (await conProposito(...productos)).map(S), closure: true, plans: plan3 })).result;
+  const x33 = {
+    igual: await enDossier(REP, REP),
+    tardio: await enDossier(null, REP),
+    sinMotivo: await enDossier(REP, { purpose: 'orientation' }),
+    conMotivo: await enDossier(REP, { purpose: 'decision', change_reason: 'the result will fund a programme' }, REP),
+    omitido: await enDossier(REP, null),
+    ninguno: await enDossier(null, null),
+  };
+  const [p33a, p33b] = await conProposito(null, REP);
+  const lineas33 = [linea('pubmed_search_exact', { query: 'x33[tiab]', retmax: 10, retstart: 0, selection_record: registro({ pass: 'p2', product: REP }) }, p33b),
+    linea('pubmed_search_exact', { query: 'x33[tiab]', retmax: 10, retstart: 0, selection_record: registro({ pass: 'p1' }) }, p33a)].join('\n');
+  const inverso = await auditSurface(lineas33);
+  const [m33] = await conProposito(REP);
+  const malFormado = structuredClone(m33);
+  malFormado.result.structuredContent.selection_record.record.product = { purpose: 'quick' };
+  malFormado.result.structuredContent.selection_record.sha256 = await sha256(JSON.stringify(malFormado.result.structuredContent.selection_record.record));
+  malFormado.result.content[0].text = JSON.stringify(malFormado.result.structuredContent);
+  const x33mal = (await dossier({ attempts: [S(malFormado)], closure: true })).result;
+  const hallazgos33 = (r) => r.findings.filter((f) => f.code.startsWith('purpose_')).map((f) => `${f.code}:${f.attempts.join('+')}`).join() || 'ninguno';
+  const prop = (r) => r.purposes[0];
+  check('X33', hallazgos33(x33.igual) === 'ninguno' && prop(x33.igual).first.purpose === 'report' && prop(x33.igual).first.late === false
+    && prop(x33.igual).order_by === 'capture_sequence'
+    && hallazgos33(x33.tardio) === 'purpose_late:a1' && hallazgos33(x33.sinMotivo) === 'purpose_changed_without_reason:a1'
+    && hallazgos33(x33.conMotivo) === 'purpose_changed_without_reason:a2' && prop(x33.conMotivo).changes[0].reason === 'the result will fund a programme'
+    && prop(x33.conMotivo).changes.map((c) => `${c.from}>${c.to}`).join() === 'report>decision,decision>report'
+    && hallazgos33(x33.omitido) === 'purpose_omitted:a1' && hallazgos33(x33.ninguno) === 'ninguno' && prop(x33.ninguno).first === null
+    && [x33.tardio, x33.sinMotivo, x33.omitido].every((r) => r.verdict === x33.igual.verdict)
+    && hallazgos33(inverso.result) === 'purpose_late:L1' && prop(inverso.result).order_by === 'server_received_at'
+    && /plan-1\*\* \(orden: hora del servidor[^\n]*primero `report` en L1 \(p2\), \*\*tardío\*\*/.test(inverso.report)
+    && x33mal.verdict === 'inconclusive' && x33mal.uncertainties.some((u) => u.code === 'unsupported_input' && /selection_record/.test(u.detail)),
+    `propósito: tardío ${hallazgos33(x33.tardio)}, sin motivo ${hallazgos33(x33.sinMotivo)}, con motivo y vuelta sin él ${hallazgos33(x33.conMotivo)}, omitido ${
+      hallazgos33(x33.omitido)}, ninguno ${hallazgos33(x33.ninguno)}; por hora del servidor ${hallazgos33(inverso.result)}; mal formado ${x33mal.verdict}`);
+
+  // X34 (38- §9). El catálogo archivado frente al que construye este commit para los mismos argumentos:
+  // idéntico, distinto con sus claves, de otra versión o sin comparar; y su texto, el JSON compacto de su
+  // estructurado. La construcción de la línea de órdenes (repoCatalog) da el mismo catálogo que el servidor.
+  const catalogoDe = async (args) => (await call('pubmed_filter_catalog', args)).result.structuredContent;
+  const pideCatalogo = { include_journals: false };
+  const sangrado = { ...catalogo.result, content: [{ type: 'text', text: JSON.stringify(catalogo.result.structuredContent, null, 2) }] };
+  const archivo34 = [
+    linea('pubmed_filter_catalog', pideCatalogo, catalogo),
+    linea('pubmed_filter_catalog', pideCatalogo, tocar(catalogo, (sc) => { sc.counts.returned_filters += 1; sc.guidance.answer_trace = 'otra traza'; })),
+    linea('pubmed_filter_catalog', pideCatalogo, tocar(catalogo, (sc) => { sc.contract_version = '1.15.0'; })),
+    JSON.stringify({ tool: 'pubmed_filter_catalog', request: pideCatalogo, response: sangrado }),
+    JSON.stringify(catalogo.result),
+  ].join('\n');
+  const x34 = {
+    comparado: await auditSurface(archivo34, { catalog: catalogoDe }),
+    sinReferencia: await auditSurface(archivo34),
+    repo: await auditSurface(archivo34, { catalog: await repoCatalog(ROOT) }),
+  };
+  const estados34 = (a) => a.catalogs.map((c) => `${c.line}:${c.status}${c.keys.length ? `[${c.keys.join('+')}]` : ''}/${c.text}`).join(' ');
+  check('X34', estados34(x34.comparado) === `1:identical/compact 2:different[counts.returned_filters+guidance.answer_trace]/compact 3:other_version/compact 4:identical/not_compact 5:not_compared/compact`
+    && x34.comparado.catalogs[4].reason === 'sin la petición archivada: no se saben sus argumentos' && x34.comparado.catalogs[2].expected_version === catalogo.result.structuredContent.contract_version
+    && x34.sinReferencia.catalogs.every((c) => c.status === 'not_compared' && c.reason === 'sin construcción de referencia')
+    && estados34(x34.repo) === estados34(x34.comparado)
+    && /Línea 2:\*\* distinto del que construye este commit en counts\.returned_filters, guidance\.answer_trace/.test(x34.comparado.report)
+    && /Línea 4:\*\* idéntico[^\n]*el texto NO es el JSON compacto/.test(x34.comparado.report)
+    && x34.comparado.result.verdict === x34.sinReferencia.result.verdict,
+    `catálogo archivado: ${estados34(x34.comparado)}; sin referencia, sin comparar; la del repositorio da lo mismo`);
+
+  // X35 (citation_form, 38- §9). Los enlaces a PubMed con consulta o fragmento se señalan como hallazgo, sin
+  // cambiar el veredicto; los canónicos se cuentan; la puntuación que cierra la frase no es parámetro.
+  const resp35 = 'Ver https://pubmed.ncbi.nlm.nih.gov/11/?utm_source=chatgpt.com, [22](https://pubmed.ncbi.nlm.nih.gov/22/), '
+    + 'https://pubmed.ncbi.nlm.nih.gov/33#abstract y ¿https://pubmed.ncbi.nlm.nih.gov/44/?';
+  const x35 = {
+    malos: (await dossier({ attempts: [S(ctlS), F(ctlF)], response: resp35, usage: usoCtl([]), closure: true })).result,
+    buenos: (await dossier({ attempts: [S(ctlS), F(ctlF)], response: 'Ver https://pubmed.ncbi.nlm.nih.gov/11/.', usage: usoCtl([]), closure: true })).result,
+    sinRespuesta: (await dossier({ attempts: [S(ctlS), F(ctlF)], closure: true })).result,
+    informe: await auditSurface(archivo(), { responseBytes: enc(resp35) }),
+  };
+  check('X35', x35.malos.links.with_parameters.map((l) => `${l.pmid}:${l.text.slice(l.text.indexOf('gov/') + 4)}`).join() === '11:11/?utm_source=chatgpt.com,33:33#abstract'
+    && x35.malos.links.canonical === 2 && hallazgo(x35.malos, 'link_with_parameters') === '11,33' && x35.malos.verdict === x35.buenos.verdict
+    && x35.buenos.links.canonical === 1 && x35.buenos.links.with_parameters.length === 0 && hallazgo(x35.buenos, 'link_with_parameters') === ''
+    && x35.sinRespuesta.links.status === 'not_measured'
+    && /Canónicos:\*\* 2\. \*\*Con consulta o fragmento:\*\* 11 \(`https:\/\/pubmed\.ncbi\.nlm\.nih\.gov\/11\/\?utm_source=chatgpt\.com`\), 33/.test(x35.informe.report),
+    `enlaces: con parámetros ${hallazgo(x35.malos, 'link_with_parameters')}, canónicos ${x35.malos.links.canonical}; solo canónicos ${x35.buenos.links.canonical}; sin respuesta, ${x35.sinRespuesta.links.status}`);
 } catch (err) {
   check('X0', false, `la parte del dossier se interrumpió: ${String(err?.stack ?? err).split('\n').slice(0, 2).join(' | ')}`);
 }

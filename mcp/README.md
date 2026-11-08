@@ -23,7 +23,8 @@ tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
   Mismo presupuesto de 24 KiB, misma cola y mismo `run`; un título nunca se corta y lo que no cabe va a
   `pending_pmids`. Medido el 26/10 con PubMed real: 50 registros, 22,7 y 24,3 KB; con títulos largos no
   caben los 50 y el resto queda pendiente. El JSON se lee con un analizador estricto que rechaza claves
-  repetidas, y la clave y el contacto se ocultan en todo diagnóstico. `dossier-check` aún no lee estos recibos.
+  repetidas, y la clave y el contacto se ocultan en todo diagnóstico. `dossier-check` los lee desde su 1.1.0
+  como un estado propio, y desde la 1.2.0 los títulos cribados son una etapa de la retención.
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición

@@ -165,7 +165,18 @@ Cada pasada lleva su embudo: encontrados, devueltos, cribados, abstracts obtenid
 - `read_without_origin`: leído sin estar en ninguna lista válida ni declarado en `known_pmids`;
 - `screened_without_origin`: lo mismo para un título cribado;
 - `mentioned_without_reading`: PMID mencionado en la respuesta sin abstract íntegro conservado;
-- `reference_not_returned`: PMID de la referencia que no llegó a ninguna lista devuelta.
+- `reference_not_returned`: PMID de la referencia que no llegó a ninguna lista devuelta;
+- `link_with_parameters`: enlace a PubMed con consulta o fragmento (`?utm_source=…`, `#…`) en la
+  respuesta, en vez de la cita canónica `https://pubmed.ncbi.nlm.nih.gov/<PMID>/` (desde la 1.2.0);
+- `purpose_late`, `purpose_changed_without_reason` y `purpose_omitted`: el propósito declarado en
+  `selection_record.product` llegó después de la primera búsqueda del plan, cambió sin `change_reason` o
+  faltó en una búsqueda posterior (desde la 1.2.0). Estos señalan búsquedas (`attempts`), no PMID.
+
+Desde la 1.2.0, `purposes` da por plan el primer propósito conocido, sus cambios y sus omisiones, en el
+orden de la secuencia de una captura cerrada o, sin ella, de la hora del servidor al recibir el registro;
+nunca en el de las líneas del archivo. Un `product` mal formado deja el recibo como entrada no soportada. La
+retención va por etapas: lista devuelta, títulos cribados (sin cribado, `not_measured`), abstracts
+conservados y uso documentado. `links` cuenta los enlaces canónicos y lista los que llevan parámetros.
 
 Cuatro formatos JSON, todos con `format` y `format_version: 1`:
 
@@ -194,7 +205,7 @@ recalcula sus relaciones (recuento, lista, posición, tamaño, completitud y con
 ejecutor; en la lectura, entrega, fallo, transporte y tiempos). Solo suma D3 el abstract íntegro atribuible
 a su PMID.
 
-Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F12 lectura, S1-S13 cribado, X1-X28 dossier y
+Pruebas, sin red: `node scripts/validate-reading.mjs` (F1-F13 lectura, S1-S13 cribado, X1-X35 dossier y
 auditor de superficie; también en la CI y en la puerta de mutación).
 
 ### Auditoría de una superficie
@@ -208,14 +219,28 @@ modelo. Es un JSONL con una línea por llamada, en una de dos formas: `{ tool, r
 respuesta, `{ structuredContent, content }`, en cuyo caso la herramienta se deduce del recibo.
 
 `audit-surface.mjs` convierte ese archivo en un dossier y lo pasa por `dossier-check.mjs`. En la carpeta de
-salida deja el manifiesto, un fichero por recibo, `dossier-check.json` e `informe.md`. El informe sigue los
-niveles de garantía:
-- integridad de las llamadas;
-- integridad de lo recuperado;
+salida deja el manifiesto, un fichero por recibo, `dossier-check.json`, `catalogo.json` e `informe.md`.
+Desde la 1.2.0 (router 1.16.0), el informe sigue los niveles de garantía de `provenance.answer_trace`:
+- **G1–G2 por recibo:** por pasada, el estado de la consulta, la fidelidad de los filtros declarados y si
+  la lista es entera, parcial con páginas pendientes o no entra; y el estado de cada lectura y cribado. Un
+  `verified` no vale por los demás, y una pasada `unsupported` no sale comprobada;
+- el catálogo archivado;
 - embudo por pasada;
 - procedencia de lo leído;
-- perlas;
+- el propósito declarado;
+- **G3:** lo medido (qué perlas contiene cada conjunto) aparte de lo declarado (su pertinencia, su fuente y
+  su independencia);
+- **G4 por etapa:** en el conjunto de la consulta, en la lista entregada, entre los títulos cribados, con
+  abstract conservado y con uso documentado. Una etapa sin medida queda «no comprobada», y G3 y G4 nunca
+  reciben un veredicto conjunto;
+- los enlaces a PubMed de la respuesta;
 - lo que no acredita.
+
+Cada llamada a `pubmed_filter_catalog` archivada se compara, sin red, con la que da el manejador del MCP con
+los filtros de este commit para los mismos argumentos: idéntica, distinta (con las claves que difieren), de
+otra versión del contrato (no se compara) o sin comparar (por ejemplo, sin la petición archivada). Si trae
+texto, se comprueba que es el JSON compacto de su estructurado. Dice si lo archivado es lo que sirve este
+commit, no que el modelo lo leyera.
 
 Además compara la petición archivada con la que acredita su recibo, campo a campo y con los valores por
 defecto del MCP:

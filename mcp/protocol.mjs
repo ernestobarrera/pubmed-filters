@@ -20,7 +20,7 @@
  * solo lectura sobre PubMed.
  */
 
-import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES } from '../scripts/exact-core.mjs';
+import { runExact, sha256, ESEARCH_WINDOW, SORT_VALUES, PRODUCT_PURPOSES } from '../scripts/exact-core.mjs';
 import { TransportError } from '../scripts/esearch.mjs';
 import { runFetch, fetchFailureReceipt, fetchRequestError, FETCH_RECEIPT_TYPE, FETCH_RECEIPT_VERSION,
   MAX_FETCH_PMIDS, MAX_PLAN_REF, MAX_READ_ID, MAX_STRUCTURED_BYTES } from '../scripts/fetch-core.mjs';
@@ -64,8 +64,6 @@ const FACET_ROLES = ['core', 'concept', 'lane', 'context', 'interpretation'];
 const READING_PATHS = ['complete_retrieval', 'focused_selection', 'exploration_only'];
 const DATE_ORIGINS = ['user', 'agent_policy', 'filter', 'none'];
 const PMID_ORIGINS = ['search_pass', 'cited_in_document', 'user', 'model_prior_knowledge', 'undetermined'];
-/** Propósito del producto (1.16.0, 38- D4, saturation_policy.sufficiency_by_purpose): fija cuánta búsqueda basta. */
-const PRODUCT_PURPOSES = ['orientation', 'report', 'decision', 'corpus'];
 const str = (max, extra = {}) => ({ type: 'string', minLength: 1, maxLength: max, ...extra });
 const SELECTION_RECORD_SCHEMA = {
   type: 'object',
