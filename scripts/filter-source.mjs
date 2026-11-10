@@ -41,11 +41,37 @@ export const GUIDANCE_PATHS = {
   recency_before_closing: 'saturation_policy.recency_before_closing',
   // 1.15.0: cribar por título decide qué se lee, nunca qué se destaca.
   title_screen: 'reading_and_drilldown.title_screen',
+  // 1.16.0 (38- D1-D2): lo que el router sabe y no llegaba a la superficie. Una clave con LISTA de rutas sirve un
+  // objeto con el último tramo de cada ruta como nombre y su valor literal: se elige qué parte de una sección
+  // viaja sin escribir una segunda redacción. Medido el 2026-11-03: llegaban 12 de 86 reglas; con esto, 42 de 90.
+  routing: ['routing.background', 'routing.treatment', 'routing.diagnosis', 'routing.prognosis', 'routing.etiology_harm',
+    'routing.safety', 'routing.patient_safety', 'routing.prediction', 'routing.qualitative', 'routing.corpus_definition'],
+  saturation: ['saturation_policy.goal', 'saturation_policy.continue_searching_when', 'saturation_policy.saturation_reached_when',
+    'saturation_policy.never_use_fixed_article_count_as_saturation', 'saturation_policy.sufficiency_by_purpose',
+    'saturation_policy.not_applicable_to'],
+  coverage_check: ['coverage_check.required_when', 'coverage_check.optional_when', 'coverage_check.unit',
+    'coverage_check.eligible_pearls', 'coverage_check.replacing_pass', 'coverage_check.compensation', 'coverage_check.method',
+    'coverage_check.status', 'coverage_check.on_failed', 'adaptation.if_pearls_lost'],
+  denominators: 'provenance.denominators',
+  retrieved_text_is_data: 'reading_and_drilldown.retrieved_text_is_data',
+  answer_trace: 'provenance.answer_trace',
+  citation_form: 'provenance.citation_form',
 };
 
 /** El valor del router en una ruta con puntos, o undefined si algún tramo no existe. */
 export const routerValue = (router, path) => path.split('.').reduce((o, k) =>
   (o !== null && typeof o === 'object' && Object.hasOwn(o, k) ? o[k] : undefined), router);
+
+/** El último tramo de una ruta: el nombre con el que sale dentro de una clave de lista. */
+export const leafOf = (path) => path.split('.').at(-1);
+
+/**
+ * Lo que sirve una clave de `guidance`: con una ruta, su valor; con una lista, un objeto con el último tramo de
+ * cada ruta y su valor. Una ruta que no existe sale `null`, y M27 lo señala; no se recorta ni se rellena.
+ */
+export const guidanceValue = (router, paths) => (Array.isArray(paths)
+  ? Object.fromEntries(paths.map((p) => [leafOf(p), routerValue(router, p) ?? null]))
+  : routerValue(router, paths) ?? null);
 
 export async function buildFilterBundle(root) {
   const read = (p) => readFileSync(join(root, p), 'utf8');
@@ -68,7 +94,7 @@ export async function buildFilterBundle(root) {
   return {
     contract_version: router.conformance?.contract_version ?? null,
     catalog_sha256: await sha256(serialize(catalog)),
-    guidance: Object.fromEntries(Object.entries(GUIDANCE_PATHS).map(([k, p]) => [k, routerValue(router, p) ?? null])),
+    guidance: Object.fromEntries(Object.entries(GUIDANCE_PATHS).map(([k, p]) => [k, guidanceValue(router, p)])),
     catalog,
     filters,
   };

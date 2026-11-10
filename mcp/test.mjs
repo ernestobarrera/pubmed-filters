@@ -406,15 +406,17 @@ check('M21', !cuerpoSinOrden.has('sort') && !cuerpoSinOrden.has('retstart') && s
 
 const RECORRIDOS = Object.keys(JSON.parse(readFileSync(join(HERE, '..', 'neurosymbolic_router.json'), 'utf8')).reading_and_drilldown.reading_path)
   .filter((k) => k !== 'rule');
-const conPase = (cambios) => registro({ pass: { ...registro().pass, ...cambios } });
+// Con product declarado (1.16.0), para que las notas de M22 sean solo las del recorrido.
+const PRODUCTO = { product: { purpose: 'report' } };
+const conPase = (cambios) => registro({ ...PRODUCTO, pass: { ...registro().pass, ...cambios } });
 const rl = {
-  sinRecorrido: await buscar(160, qDep, { filters_used: [DEP], selection_record: registro() }),
+  sinRecorrido: await buscar(160, qDep, { filters_used: [DEP], selection_record: registro(PRODUCTO) }),
   completo: await buscar(161, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'complete_retrieval' }) }),
   exploracion: await buscar(162, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'exploration_only' }) }),
   focalizadaConMotivo: await buscar(163, qDep, { filters_used: [DEP], selection_record: conPase({
     reading_path: 'focused_selection', selection_reason: 'the 59 synthesis records, retrieved whole' }) }),
   focalizadaSinMotivo: await buscar(164, qDep, { filters_used: [DEP], selection_record: conPase({ reading_path: 'focused_selection' }) }),
-  focalizadaYDescartado: await buscar(165, qDep, { filters_used: [DEP], selection_record: registro({
+  focalizadaYDescartado: await buscar(165, qDep, { filters_used: [DEP], selection_record: registro({ ...PRODUCTO,
     filters: [{ path: DEP, decision: 'discarded', reason: 'not needed here' }],
     pass: { ...registro().pass, reading_path: 'focused_selection', selection_reason: 'trials only' } }) }),
 };
@@ -432,6 +434,28 @@ check('M22', RECORRIDOS.join() === TOOL.inputSchema.properties.selection_record.
   && Object.values(rl).every((v) => v.isError === false && v.structuredContent.status.query_integrity === 'verified')
   && rlMalos.every((x) => x.isError === true) && enviadas.length === 0,
   `recorrido de lectura: el enumerado es el del router; sin declarar, el registro sigue declared con una nota aparte; focused_selection exige su motivo; no oculta otros problemas; un recorrido inventado o un motivo de menos de 3 caracteres se rechazan — estados: ${JSON.stringify(Object.fromEntries(Object.keys(rl).map((k) => [k, st(k)])))}`);
+
+// M33 (1.16.0, 38- D4). El propósito del producto: opcional, con nota si falta, para que un registro de la 1.15
+// siga siendo declared; su enumerado es el del router, y uno inventado, sin purpose o con claves de más se
+// rechaza antes de PubMed. El servidor no ve cambios entre pasadas: eso lo mira el auditor.
+const PROPOSITOS = Object.keys(JSON.parse(readFileSync(join(HERE, '..', 'neurosymbolic_router.json'), 'utf8')).saturation_policy.sufficiency_by_purpose).filter((k) => !['rule', 'limits_are_not_sufficiency'].includes(k));
+const pr = {
+  sinProducto: await buscar(180, qDep, { filters_used: [DEP], selection_record: registro({ pass: { ...registro().pass, reading_path: 'complete_retrieval' } }) }),
+  informe: await buscar(181, qDep, { filters_used: [DEP], selection_record: registro({ product: { purpose: 'report' }, pass: { ...registro().pass, reading_path: 'complete_retrieval' } }) }),
+  cambiado: await buscar(182, qDep, { filters_used: [DEP], selection_record: registro({ product: { purpose: 'orientation', change_reason: 'the user asked only for a quick answer' },
+    pass: { ...registro().pass, reading_path: 'complete_retrieval' } }) }),
+};
+enviadas.length = 0;
+const prMalos = await Promise.all([{ purpose: 'quick' }, {}, { purpose: 'report', extra: 1 }, { purpose: 'report', change_reason: 'no' }]
+  .map((product, i) => buscar(185 + i, qDep, { filters_used: [DEP], selection_record: registro({ product }) })));
+const srp = (k) => pr[k].structuredContent.selection_record;
+check('M33', PROPOSITOS.join() === TOOL.inputSchema.properties.selection_record.properties.product?.properties?.purpose?.enum?.join()
+  && pr.sinProducto.structuredContent.status.selection_record === 'declared' && srp('sinProducto').notes.join() === 'product no declarado'
+  && srp('sinProducto').problems.length === 0
+  && ['informe', 'cambiado'].every((k) => pr[k].structuredContent.status.selection_record === 'declared' && srp(k).notes.length === 0)
+  && prMalos.every((x) => x.isError === true && x.structuredContent.result_count === null) && enviadas.length === 0,
+  `propósito: el enumerado es el del router (${PROPOSITOS.join(', ')}); sin declarar, el registro sigue declared con una nota aparte;`
+  + ` con él, o con su cambio motivado, sin nota; inventado, sin purpose, con claves de más o con un motivo de menos de 3 caracteres, rechazado sin llamar a PubMed (${prMalos.length})`);
 
 // --- Lectura por PMID con recibo (1.14.0, especificación 29-) --------------------------------------
 // Medido en las pruebas de superficie del 21-23/10: PMID pedidos contados como abstracts conservados, y un
@@ -576,6 +600,28 @@ check('M30', rechazosLargos.every(({ result: r }) => r.isError === true && r.str
   `rechazos con claves de 30.000 letras (argumentos y contexto), 20.000 «€» y 2.000 claves: ${rechazosLargos.map(({ result: r }) =>
     Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, todos ≤ ${MAX_STRUCTURED_BYTES}, con motivo, run, intento y hora, sin NCBI; el normal sigue nombrando la clave`);
 
+// M32 (1.16.0, 38- D9). Los demás rechazos de la misma clase acotan también las claves ajenas: lectura
+// (argumentos y contexto), catálogo, filtro y búsqueda. Hasta la 1.15.0 las copiaban enteras. No eran una vía
+// de secretos, porque esas claves las escribe el modelo, pero sí de tamaño.
+enviadas.length = 0;
+const larga32 = 'a'.repeat(30000);
+const h32 = createMcpHandler({ fetcher: ncbiLectura(), run: { contract_version: 'x' }, filters: paquete });
+const fuente32 = (id, name, args) => h32({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args } });
+const r32 = {
+  lecturaArgs: (await leerCon(h32, 720, { pmids: ['1'], context: CTX, [larga32]: 1 })).result,
+  lecturaContexto: (await leerCon(h32, 721, { pmids: ['1'], context: { ...CTX, [larga32]: 1 } })).result,
+  catalogo: (await fuente32(722, 'pubmed_filter_catalog', { [larga32]: 1 })).result,
+  filtro: (await fuente32(723, 'pubmed_get_filter', { path: 'filters/clinical/deprescription.txt', [larga32]: 1 })).result,
+  busqueda: (await h32(llamada(724, 'asthma[tiab]', { [larga32]: 1 }))).result,
+};
+const normal32 = (await h32(llamada(725, 'asthma[tiab]', { include_abstract: true }))).result.structuredContent;
+check('M32', Object.values(r32).every((r) => r.isError === true && Buffer.byteLength(JSON.stringify(r.structuredContent)) <= 2000
+    && /no admitid[ao]s/.test(r.structuredContent.error) && r.structuredContent.error.includes('a'.repeat(40))
+    && !r.structuredContent.error.includes('a'.repeat(41)) && /30000 caracteres/.test(r.structuredContent.error))
+  && normal32.error === 'argumentos no admitidos: include_abstract' && enviadas.length === 0,
+  `rechazos con una clave de 30.000 letras en lectura (argumentos y contexto), catálogo, filtro y búsqueda: ${Object.values(r32).map((r) =>
+    Buffer.byteLength(JSON.stringify(r.structuredContent))).join(', ')} B, acotados a 40 letras con su longitud, sin NCBI; el normal sigue nombrando la clave`);
+
 // --- Canal de llegada a la superficie (1.14.1) -------------------------------------------------------
 // Medido el 2026-10-26 sobre d610902: a una superficie sin terminal solo le llega del router lo que sirve
 // `guidance` (6,6 de 87 KB) y lo que dicen las descripciones de las herramientas, y las cuatro reglas de
@@ -583,7 +629,7 @@ check('M30', rechazosLargos.every(({ result: r }) => r.isError === true && r.str
 // mcp/surface-channels.json y la declaración se comprueba contra lo que se anuncia de verdad. No prueba
 // que la superficie lea la regla ni que la cumpla.
 
-const { GUIDANCE_PATHS, routerValue } = await import('../scripts/filter-source.mjs');
+const { GUIDANCE_PATHS, routerValue, leafOf } = await import('../scripts/filter-source.mjs');
 const ROUTER = JSON.parse(readFileSync(join(RAIZ_REPO, 'neurosymbolic_router.json'), 'utf8'));
 const CANALES = JSON.parse(readFileSync(join(HERE, 'surface-channels.json'), 'utf8'));
 const esObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -605,13 +651,30 @@ function problemasDeCanal(router, guidance, rutas, tools, canales) {
   if (!Array.isArray(politica) || !esObjeto(canales) || !esObjeto(canales.reglas) || !esObjeto(guidance) || !esObjeto(rutas)) {
     return ['el router, el inventario, guidance o la tabla de rutas no tienen la forma esperada'];
   }
-  // Primero lo global: toda ruta de guidance existe y sale literal, y no se sirve nada sin ruta.
+  // Primero lo global: toda ruta de guidance existe y sale literal, y no se sirve nada sin ruta. Una clave con
+  // LISTA de rutas (1.16.0, 38- D1) se comprueba subruta a subruta: ni vacía, ni con dos nombres finales
+  // iguales, cada subruta literal, y nada servido dentro de la clave sin su ruta.
   for (const [clave, ruta] of Object.entries(rutas)) {
+    if (Array.isArray(ruta)) {
+      const hojas = ruta.map((p) => (typeof p === 'string' ? leafOf(p) : null));
+      if (ruta.length === 0) problemas.push(`guidance.${clave}: lista de rutas vacía`);
+      if (new Set(hojas).size !== hojas.length) problemas.push(`guidance.${clave}: dos rutas con el mismo nombre final`);
+      const servido = guidance[clave];
+      if (!esObjeto(servido)) { problemas.push(`guidance.${clave} no es un objeto de subrutas`); continue; }
+      for (const p of ruta) {
+        const valor = typeof p === 'string' ? routerValue(router, p) : undefined;
+        if (valor === undefined || valor === null) problemas.push(`guidance.${clave}.${leafOf(String(p))} sale vacía: ${p} no existe en el router`);
+        else if (JSON.stringify(servido[leafOf(p)]) !== JSON.stringify(valor)) problemas.push(`guidance.${clave}.${leafOf(p)} no es literal a ${p}`);
+      }
+      for (const h of Object.keys(servido)) if (!hojas.includes(h)) problemas.push(`guidance.${clave}.${h} se sirve sin ruta declarada`);
+      continue;
+    }
     const valor = typeof ruta === 'string' ? routerValue(router, ruta) : undefined;
     if (valor === undefined || valor === null) problemas.push(`guidance.${clave} sale vacía: ${ruta} no existe en el router`);
     else if (JSON.stringify(guidance[clave]) !== JSON.stringify(valor)) problemas.push(`guidance.${clave} no es literal a ${ruta}`);
   }
   for (const clave of Object.keys(guidance)) if (!Object.hasOwn(rutas, clave)) problemas.push(`guidance.${clave} se sirve sin ruta declarada`);
+  const subrutas = (clave) => [rutas[clave]].flat().filter((p) => typeof p === 'string');
   const universo = politica.flatMap((s) => (esObjeto(router[s]) ? Object.keys(router[s]).map((k) => `${s}.${k}`) : [s]));
   const reglas = canales.reglas;
   for (const r of universo) if (!Object.hasOwn(reglas, r)) problemas.push(`${r}: regla sin canal declarado`);
@@ -623,7 +686,8 @@ function problemasDeCanal(router, guidance, rutas, tools, canales) {
       problemas.push(`${regla}: canal no reconocido`);
       continue;
     }
-    if (Object.hasOwn(canal, 'guidance') && !(typeof canal.guidance === 'string' && dentro(rutas[canal.guidance], regla))) {
+    if (Object.hasOwn(canal, 'guidance') && !(typeof canal.guidance === 'string' && Object.hasOwn(rutas, canal.guidance)
+      && subrutas(canal.guidance).some((p) => dentro(p, regla)))) {
       problemas.push(`${regla}: guidance.${canal.guidance} no sirve esta regla`);
     }
     if (Object.hasOwn(canal, 'tool_text')) {
@@ -636,11 +700,14 @@ function problemasDeCanal(router, guidance, rutas, tools, canales) {
       }
     }
   }
-  // Y al revés: lo que guidance sirve de retrieval_policy está declarado por la regla que lo contiene.
-  for (const [clave, ruta] of Object.entries(rutas)) {
-    if (typeof ruta !== 'string' || !politica.includes(ruta.split('.')[0])) continue;
-    if (!Object.entries(reglas).some(([regla, canal]) => esObjeto(canal) && canal.guidance === clave && dentro(ruta, regla))) {
-      problemas.push(`guidance.${clave} se sirve y ninguna regla lo declara`);
+  // Y al revés: lo que guidance sirve de retrieval_policy está declarado por la regla que lo contiene, SUBRUTA A
+  // SUBRUTA: en una clave de lista no basta con que alguna de sus rutas esté declarada (38- §8, pregunta 2).
+  for (const clave of Object.keys(rutas)) {
+    for (const ruta of subrutas(clave)) {
+      if (!politica.includes(ruta.split('.')[0])) continue;
+      if (!Object.entries(reglas).some(([regla, canal]) => esObjeto(canal) && canal.guidance === clave && dentro(ruta, regla))) {
+        problemas.push(`guidance.${clave}${Array.isArray(rutas[clave]) ? `.${leafOf(ruta)}` : ''} se sirve y ninguna regla lo declara`);
+      }
     }
   }
   return problemas;
@@ -662,6 +729,16 @@ sinFrase.find((x) => x.name === 'pubmed_search_exact').inputSchema.properties.so
 const canalMalo = clon(CANALES); canalMalo.reglas['provenance.denominators'] = 'guidance';
 const textoMalo = clon(CANALES); textoMalo.reglas['provenance.denominators'] = { tool_text: 'records_retrieved' };
 const guiaSinDeclarar = clon(CANALES); guiaSinDeclarar.reglas['saturation_policy.recency_before_closing'] = 'not_served';
+// Claves de lista (1.16.0): cada forma de perder una subruta en silencio.
+const subrutaVaciada = clon(cat.guidance); subrutaVaciada.coverage_check.replacing_pass = null;
+const subrutaRota = { ...GUIDANCE_PATHS, coverage_check: GUIDANCE_PATHS.coverage_check.map((p) => (p === 'coverage_check.replacing_pass' ? 'coverage_check.replacing_pas' : p)) };
+const listaMalDeclarada = clon(CANALES); listaMalDeclarada.reglas['coverage_check.screening_basis'] = { guidance: 'coverage_check' };
+const subrutaSinDeclarar = clon(CANALES); subrutaSinDeclarar.reglas['coverage_check.replacing_pass'] = 'not_served';
+const listaVacia = { ...GUIDANCE_PATHS, routing: [] };
+const guiaListaVacia = { ...cat.guidance, routing: {} };
+const nombresRepetidos = { ...GUIDANCE_PATHS, saturation: [...GUIDANCE_PATHS.saturation, 'adaptation.not_applicable_to'] };
+const guiaRepetidos = { ...cat.guidance, saturation: { ...cat.guidance.saturation } };
+const subrutaDeMas = clon(cat.guidance); subrutaDeMas.coverage_check.screening_basis = ROUTER.coverage_check.screening_basis;
 const controles = [
   ['regla sin canal', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, sinRegla), /recency_before_closing: regla sin canal/],
   ['regla nueva en el router', problemasDeCanal(routerNuevo, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, CANALES), /regla_nueva: regla sin canal/],
@@ -672,6 +749,13 @@ const controles = [
   ['tool_text sin lista', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, textoMalo), /denominators: el fragmento no está/],
   ['guidance sin declarar', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, guiaSinDeclarar), /recency_before_closing se sirve y ninguna regla/],
   ['inventario que no es objeto', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, []), /forma esperada/],
+  ['subruta vaciada', problemasDeCanal(ROUTER, subrutaVaciada, GUIDANCE_PATHS, herramientasAnunciadas, CANALES), /coverage_check\.replacing_pass no es literal/],
+  ['subruta rota', problemasDeCanal(ROUTER, cat.guidance, subrutaRota, herramientasAnunciadas, CANALES), /coverage_check\.replacing_pas sale vacía/],
+  ['lista mal declarada', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, listaMalDeclarada), /screening_basis: guidance\.coverage_check no sirve esta regla/],
+  ['subruta servida como not_served', problemasDeCanal(ROUTER, cat.guidance, GUIDANCE_PATHS, herramientasAnunciadas, subrutaSinDeclarar), /guidance\.coverage_check\.replacing_pass se sirve y ninguna regla/],
+  ['lista vacía', problemasDeCanal(ROUTER, guiaListaVacia, listaVacia, herramientasAnunciadas, CANALES), /routing: lista de rutas vacía/],
+  ['nombres finales repetidos', problemasDeCanal(ROUTER, guiaRepetidos, nombresRepetidos, herramientasAnunciadas, CANALES), /saturation: dos rutas con el mismo nombre final/],
+  ['subruta servida sin ruta', problemasDeCanal(ROUTER, subrutaDeMas, GUIDANCE_PATHS, herramientasAnunciadas, CANALES), /coverage_check\.screening_basis se sirve sin ruta/],
 ].filter(([, p, patron]) => !p.some((x) => patron.test(x))).map(([nombre]) => nombre);
 check('M27', canalReal.length === 0 && controles.length === 0 && cuantas.guidance >= 4
   && ['order_hides_by_age', 'pagination_order_recommendation', 'condition_guideline_pass', 'recency_before_closing']
@@ -679,6 +763,23 @@ check('M27', canalReal.length === 0 && controles.length === 0 && cuantas.guidanc
   canalReal.length === 0 && controles.length === 0
     ? `cada regla de retrieval_policy declara su canal (${valores.length}: ${cuantas.guidance} en guidance, ${cuantas.tool_text} en descripciones, ${cuantas.not_served} sin servir) y la declaración se cumple; el orden, las guías y la recencia de la 1.14.1 salen en el catálogo`
     : `canal: ${[...canalReal, ...controles.map((c) => `control sin detectar: ${c}`)].join('; ')}`);
+
+// M31 (1.16.0, 38- D3). El catálogo por defecto cabe en su cota de 44 KiB y su texto es el mismo objeto en JSON
+// compacto, como la lectura y el cribado; la búsqueda y el filtro conservan su texto con sangría. La cota no dice
+// que 44 KiB lleguen enteros a una superficie, que lo dice la prueba de entrega: impide que el catálogo crezca
+// sin que nadie lo decida. Cambiarla exige cambiar también esta prueba.
+const { MAX_CATALOG_BYTES } = await import('./protocol.mjs');
+const catRes = (await usar(37, CATALOG_TOOL.name, {})).result;
+const filtroRes = (await usar(38, GET_FILTER_TOOL.name, { path: 'filters/scope/humans.txt' })).result;
+const busqRes = (await conFuente(llamada(39, 'asthma[tiab]'))).result;
+const pesa = (sc) => Buffer.byteLength(JSON.stringify(sc));
+const relleno31 = { ...catRes.structuredContent, guidance: { ...catRes.structuredContent.guidance, relleno: 'x'.repeat(3000) } };
+check('M31', MAX_CATALOG_BYTES === 45056 && pesa(catRes.structuredContent) <= MAX_CATALOG_BYTES && pesa(relleno31) > MAX_CATALOG_BYTES
+  && catRes.isError === false && catRes.content[0].text === JSON.stringify(catRes.structuredContent)
+  && filtroRes.content[0].text === JSON.stringify(filtroRes.structuredContent, null, 2)
+  && busqRes.content[0].text === JSON.stringify(busqRes.structuredContent, null, 2),
+  `catálogo por defecto: ${pesa(catRes.structuredContent)} B estructurados (cota ${MAX_CATALOG_BYTES}; con 3.000 B de relleno, ${pesa(relleno31)}),`
+  + ' texto compacto e idéntico; búsqueda y filtro conservan su texto con sangría');
 
 // --- Transporte HTTP del Worker ------------------------------------------------------------------
 

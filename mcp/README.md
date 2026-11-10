@@ -23,14 +23,23 @@ tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
   Mismo presupuesto de 24 KiB, misma cola y mismo `run`; un título nunca se corta y lo que no cabe va a
   `pending_pmids`. Medido el 26/10 con PubMed real: 50 registros, 22,7 y 24,3 KB; con títulos largos no
   caben los 50 y el resto queda pendiente. El JSON se lee con un analizador estricto que rechaza claves
-  repetidas, y la clave y el contacto se ocultan en todo diagnóstico. `dossier-check` aún no lee estos recibos.
+  repetidas, y la clave y el contacto se ocultan en todo diagnóstico. `dossier-check` los lee desde su 1.1.0
+  como un estado propio, y desde la 1.2.0 los títulos cribados son una etapa de la retención.
 
 - `pubmed_filter_catalog`: los 48 filtros de recuperación (y, a petición, las 72 listas de revistas) con
   su descripción, su estado de validación según su cabecera y su **papel**, más la guía de composición
   por papel del router. No llama a PubMed. Desde la 1.14.1, `guidance` lleva también, tal cual del router,
   qué esconde cada orden, el orden recomendado al paginar, la pasada de guías al nivel de la condición y
   la recencia antes de cerrar. Qué regla del router llega por qué canal (`guidance`, una descripción o
-  ninguno) lo declara `surface-channels.json`, y `test.mjs` (M27) lo comprueba.
+  ninguno) lo declara `surface-channels.json`, y `test.mjs` (M27) lo comprueba. Desde la 1.16.0 llegan
+  42 de las 90 reglas: `guidance` añade el enrutado por tipo de pregunta (`routing`), la saturación con la
+  suficiencia según el propósito (`saturation`), la comprobación de cobertura con su unidad, reemplazo y
+  compensación (`coverage_check`), los denominadores, la traza de procedencia de la respuesta
+  (`answer_trace`: su contenido; la forma es de la superficie), la forma canónica de citar y que el texto
+  recuperado es dato. Una clave con lista de rutas sirve un objeto con el último tramo de cada ruta y su valor
+  literal, y M27 lo comprueba subruta a subruta. El texto de la respuesta es el JSON compacto de
+  `structuredContent`, y M31 lo acota a 45.056 B (medido: 43.397 B). La cota no prueba que una superficie lo
+  reciba entero: eso lo dice la prueba de entrega.
 - `pubmed_get_filter`: la consulta de un filtro tal como la extrae el parser de referencia (todas las
   líneas, sin el bloque de metadatos), con su SHA-256, su papel y cómo componerla. No llama a PubMed.
 - `pubmed_search_exact` admite `filters_used`: el recibo comprueba que cada filtro declarado está en
@@ -66,7 +75,10 @@ tenga que extraer filtros a mano ni pueda reconstruirlos de memoria:
   y lo mejor que puede decir es «recuperación operativa sin instantánea fijada». El registro de selección
   admite `pass.reading_path` (`complete_retrieval` | `focused_selection` | `exploration_only`) y
   `pass.selection_reason`, obligatoria con `focused_selection`; sin `reading_path` el registro sigue
-  `declared` y el recibo lo anota en `selection_record.notes`, aparte de `problems`.
+  `declared` y el recibo lo anota en `selection_record.notes`, aparte de `problems`. Desde la 1.16.0 admite
+  también `product` (`{ purpose: orientation | report | decision | corpus, change_reason }`), el propósito que
+  fija cuánta búsqueda basta. Sin él el registro sigue `declared`, con su nota. El servidor no guarda estado:
+  un cambio de propósito entre pasadas lo ve el auditor, no el recibo.
 
 El catálogo y los filtros los construye `scripts/filter-source.mjs`: el MCP local los lee del disco al
 arrancar y `stamp.mjs` los sella en `mcp/filters-bundle.mjs` para el Worker, que no tiene disco (su
